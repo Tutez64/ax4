@@ -313,6 +313,28 @@ class TestASCompat extends utest.Test {
 		equals(null, ASCompat.asByteArray(null));
 	}
 
+	function testRestToArray() {
+		var empty = ASCompat.restToArray(null);
+		equals(0, empty.length);
+
+		var arr = [1, 2];
+		var fromArray = ASCompat.restToArray(arr);
+		equals(2, fromArray.length);
+		equals(1, fromArray[0]);
+		equals(2, fromArray[1]);
+
+		var fromToArray = ASCompat.restToArray({
+			toArray: function() return [3, 4]
+		});
+		equals(2, fromToArray.length);
+		equals(3, fromToArray[0]);
+		equals(4, fromToArray[1]);
+
+		var fromScalar = ASCompat.restToArray(5);
+		equals(1, fromScalar.length);
+		equals(5, fromScalar[0]);
+	}
+
 	function testToString() {
 		equals("123", ASCompat.toString(123));
 		equals("true", ASCompat.toString(true));

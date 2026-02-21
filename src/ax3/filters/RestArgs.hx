@@ -172,10 +172,10 @@ class RestArgs extends AbstractFilter {
 
 	static function buildRestArrayInit(paramVar:TVar):TExpr {
 		var paramLocal = mk(TELocal(mkIdent(paramVar.name), paramVar), paramVar.type, paramVar.type);
-		var field = mk(TEField({kind: TOExplicit(mkDot(), paramLocal), type: paramLocal.type}, "toArray", mkIdent("toArray")), TTFunction, TTFunction);
-		return mk(TECall(field, {
+		var eRestToArray = mkBuiltin("ASCompat.restToArray", TTFunction);
+		return mk(TECall(eRestToArray, {
 			openParen: mkOpenParen(),
-			args: [],
+			args: [{expr: paramLocal, comma: null}],
 			closeParen: mkCloseParen()
 		}), tUntypedArray, tUntypedArray);
 	}

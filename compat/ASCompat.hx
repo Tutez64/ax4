@@ -721,6 +721,50 @@ class ASCompat {
 		return if (Reflect.isFunction(v)) v else null;
 	}
 
+	/**
+	 * Normalizes runtime values used for converted AS3 rest arguments.
+	 * Generated code can reach this path through dynamic/callable calls where
+	 * the rest container is not always a standard haxe.Rest instance.
+	 */
+	public static function restToArray(rest:Dynamic):Array<Dynamic> {
+		if (rest == null) {
+			return [];
+		}
+		if (Std.isOfType(rest, Array)) {
+			return cast rest;
+		}
+
+		var toArray = Reflect.field(rest, "toArray");
+		if (toArray != null && Reflect.isFunction(toArray)) {
+			var converted:Dynamic = null;
+			var hasConverted = false;
+			try {
+				// Prefer direct invocation for better cross-target behavior.
+				converted = untyped rest.toArray();
+				hasConverted = true;
+			} catch (_:Dynamic) {}
+
+			if (!hasConverted) {
+				try {
+					converted = Reflect.callMethod(rest, toArray, []);
+					hasConverted = true;
+				} catch (_:Dynamic) {}
+			}
+
+			if (hasConverted) {
+				if (converted == null) {
+					return [];
+				}
+				if (Std.isOfType(converted, Array)) {
+					return cast converted;
+				}
+				return [converted];
+			}
+		}
+
+		return [rest];
+	}
+
 	public static function pauseForGCIfCollectionImminent(?imminence:Float):Void {
 		var threshold = normalizeGcImminence(imminence);
 		#if flash
