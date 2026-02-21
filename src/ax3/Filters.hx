@@ -57,6 +57,7 @@ class Filters {
 			new ApiSignatureOverrides(context),
 			new RewriteForIn(context),
 			new RewriteHasOwnProperty(context),
+			new RewriteUndefinedLookupComparisons(context),
 			new NumberToInt(context),
 			new CoerceToNumber(context),
 			new RewriteObjectCompare(context),
