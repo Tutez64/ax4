@@ -104,6 +104,7 @@ class Filters {
 			new UintComparison(context),
 			new HandleProtectedOverrides(context),
 			new FixOverrides(context),
+			new RewriteErrorCatch(context),
 			new CheckUntypedMethodCalls(context),
 			new RemoveRedundantParenthesis(context),
 			new RewriteProxyInheritance(context),
