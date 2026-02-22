@@ -70,6 +70,31 @@ class TestASCompat extends utest.Test {
 		equals(2, indices[2]);
 	}
 
+	function testArraySortMethodClosureKeepsThis() {
+		var owner = new TestASCompatComparatorOwner(5);
+		var values = [3, 1, 2];
+		var cmp:Dynamic = owner.compareInts;
+		ASCompat.ASArray.sort(values, cmp);
+		equals(1, values[0]);
+		equals(2, values[1]);
+		equals(3, values[2]);
+		isTrue(owner.calls > 0);
+	}
+
+	function testVectorSortMethodClosureKeepsThis() {
+		var owner = new TestASCompatComparatorOwner(9);
+		var values = new flash.Vector<Int>();
+		values.push(4);
+		values.push(1);
+		values.push(3);
+		var cmp:Dynamic = owner.compareInts;
+		ASCompat.ASVector.sort(values, cmp);
+		equals(1, values[0]);
+		equals(3, values[1]);
+		equals(4, values[2]);
+		isTrue(owner.calls > 0);
+	}
+
 	function testArrayReverseMapSomeSort() {
 		var reversed = [1, 2, 3];
 		var reversedResult = ASCompat.ASArray.reverse(reversed);
@@ -696,5 +721,19 @@ private class TestASCompatApplyTarget {
 
 	public function touch():Void {
 		touchCount++;
+	}
+}
+
+private class TestASCompatComparatorOwner {
+	public var bias:Int;
+	public var calls:Int = 0;
+
+	public function new(bias:Int) {
+		this.bias = bias;
+	}
+
+	public function compareInts(a:Int, b:Int):Int {
+		calls++;
+		return (a + bias) - (b + bias);
 	}
 }

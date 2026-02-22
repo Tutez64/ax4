@@ -1431,7 +1431,7 @@ class ASArray {
 		for (i in 0...a.length) {
 			var result:Bool =
 				if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
-				else Reflect.callMethod(null, callback, [a[i], i, a]);
+				else callback(a[i], i, a);
 			if (result) {
 				return true;
 			}
@@ -1442,7 +1442,7 @@ class ASArray {
 	public static function forEach<T>(a:Array<T>, callback:(item:T, index:Int, array:Array<T>)->Void, ?thisObj:Dynamic):Void {
 		for (i in 0...a.length) {
 			if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
-			else Reflect.callMethod(null, callback, [a[i], i, a]);
+			else callback(a[i], i, a);
 		}
 	}
 
@@ -1451,7 +1451,7 @@ class ASArray {
 		for (i in 0...a.length) {
 			var value:U =
 				if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
-				else Reflect.callMethod(null, callback, [a[i], i, a]);
+				else callback(a[i], i, a);
 			out.push(value);
 		}
 		return out;
@@ -1463,7 +1463,7 @@ class ASArray {
 			return a;
 		}
 		a.sort(function(x, y) {
-			var result:Dynamic = Reflect.callMethod(null, f, [x, y]);
+			var result:Dynamic = f(x, y);
 			return coerceSortResult(result);
 		});
 		return a;
@@ -1522,7 +1522,7 @@ class ASVector {
 	public static function forEach<T>(a:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Void, ?thisObj:Dynamic):Void {
 		for (i in 0...a.length) {
 			if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
-			else Reflect.callMethod(null, callback, [a[i], i, a]);
+			else callback(a[i], i, a);
 		}
 	}
 
@@ -1531,7 +1531,7 @@ class ASVector {
 		for (i in 0...a.length) {
 			var value:U =
 				if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
-				else Reflect.callMethod(null, callback, [a[i], i, a]);
+				else callback(a[i], i, a);
 			out.push(value);
 		}
 		return out;
@@ -1543,7 +1543,7 @@ class ASVector {
 			return a;
 		}
 		a.sort(function(x, y) {
-			var result:Dynamic = Reflect.callMethod(null, f, [x, y]);
+			var result:Dynamic = f(x, y);
 			return coerceSortResult(result);
 		});
 		return a;
@@ -1602,7 +1602,7 @@ class ASVector {
 		for (i in 0...getLen(a)) {
 			var item = getAt(a, i);
 			if (thisObj != null) Reflect.callMethod(thisObj, callback, [item, i, a])
-			else Reflect.callMethod(null, callback, [item, i, a]);
+			else callback(item, i, a);
 		}
 	}
 
@@ -1612,7 +1612,7 @@ class ASVector {
 			var item = getAt(a, i);
 			var value:Dynamic =
 				if (thisObj != null) Reflect.callMethod(thisObj, callback, [item, i, a])
-				else Reflect.callMethod(null, callback, [item, i, a]);
+				else callback(item, i, a);
 			out.push(value);
 		}
 		return out;
@@ -1624,7 +1624,7 @@ class ASVector {
 			return a;
 		}
 		a.sort(function(x, y) {
-			var result:Dynamic = Reflect.callMethod(null, f, [x, y]);
+			var result:Dynamic = f(x, y);
 			return coerceSortResult(result);
 		});
 		return a;
