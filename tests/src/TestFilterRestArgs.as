@@ -5,6 +5,7 @@
  * - converter must avoid direct `_rest.toArray()` calls (runtime crash risk on some dynamic/callable paths)
  * - rest parameter renaming must avoid collisions (`args`, `_args`, `__args`) while preserving body references
  * - local functions and anonymous functions with rest should also be rewritten
+ * - anonymous rest closures escaping as `Function` values must be wrapped for dynamic call safety
  */
 package {
 	public class TestFilterRestArgs {
@@ -25,6 +26,7 @@ package {
 			events.push(conflictWithUnderscore(10, 1, 2));
 			events.push(conflictWithDoubleUnderscore(10, 20, 1, 2, 3));
 			events.push(localAndAnonymousRest("tag"));
+			events.push(returnedRestClosureCall());
 
 			var passthrough:Array = passThrough(5, 6, 7);
 			events.push(passthrough.length);
@@ -70,6 +72,17 @@ package {
 			var localValue:int = local(2, 10, 20, 30);
 			var anonValue:String = String(anon(tag, 1, 2, 3, 4));
 			return anonValue + ":" + localValue;
+		}
+
+		public function makeRestClosure():Function {
+			return function(...items):int {
+				return items.length;
+			};
+		}
+
+		public function returnedRestClosureCall():int {
+			var cb:Function = makeRestClosure();
+			return int(cb(7, 8, 9));
 		}
 
 		public function passThrough(..._rest):Array {

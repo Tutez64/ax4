@@ -1130,7 +1130,7 @@ class GenHaxe extends PrinterBase {
 				| "flash.Lib.getTimer" | "flash.Lib.getURL"
 				| "Reflect.deleteField" | "Type.createInstance"| "Type.resolveClass" | "Type.getClassName" | "Type.getClass"
 				| "haxe.Json" | "Reflect.compare" | "Reflect.isFunction" | "Math.POSITIVE_INFINITY" | "Math.NEGATIVE_INFINITY"
-				| "StringTools.replace" | "StringTools.hex" | "Reflect.callMethod" | "ASDictionary.asDictionary" | "_":
+				| "StringTools.replace" | "StringTools.hex" | "Reflect.callMethod" | "Reflect.makeVarArgs" | "ASDictionary.asDictionary" | "_":
 					name;
 			case "Number": "Float";
 			case "int": "Int";

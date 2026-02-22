@@ -77,6 +77,17 @@ class RestArgs extends AbstractFilter {
 		switch e.kind {
 			case TELocalFunction(f):
 				processFunction(f.fun);
+				if (shouldWrapAnonymousRestClosure(f)) {
+					normalizeRestArgForVarArgs(f.fun.sig.args[f.fun.sig.args.length - 1]);
+					var lead = removeLeadingTrivia(e);
+					var trail = removeTrailingTrivia(e);
+						var eMakeVarArgs = mkBuiltin("Reflect.makeVarArgs", TTFunction, lead, []);
+					return mk(TECall(eMakeVarArgs, {
+						openParen: mkOpenParen(),
+						args: [{expr: e, comma: null}],
+						closeParen: mkCloseParen(trail)
+					}), TTFunction, e.expectedType);
+				}
 
 			// Haxe < 4.20 needs explicit packing of rest args into an array.
 			#if (haxe_ver < 4.20)
@@ -101,6 +112,39 @@ class RestArgs extends AbstractFilter {
 		}
 
 		return e;
+	}
+
+	static function shouldWrapAnonymousRestClosure(f:TLocalFunction):Bool {
+		if (f.name != null || f.fun.sig.args.length == 0) {
+			return false;
+		}
+		return switch f.fun.sig.args[f.fun.sig.args.length - 1].kind {
+			case TArgRest(_):
+				true;
+			case _:
+				false;
+		}
+	}
+
+	static function normalizeRestArgForVarArgs(arg:TFunctionArg) {
+		switch arg.kind {
+			case TArgRest(dots, _, typeHint):
+				typeHint = ensureArrayTypeHint(typeHint);
+				arg.kind = TArgNormal(typeHint, null);
+				var dotsTrivia = dots.leadTrivia.concat(dots.trailTrivia);
+				arg.syntax.name.leadTrivia = dotsTrivia.concat(arg.syntax.name.leadTrivia);
+			case _:
+		}
+	}
+
+	static function ensureArrayTypeHint(typeHint:Null<TypeHint>):TypeHint {
+		if (typeHint != null) {
+			return typeHint;
+		}
+		return {
+			colon: new Token(0, TkColon, ":", [], []),
+			type: TPath({first: new Token(0, TkIdent, "Array", [], []), rest: []})
+		};
 	}
 
 	static function renameArg(arg:TFunctionArg, newName:String) {
