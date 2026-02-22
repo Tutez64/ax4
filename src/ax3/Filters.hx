@@ -28,6 +28,7 @@ class Filters {
 			new HandleVisibilityModifiers(context),
 			new RewriteMeta(context),
 			new NormalizeContentTypeHeader(context),
+			new URLStreamHttpToURLLoader(context),
 			new MathApi(context),
 			new RewriteJSON(context),
 			new UtilFunctions(context),

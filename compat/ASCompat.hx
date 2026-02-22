@@ -721,6 +721,59 @@ class ASCompat {
 		return if (Reflect.isFunction(v)) v else null;
 	}
 
+	public static function urlLoaderBytesAvailable(loader:Dynamic):UInt {
+		if (loader == null) {
+			return 0;
+		}
+		var bytesAvailable = Reflect.field(loader, "bytesAvailable");
+		if (bytesAvailable != null) {
+			return Std.int(toNumber(bytesAvailable));
+		}
+		var data = Reflect.field(loader, "data");
+		if (data == null) {
+			return 0;
+		}
+		if (Std.isOfType(data, haxe.io.Bytes)) {
+			return cast(data, haxe.io.Bytes).length;
+		}
+		var text = toString(data);
+		return if (text == null) 0 else text.length;
+	}
+
+	public static function urlLoaderReadUTFBytes(loader:Dynamic, length:UInt):String {
+		if (loader == null) {
+			return "";
+		}
+		var readUTFBytes = Reflect.field(loader, "readUTFBytes");
+		if (readUTFBytes != null && Reflect.isFunction(readUTFBytes)) {
+			try {
+				// Prefer direct invocation for better cross-target behavior.
+				return toString(untyped loader.readUTFBytes(length));
+			} catch (_:Dynamic) {}
+			try {
+				return toString(Reflect.callMethod(loader, readUTFBytes, [length]));
+			} catch (_:Dynamic) {}
+		}
+		var data = Reflect.field(loader, "data");
+		if (data == null) {
+			return "";
+		}
+		if (Std.isOfType(data, haxe.io.Bytes)) {
+			var bytes:haxe.io.Bytes = cast data;
+			var limit = Std.int(Math.min(length, bytes.length));
+			return bytes.getString(0, limit);
+		}
+		var text = toString(data);
+		if (text == null) {
+			return "";
+		}
+		var limit = Std.int(length);
+		if (limit <= 0) {
+			return "";
+		}
+		return if (limit >= text.length) text else text.substr(0, limit);
+	}
+
 	/**
 	 * Normalizes runtime values used for converted AS3 rest arguments.
 	 * Generated code can reach this path through dynamic/callable calls where

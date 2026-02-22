@@ -374,6 +374,20 @@ class TestASCompat extends utest.Test {
 		equals(5, fromScalar[0]);
 	}
 
+	function testUrlLoaderHelpers() {
+		var dataLoader = {data: "hello"};
+		equals(5, ASCompat.urlLoaderBytesAvailable(dataLoader));
+		equals("hel", ASCompat.urlLoaderReadUTFBytes(dataLoader, 3));
+		equals("hello", ASCompat.urlLoaderReadUTFBytes(dataLoader, 20));
+
+		var streamLike = {
+			bytesAvailable: 4,
+			readUTFBytes: function(length:Int) return "abcd".substr(0, length)
+		};
+		equals(4, ASCompat.urlLoaderBytesAvailable(streamLike));
+		equals("ab", ASCompat.urlLoaderReadUTFBytes(streamLike, 2));
+	}
+
 	function testToString() {
 		equals("123", ASCompat.toString(123));
 		equals("true", ASCompat.toString(true));
