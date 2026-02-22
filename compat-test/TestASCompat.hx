@@ -13,6 +13,20 @@ class TestASCompat extends utest.Test {
 		floatEquals(Math.NaN, ASCompat.processNull((undefined : Null<Float>)));
 	}
 
+	function testASObjectBracketGetKeepsFunctionIdentity() {
+		var obj:ASObject = new ASObject();
+		var callCount = 0;
+		var f = function():Void {
+			callCount++;
+		};
+		obj["listener"] = f;
+
+		var fromIndex = ASCompat.asFunction(obj["listener"]);
+		isTrue(fromIndex == f);
+		fromIndex();
+		equals(1, callCount);
+	}
+
 	function testIsAnyVector() {
 		isTrue(ASCompat.isVector(new flash.Vector<String>(), (_:ASAny)));
 	}
