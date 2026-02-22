@@ -27,6 +27,7 @@ class Filters {
 			new WrapModuleLevelDecls(context),
 			new HandleVisibilityModifiers(context),
 			new RewriteMeta(context),
+			new NormalizeContentTypeHeader(context),
 			new MathApi(context),
 			new RewriteJSON(context),
 			new UtilFunctions(context),
