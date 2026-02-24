@@ -338,6 +338,64 @@ class TestASCompat extends utest.Test {
 		equals(null, ASCompat.asXMLList(xml));
 	}
 
+	function testUndefinedSentinelCoercions() {
+		var undef:Dynamic =
+		#if js
+		js.Syntax.code("undefined");
+		#elseif flash
+		untyped __global__["undefined"];
+		#else
+		ASCompat.UNDEFINED;
+		#end
+
+		#if !flash
+		isTrue(ASCompat.isUndefinedValue(undef));
+		#end
+		isFalse(ASCompat.toBool(undef));
+		floatEquals(Math.NaN, ASCompat.toNumber(undef));
+		equals("undefined", ASCompat.toString(undef));
+		equals("undefined", ASCompat.typeof(undef));
+	}
+
+	function testDictionaryLookupNullComparisons() {
+		var dict:ASDictionary<Dynamic, Dynamic> = new ASDictionary<Dynamic, Dynamic>();
+		var key = "missing";
+
+		isTrue(ASCompat.dictionaryLookupEqNull(dict, key));
+		isFalse(ASCompat.dictionaryLookupNeNull(dict, key));
+
+		dict[key] = null;
+		isTrue(ASCompat.dictionaryLookupEqNull(dict, key));
+		isFalse(ASCompat.dictionaryLookupNeNull(dict, key));
+
+		dict[key] = 123;
+		isFalse(ASCompat.dictionaryLookupEqNull(dict, key));
+		isTrue(ASCompat.dictionaryLookupNeNull(dict, key));
+	}
+
+	function testMapItemForNullComparisons() {
+		var store = new haxe.ds.StringMap<Dynamic>();
+		var fakeMap:Dynamic = {
+			hasKey: function(key:Dynamic):Bool {
+				return store.exists(Std.string(key));
+			},
+			itemFor: function(key:Dynamic):Dynamic {
+				return store.get(Std.string(key));
+			}
+		};
+
+		isTrue(ASCompat.mapItemForEqNull(fakeMap, "k"));
+		isFalse(ASCompat.mapItemForNeNull(fakeMap, "k"));
+
+		store.set("k", null);
+		isTrue(ASCompat.mapItemForEqNull(fakeMap, "k"));
+		isFalse(ASCompat.mapItemForNeNull(fakeMap, "k"));
+
+		store.set("k", 7);
+		isFalse(ASCompat.mapItemForEqNull(fakeMap, "k"));
+		isTrue(ASCompat.mapItemForNeNull(fakeMap, "k"));
+	}
+
 	function testIsByteArray() {
 		var bytes = new flash.utils.ByteArray();
 		isTrue(ASCompat.isByteArray(bytes));

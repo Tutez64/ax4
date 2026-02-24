@@ -10,7 +10,11 @@ import haxe.Timer;
 using StringTools;
 
 class ASCompat {
+	#if (flash || js)
+	public static inline final UNDEFINED:Dynamic = null;
+	#else
 	public static final UNDEFINED:Dynamic = {__as3_undefined__: true};
+	#end
 
 	public static inline final MAX_INT = 2147483647;
 	public static inline final MIN_INT = -2147483648;
@@ -474,10 +478,13 @@ class ASCompat {
 	// String(d)
 	public static inline function toString(d:Dynamic):String {
 		#if flash
-		return Std.string(d);
+		return untyped __global__["String"](d);
 		#elseif js
 		return js.Syntax.code("String")(d);
 		#else
+		if (isUndefinedValue(d)) {
+			return "undefined";
+		}
 		if (Std.isOfType(d, Float) && Math.isNaN(cast d)) return "NaN";
 		return Std.string(d);
 		#end
@@ -552,7 +559,12 @@ class ASCompat {
 	public static inline function typeof(value:Dynamic):String {
 		#if js
 		return js.Syntax.typeof(value);
+		#elseif flash
+		return untyped __typeof__(value);
 		#else
+		if (isUndefinedValue(value)) {
+			return "undefined";
+		}
 		if (Std.isOfType(value, String)) {
 			return "string";
 		}
@@ -565,6 +577,103 @@ class ASCompat {
 			case TUnknown: "undefined";
 		}
 		#end
+	}
+
+	public static inline function isUndefinedValue(value:Dynamic):Bool {
+		#if js
+		return js.Syntax.code("typeof {0} === 'undefined'", value);
+		#elseif flash
+		return false;
+		#else
+		return value == UNDEFINED;
+		#end
+	}
+
+	// Preserves AS3 behavior for loose null checks on Dictionary lookups:
+	// missing key (undefined) should behave like null for `== null` / `!= null`.
+	public static function dictionaryLookupEqNull(dict:Dynamic, key:Dynamic):Bool {
+		if (dict == null) {
+			return true;
+		}
+		#if flash
+		if (!untyped __in__(key, dict)) {
+			return true;
+		}
+		var value:Dynamic = untyped dict[key];
+		return value == null || isUndefinedValue(value);
+		#else
+		try {
+			var asDict:ASDictionary<Dynamic, Dynamic> = cast dict;
+			if (!asDict.exists(cast key)) {
+				return true;
+			}
+			var value:Dynamic = asDict[cast key];
+			return value == null || isUndefinedValue(value);
+		} catch (_:Dynamic) {
+		}
+		var fallback = getProperty(dict, key);
+		return fallback == null || isUndefinedValue(fallback);
+		#end
+	}
+
+	public static inline function dictionaryLookupNeNull(dict:Dynamic, key:Dynamic):Bool {
+		return !dictionaryLookupEqNull(dict, key);
+	}
+
+	// Preserves AS3 behavior for loose null checks on map-style itemFor lookups.
+	public static function mapItemForEqNull(map:Dynamic, key:Dynamic):Bool {
+		if (map == null) {
+			return true;
+		}
+		#if flash
+		var hasKeyMethod:Dynamic = null;
+		try {
+			hasKeyMethod = untyped map.hasKey;
+		} catch (_:Dynamic) {
+		}
+		if (hasKeyMethod != null) {
+			var hasKeyValue = false;
+			try {
+				hasKeyValue = toBool(untyped map.hasKey(key));
+			} catch (_:Dynamic) {
+			}
+			if (!hasKeyValue) {
+				return true;
+			}
+		}
+		var itemForMethod:Dynamic = null;
+		try {
+			itemForMethod = untyped map.itemFor;
+		} catch (_:Dynamic) {
+		}
+		if (itemForMethod != null) {
+			var value:Dynamic = null;
+			try {
+				value = untyped map.itemFor(key);
+			} catch (_:Dynamic) {
+				return true;
+			}
+			return value == null || isUndefinedValue(value);
+		}
+		return true;
+		#else
+		var hasKey = Reflect.field(map, "hasKey");
+		if (hasKey != null && Reflect.isFunction(hasKey)) {
+			if (!toBool(Reflect.callMethod(map, hasKey, [key]))) {
+				return true;
+			}
+		}
+		var itemFor = Reflect.field(map, "itemFor");
+		if (itemFor != null && Reflect.isFunction(itemFor)) {
+			var value = Reflect.callMethod(map, itemFor, [key]);
+			return value == null || isUndefinedValue(value);
+		}
+		return true;
+		#end
+	}
+
+	public static inline function mapItemForNeNull(map:Dynamic, key:Dynamic):Bool {
+		return !mapItemForEqNull(map, key);
 	}
 
 	public static inline function as<T>(v:Dynamic, c:Class<T>):T {
@@ -1348,6 +1457,9 @@ class ASCompat {
 	}
 
 	static inline function toNumberNative(d:Dynamic):Float {
+		if (isUndefinedValue(d)) {
+			return Math.NaN;
+		}
 		if (d == null) {
 			return 0;
 		}
@@ -1404,6 +1516,9 @@ class ASCompat {
 	}
 
 	static inline function toBoolNative(d:Dynamic):Bool {
+		if (isUndefinedValue(d)) {
+			return false;
+		}
 		if (d == null) {
 			return false;
 		}

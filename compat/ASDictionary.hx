@@ -50,14 +50,24 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 				if (entry != null) {
 					result = entry.value;
 				} else {
+					#if js
+					result = js.Syntax.code("undefined");
+					#else
 					result = ASCompat.UNDEFINED;
+					#end
 				}
 			} else {
+				#if js
+				result = js.Syntax.code("undefined");
+				#else
 				result = ASCompat.UNDEFINED;
+				#end
 			}
 		} else {
 			#if cpp
 			result = this.exists(key) ? this.get(key) : ASCompat.UNDEFINED;
+			#elseif js
+			result = this.exists(key) ? this.get(key) : js.Syntax.code("undefined");
 			#else
 			result = this.get(key);
 			#end

@@ -2,6 +2,9 @@
  * Test case for RewriteUndefinedLookupComparisons filter.
  * Dictionary/Object dynamic lookups compared to undefined should be rewritten
  * as existence checks to preserve AS3 runtime behavior on non-Flash targets.
+ *
+ * Also, loose null checks on Dictionary lookups should be rewritten so that
+ * missing entries (undefined) still behave like null (`undefined == null`).
  */
 package {
     import flash.utils.Dictionary;
@@ -22,9 +25,15 @@ package {
             var l1:Boolean = undefined == dict[key];
             var l2:Boolean = undefined != obj[key];
 
-            // Null comparisons should remain value checks.
-            var keepDict:Boolean = dict[key] == null;
-            var keepObj:Boolean = obj[key] != null;
+            // Loose null checks on Dictionary lookup should treat missing as null.
+            var n1:Boolean = dict[key] == null;
+            var n2:Boolean = dict[key] != null;
+            var n3:Boolean = null == dict[key];
+            var n4:Boolean = null != dict[key];
+
+            // Object null checks should remain simple value checks.
+            var keepObjEq:Boolean = obj[key] == null;
+            var keepObjNe:Boolean = obj[key] != null;
         }
     }
 }
