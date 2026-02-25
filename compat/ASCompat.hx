@@ -410,6 +410,16 @@ class ASCompat {
 		if (dynamicProperties != null && dynamicProperties.exists(name)) {
 			return true;
 		}
+		// For OpenFL runtime MovieClips, timeline instances are often only addressable by child name.
+		var getChildByName = Reflect.field(obj, "getChildByName");
+		if (getChildByName != null && Reflect.isFunction(getChildByName)) {
+			try {
+				if (Reflect.callMethod(obj, getChildByName, [name]) != null) {
+					return true;
+				}
+			} catch (_:Dynamic) {
+			}
+		}
 		#end
 		return false;
 	}

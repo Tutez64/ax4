@@ -513,6 +513,32 @@ class TestASCompat extends utest.Test {
 		equals("renamed", target.name);
 	}
 
+	function testHasPropertyRealMemberIsConsistentAcrossTargets() {
+		var clip = new TestASCompatHasPropertyMemberClip();
+		isTrue(ASCompat.hasProperty(clip, "label"));
+		isFalse(ASCompat.hasProperty(clip, "missing_label"));
+	}
+
+	function testHasPropertyMovieClipChildNameFallbackForChildOnly() {
+		var root = new flash.display.MovieClip();
+		var label = new flash.display.MovieClip();
+		label.name = "label";
+		root.addChild(label);
+
+		// Realistic non-Flash scenario: timeline-like children are present by name
+		// but not as reflected fields.
+		isFalse(Reflect.hasField(root, "label"));
+		isTrue(root.getChildByName("label") != null);
+
+		#if flash
+		// Flash keeps native behavior; the non-Flash fallback is intentionally disabled there.
+		isFalse(ASCompat.hasProperty(root, "label"));
+		#else
+		isTrue(ASCompat.hasProperty(root, "label"));
+		#end
+		isFalse(ASCompat.hasProperty(root, "missing_label"));
+	}
+
 	function testApplyBoundMethod() {
 		var target = new TestASCompatApplyTarget();
 		var pushed = ASCompatMacro.applyBoundMethod(target, "pushValues", [1, 2, 3]);
@@ -807,6 +833,17 @@ private class TestASCompatApplyTarget {
 
 	public function touch():Void {
 		touchCount++;
+	}
+}
+
+private class TestASCompatHasPropertyMemberClip extends flash.display.MovieClip {
+	public var label:flash.display.MovieClip;
+
+	public function new() {
+		super();
+		label = new flash.display.MovieClip();
+		label.name = "label";
+		addChild(label);
 	}
 }
 
