@@ -17,11 +17,11 @@ class HandleNew extends AbstractFilter {
 					case TNType(_): // other kinds of typed `new` - nothing to do
 						e;
 
-					case TNExpr(eclass): // anything else - rewrite to Type.createInstance
+					case TNExpr(eclass): // anything else - rewrite to ASCompat.createInstance
 						var leadTrivia = keyword.leadTrivia;
 						var trailTrivia = removeTrailingTrivia(e);
 
-						var eCreateInstance = mk(TEBuiltin(new Token(0, TkIdent, "Type.createInstance", leadTrivia, []), "Type.createInstance"), TTBuiltin, TTBuiltin);
+						var eCreateInstance = mkBuiltin("ASCompat.createInstance", TTBuiltin, leadTrivia, []);
 						var ctorArgs = if (args != null) args.args else [];
 
 						e.with(kind = TECall(eCreateInstance, {

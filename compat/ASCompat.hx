@@ -688,6 +688,29 @@ class ASCompat {
 		return flash.Lib.as(v, c);
 	}
 
+	public static inline function createInstance(cl:Dynamic, args:Array<Dynamic>):Dynamic {
+		if (cl == null) {
+			return null;
+		}
+		#if flash
+		return Type.createInstance(cast cl, args);
+		#else
+		if (Std.isOfType(cl, Class)) {
+			return Type.createInstance(cast cl, args);
+		}
+		// Generic factory protocol for non-Class values (e.g. runtime symbol proxies).
+		// If an object exposes `create(args:Array<Dynamic>)`, use it.
+		var factory = Reflect.field(cl, "create");
+		if (factory != null && Reflect.isFunction(factory)) {
+			return Reflect.callMethod(cl, factory, [args]);
+		}
+		if (Reflect.isFunction(cl)) {
+			return Reflect.callMethod(null, cl, args);
+		}
+		return Type.createInstance(cast cl, args);
+		#end
+	}
+
 	public static inline function toExponential(n:Float, ?digits:Int):String {
 		#if (js || flash)
 		return (cast n).toExponential(digits);
