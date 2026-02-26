@@ -149,6 +149,21 @@ package {
             for each (sharedHelperFromMap in helpersByCategory.itemFor("helpers")) {
                 var sharedMapHelperValue:int = sharedHelperFromMap.value;
             }
+
+            // Case 17: Cyclical numeric flow over * vars should still infer Int when possible.
+            // Note: hashB is expected to potentially stay ASAny because it is read before
+            // a stable hint exists (hashCarry = hashB). The filter keeps this conservative
+            // behavior to avoid incorrect inference.
+            var words:Array = [1, 2, 3, 4];
+            var hashA:* = words[0];
+            var hashB:* = words[1];
+            var hashC:* = words[2];
+            var hashD:* = words[3];
+            var hashCarry:*;
+            hashCarry = hashB;
+            var hashMix:int = (hashA & hashB) ^ (hashC & hashD) ^ (hashA & hashD);
+            hashB = hashA;
+            hashA += hashCarry;
         }
     }
 }

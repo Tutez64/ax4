@@ -99,13 +99,33 @@ class InferLocalVarTypes extends AbstractFilter {
 				e.type = inferred;
 			}
 		}
+
+		function hintFromExprWithLocals(e:TExpr):Null<TType> {
+			var hint = hintFromExpr(e, mapValueHints, mapIteratorHints);
+			if (hint != null && !typeEq(hint, TTAny)) {
+				return hint;
+			}
+			return switch e.kind {
+				case TELocal(_, v):
+					inferredTypeForLocal(v);
+				case TEParens(_, inner, _):
+					hintFromExprWithLocals(inner);
+				case TECast(c):
+					hintFromExprWithLocals(c.expr);
+				case TEHaxeRetype(inner):
+					hintFromExprWithLocals(inner);
+				case _:
+					hint;
+			}
+		}
+
 		function addCandidate(decl:TVarDecl) {
 			if (decl.v.type != TTAny) {
 				return;
 			}
 			var hint:TType = null;
 			if (decl.init != null) {
-				hint = hintFromExpr(decl.init.expr, mapValueHints, mapIteratorHints);
+				hint = hintFromExprWithLocals(decl.init.expr);
 				if (hint != null && typeEq(hint, TTAny)) {
 					hint = null;
 				}
@@ -140,7 +160,7 @@ class InferLocalVarTypes extends AbstractFilter {
 					noteHint(info, TTNumber);
 				} else {
 					if (op.match(AOpAdd(_))) {
-						var rhsHint = hintFromExpr(rhs, mapValueHints, mapIteratorHints);
+						var rhsHint = hintFromExprWithLocals(rhs);
 						if (typeEq(rhsHint, TTString)) {
 							noteHint(info, TTString);
 						} else if (isNumericType(rhsHint)) {
@@ -166,11 +186,12 @@ class InferLocalVarTypes extends AbstractFilter {
 					info.incompatible = true;
 					return;
 				}
-				var hint = hintFromExpr(rhs, mapValueHints, mapIteratorHints);
-				if (hint == null || !isNumericType(hint)) {
-					// Allow if RHS is unknown? No, restrict.
-					// But we should allow Int assigned to Number.
-					// isNumericType checks Int/Number.
+				var hint = hintFromExprWithLocals(rhs);
+				if (hint == null) {
+					// Keep current numeric hint when RHS is temporarily unresolved.
+					return;
+				}
+				if (!isNumericType(hint)) {
 					info.incompatible = true;
 				} else {
 					noteHint(info, hint);
@@ -241,7 +262,7 @@ class InferLocalVarTypes extends AbstractFilter {
 
 			switch op {
 				case OpAssign(_):
-					var hint = hintFromExpr(rhs, mapValueHints, mapIteratorHints);
+					var hint = hintFromExprWithLocals(rhs);
 					if (hint != null && typeEq(hint, TTAny)) {
 						hint = null;
 					}
@@ -512,7 +533,7 @@ class InferLocalVarTypes extends AbstractFilter {
 						var info = infos[loopVar];
 						if (info != null) {
 							// Try to infer from the iterable expression
-							var objHint = hintFromExpr(f.iter.eobj, mapValueHints, mapIteratorHints);
+							var objHint = hintFromExprWithLocals(f.iter.eobj);
 							var elemType = elementTypeFromIterableHint(objHint);
 							if (elemType != null) {
 								noteHint(info, elemType);
@@ -536,7 +557,7 @@ class InferLocalVarTypes extends AbstractFilter {
 							if (isAs3CommonsMap(obj.type)) {
 								var mapKey = mapKeyFromFieldObject(obj);
 								if (mapKey != null && args.args.length >= 2) {
-									var valueHint = hintFromExpr(args.args[1].expr, mapValueHints, mapIteratorHints);
+									var valueHint = hintFromExprWithLocals(args.args[1].expr);
 									noteMapValue(mapValueHints, mapKey, valueHint);
 								}
 							}
