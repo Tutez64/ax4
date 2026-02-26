@@ -79,6 +79,26 @@ class InferLocalVarTypes extends AbstractFilter {
 		var mapIteratorValueHints = new Map<String, TType>();
 		var mapIteratorVarHints = new Map<TVar, String>();
 
+		function inferredTypeForLocal(v:TVar):Null<TType> {
+			var info = infos[v];
+			if (info != null && !info.incompatible && info.hint != null && !typeEq(info.hint, TTAny)) {
+				return info.hint;
+			}
+			if (!typeEq(v.type, TTAny)) {
+				return v.type;
+			}
+			return null;
+		}
+
+		function syncLocalExprType(e:TExpr, v:TVar) {
+			if (!typeEq(e.type, TTAny)) {
+				return;
+			}
+			var inferred = inferredTypeForLocal(v);
+			if (inferred != null) {
+				e.type = inferred;
+			}
+		}
 		function addCandidate(decl:TVarDecl) {
 			if (decl.v.type != TTAny) {
 				return;
@@ -442,12 +462,24 @@ class InferLocalVarTypes extends AbstractFilter {
 					loop(a.eindex);
 
 				case TELocal(_, v):
+					syncLocalExprType(e, v);
 					var info = infos[v];
 					if (info != null) {
 						if (info.hint == null) {
 							info.incompatible = true;
 						}
 					}
+
+				case TEHaxeFor(f):
+					loop(f.iter);
+					if (typeEq(f.vit.type, TTAny)) {
+						var iterHint = hintFromExprWithLocals(f.iter);
+						var elemType = elementTypeFromIterableHint(iterHint);
+						if (elemType != null && !typeEq(elemType, TTAny)) {
+							f.vit.type = elemType;
+						}
+					}
+					loop(f.body);
 
 				case TEForEach(f):
 					// First process the loop variable declaration (to add candidates)

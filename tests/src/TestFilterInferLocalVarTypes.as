@@ -7,6 +7,7 @@
 package {
     import flash.filters.ColorMatrixFilter;
     import flash.display.Sprite;
+    import org.as3commons.collections.Map;
 
     public class TestFilterInferLocalVarTypes {
         public function TestFilterInferLocalVarTypes() {
@@ -133,6 +134,20 @@ package {
             var sharedHelper:*;
             for each (sharedHelper in helpers) {
                 var sharedValue:int = sharedHelper.value;
+            }
+
+            // Case 15: Untyped map item iteration should infer typed iteratee values
+            // m.itemFor(...) returns *, but values added into this key are Vector.<LocalVarTypeHelper>.
+            var helpersByCategory:Map = new Map();
+            helpersByCategory.add("helpers", helpers);
+            for each (var helperFromMap in helpersByCategory.itemFor("helpers")) {
+                var mapHelperValue:int = helperFromMap.value;
+            }
+
+            // Case 16: Same map iteration pattern, but with a shared loop variable.
+            var sharedHelperFromMap:*;
+            for each (sharedHelperFromMap in helpersByCategory.itemFor("helpers")) {
+                var sharedMapHelperValue:int = sharedHelperFromMap.value;
             }
         }
     }

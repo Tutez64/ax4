@@ -58,6 +58,8 @@ class Filters {
 		filters = filters.concat([
 			new ApiSignatureOverrides(context),
 			new RewriteForIn(context),
+			// Re-run inference after loop rewrites to type synthesized temp iteratee vars.
+			new InferLocalVarTypes(context),
 			new RewriteHasOwnProperty(context),
 			new RewriteUndefinedLookupComparisons(context),
 			new NumberToInt(context),
