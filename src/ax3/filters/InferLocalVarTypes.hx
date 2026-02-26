@@ -119,6 +119,23 @@ class InferLocalVarTypes extends AbstractFilter {
 			}
 		}
 
+		function isGeneratedIterVar(v:TVar):Bool {
+			return v.name.length > 11 && v.name.substr(0, 11) == "__ax3_iter_";
+		}
+
+		function iterLocalFromHaxeForIter(e:TExpr):Null<TVar> {
+			return switch e.kind {
+				case TELocal(_, v):
+					v;
+				case TEParens(_, inner, _):
+					iterLocalFromHaxeForIter(inner);
+				case TEHaxeRetype(inner):
+					iterLocalFromHaxeForIter(inner);
+				case _:
+					null;
+			}
+		}
+
 		function addCandidate(decl:TVarDecl) {
 			if (decl.v.type != TTAny) {
 				return;
@@ -492,6 +509,16 @@ class InferLocalVarTypes extends AbstractFilter {
 					}
 
 				case TEHaxeFor(f):
+					var iterLocal = iterLocalFromHaxeForIter(f.iter);
+					if (iterLocal != null && isGeneratedIterVar(iterLocal)) {
+						var iterInfo = infos[iterLocal];
+						if (iterInfo != null && iterInfo.hint == null) {
+							// Synthetic iteratee temps created by RewriteForIn often wrap dynamic array values.
+							// Prefer Array<ASAny> to avoid leaving them as ASAny.
+							iterInfo.incompatible = false;
+							noteHint(iterInfo, TypedTreeTools.tUntypedArray);
+						}
+					}
 					loop(f.iter);
 					if (typeEq(f.vit.type, TTAny)) {
 						var iterHint = hintFromExprWithLocals(f.iter);
