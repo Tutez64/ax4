@@ -63,5 +63,19 @@ package {
                 trace("Has items: " + param1.length);
             }
         }
+
+        private function testBitwiseOnAny():void {
+            // Keep variables as * to ensure CoerceToNumber inserts toInt for bitwise operands.
+            var a:* = 1;
+            var b:* = 2;
+            var seed:uint = 3;
+            a = "x";
+            a = 4;
+            b = "y";
+            b = 5;
+
+            var mixed:int = (seed & a) ^ (seed & b) ^ (a & b);
+            trace(mixed);
+        }
     }
 }

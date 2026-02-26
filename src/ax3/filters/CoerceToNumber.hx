@@ -214,6 +214,11 @@ class CoerceToNumber extends AbstractFilter {
 	}
 
 	static function coerceBitwiseOperand(e:TExpr):TExpr {
+		switch e.kind {
+			case TELocal(_, v) if (isAnyLike(v.type)):
+				return mkToIntCall(e);
+			case _:
+		}
 		return switch e.type {
 			case TTInt | TTUint:
 				e;
