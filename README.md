@@ -55,6 +55,7 @@ java -jar converter.jar config.json
 - [Quickstart](docs/Quickstart.md)
 - [Config reference](docs/Config.md)
 - [Config examples](docs/Examples.md)
+- [Differences from ax3](docs/ForkDifferences.md)
 - [Filters overview](docs/Filters.md)
 - [Troubleshooting](docs/Troubleshooting.md)
 - [Contributing](docs/Contributing.md)

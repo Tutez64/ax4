@@ -4,6 +4,7 @@
 - [Quickstart](Quickstart)
 - [Config reference](Config)
 - [Config examples](Examples)
+- [Differences from ax3](ForkDifferences)
 - [Filters overview](Filters)
 - [Troubleshooting](Troubleshooting)
 - [Contributing](Contributing)

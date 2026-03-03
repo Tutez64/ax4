@@ -12,6 +12,7 @@ This documentation is for users migrating ActionScript 3 projects to Haxe with `
 ## Technical references
 
 - [Filters overview](Filters.md)
+- [Differences from ax3](ForkDifferences.md)
 - [Contributing](Contributing.md)
 - [GitHub wiki setup and sync](Wiki.md)
 
