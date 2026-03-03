@@ -1,0 +1,65 @@
+name: Sync Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "docs/**"
+      - ".github/workflows/wiki-sync.yml"
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone or initialize wiki repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          WIKI_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${REPOSITORY}.wiki.git"
+          if git clone "${WIKI_URL}" wiki; then
+            echo "Wiki repository cloned."
+          else
+            echo "Wiki repository does not exist yet, creating local wiki repository."
+            mkdir wiki
+            cd wiki
+            git init
+            git checkout -B master
+            git remote add origin "${WIKI_URL}"
+          fi
+
+      - name: Sync markdown pages from docs
+        run: |
+          set -euo pipefail
+          find wiki -maxdepth 1 -type f -name "*.md" -delete
+          find docs -maxdepth 1 -type f -name "*.md" -exec cp {} wiki/ \;
+          if [ -f wiki/Home.md ]; then
+            echo "Home.md found."
+          else
+            cp docs/Home.md wiki/Home.md
+          fi
+
+      - name: Commit and push changes
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No wiki changes to commit."
+            exit 0
+          fi
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          git commit -m "Sync wiki from docs (${SHORT_SHA})"
+          git push origin HEAD:master || git push origin HEAD:main
