@@ -47,6 +47,7 @@ typedef Config = {
 	var ?dataout:String;
 	var ?dataext:Array<String>;
 	var ?datafiles:Array<String>;
+	var ?copyNonAs:Bool;
 	var ?unpackout:String;
 	var ?unpackswc:Array<String>;
 	var ?hxoutClean:Bool;

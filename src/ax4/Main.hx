@@ -14,6 +14,8 @@ using StringTools;
 class Main {
 	static var ctx:Context;
 	static var skipFiles = new Map<String,Bool>();
+	static var sourceRootsAbsolute:Array<String> = [];
+	static var dataFilesLookup = new Map<String,Bool>();
 
 	static function main() {
 		var total = stamp();
@@ -27,12 +29,16 @@ class Main {
 		checkSet(config.swc, 'swc');
 		if (config.settings == null) config.settings = {};
 		if (config.settings.flashProperties == null) config.settings.flashProperties = FlashPropertiesSetting.none;
+		if (config.copyNonAs == null) config.copyNonAs = true;
 
 		ctx = new Context(config);
+		var srcs = if (Std.isOfType(config.src, String)) [config.src] else config.src;
+		initSourceRoots(srcs);
+		initDataFilesLookup();
+
 		clean();
 		copy();
 		unpackswc();
-		copydatafiles();
 
 		var tree = new TypedTree();
 
@@ -40,13 +46,11 @@ class Main {
 		SWCLoader.load(tree, config.haxeTypes, config.swc);
 		Timers.swcs = stamp() - t;
 
-		if (ctx.config.dataout != null) FileSystem.createDirectory(ctx.config.dataout);
-
 		var files = [];
-		var srcs = if (Std.isOfType(config.src, String)) [config.src] else config.src;
 		for (src in srcs) {
 			walk(src, src, files);
 		}
+		copydatafiles();
 
 		t = stamp();
 		Typer.process(ctx, tree, files);
@@ -131,6 +135,83 @@ class Main {
 		return skipFiles != null && skipFiles.contains(path);
 	}
 
+	static function initSourceRoots(srcs:Array<String>):Void {
+		sourceRootsAbsolute = [];
+		for (src in srcs) sourceRootsAbsolute.push(normalizePath(FileSystem.absolutePath(src)));
+	}
+
+	static function initDataFilesLookup():Void {
+		dataFilesLookup = new Map<String,Bool>();
+		if (ctx.config.datafiles == null) return;
+
+		for (path in ctx.config.datafiles) {
+			var normalized = normalizePath(path);
+			dataFilesLookup.set(normalized, true);
+			dataFilesLookup.set(normalizePath(FileSystem.absolutePath(path)), true);
+		}
+	}
+
+	static function normalizePath(path:String):String {
+		return path.replace("\\", "/");
+	}
+
+	static function makeRelativePath(root:String, path:String):String {
+		var rootNorm = normalizePath(root);
+		var pathNorm = normalizePath(path);
+		if (pathNorm == rootNorm) return "";
+		if (pathNorm.startsWith(rootNorm + "/")) return pathNorm.substr(rootNorm.length + 1);
+
+		var rootAbs = normalizePath(FileSystem.absolutePath(root));
+		var pathAbs = normalizePath(FileSystem.absolutePath(path));
+		if (pathAbs == rootAbs) return "";
+		if (pathAbs.startsWith(rootAbs + "/")) return pathAbs.substr(rootAbs.length + 1);
+
+		return pathNorm;
+	}
+
+	static function findSourceRelativePath(path:String):Null<String> {
+		var pathAbs = normalizePath(FileSystem.absolutePath(path));
+		for (root in sourceRootsAbsolute) {
+			if (pathAbs == root) return "";
+			if (pathAbs.startsWith(root + "/")) return pathAbs.substr(root.length + 1);
+		}
+		return null;
+	}
+
+	static function getDataOutputDir():String {
+		return ctx.config.dataout != null ? ctx.config.dataout : ctx.config.hxout;
+	}
+
+	static function hasDataSelectionFilters():Bool {
+		return ctx.config.dataext != null || ctx.config.datafiles != null;
+	}
+
+	static function isDataFileSelected(path:String):Bool {
+		var normalized = normalizePath(path);
+		if (dataFilesLookup.exists(normalized)) return true;
+		return dataFilesLookup.exists(normalizePath(FileSystem.absolutePath(path)));
+	}
+
+	static function shouldCopyNonAsFromSource(path:String, ext:String):Bool {
+		if (!ctx.config.copyNonAs) return false;
+		if (!hasDataSelectionFilters()) return true;
+		if (ctx.config.dataext != null && ctx.config.dataext.indexOf(ext) != -1) return true;
+		return isDataFileSelected(path);
+	}
+
+	static function copyFileToDataOutput(sourcePath:String, relPath:String):Void {
+		var destinationPath = Path.join([getDataOutputDir(), normalizePath(relPath)]);
+		var destinationDir = Path.directory(destinationPath);
+		if (destinationDir != "" && !FileSystem.exists(destinationDir)) FileSystem.createDirectory(destinationDir);
+		File.copy(sourcePath, destinationPath);
+	}
+
+	static function fileBaseName(path:String):String {
+		var normalized = normalizePath(path);
+		var slash = normalized.lastIndexOf("/");
+		return slash == -1 ? normalized : normalized.substr(slash + 1);
+	}
+
 	static function walk(root:String, dir:String, files:Array<ParseTree.File>) {
 		for (name in FileSystem.readDirectory(dir)) {
 			var absPath = dir + "/" + name;
@@ -145,25 +226,11 @@ class Main {
 					if (file != null) {
 						files.push(file);
 					}
-				} else {
-					var relPath = absPath.substr(root.length);
-					if (relPath.startsWith("/")) relPath = relPath.substr(1);
-					var dest = ctx.config.hxout + "/" + relPath;
-					var destDir = Path.directory(dest);
-					if (!FileSystem.exists(destDir)) FileSystem.createDirectory(destDir);
-					File.copy(absPath, dest);
-
-					if (
-						ctx.config.dataout != null && ctx.config.dataext != null &&
-						ctx.config.dataext.indexOf(ext) != -1
-					) {
-						print('Walk copy file ' + absPath);
-						final t = stamp();
-						final dst = ctx.config.dataout + name;
-						if (FileSystem.exists(dst)) print('File exists, overwrite');
-						File.copy(absPath, dst);
-						Timers.copy += stamp() - t;
-					}
+				} else if (shouldCopyNonAsFromSource(absPath, ext)) {
+					var relPath = makeRelativePath(root, absPath);
+					final t = stamp();
+					copyFileToDataOutput(absPath, relPath);
+					Timers.copy += stamp() - t;
 				}
 			}
 		}
@@ -221,15 +288,15 @@ class Main {
 	}
 
 	static function copydatafiles(): Void {
-		if (ctx.config.datafiles != null && ctx.config.dataout != null && ctx.config.datafiles.length > 0) {
-			final t = stamp();
-			for (path in ctx.config.datafiles) {
-				final fileName = path.substr(path.lastIndexOf('/') + 1);
-				print('Copy file $fileName');
-				File.copy(path, ctx.config.dataout + fileName);
-			}
-			Timers.copy += stamp() - t;
+		if (ctx.config.datafiles == null || ctx.config.datafiles.length == 0) return;
+		final t = stamp();
+		for (path in ctx.config.datafiles) {
+			var relPath = findSourceRelativePath(path);
+			if (relPath == null || relPath == "") relPath = fileBaseName(path);
+			print('Copy file ' + fileBaseName(path));
+			copyFileToDataOutput(path, relPath);
 		}
+		Timers.copy += stamp() - t;
 	}
 
 	static function clean(): Void {
