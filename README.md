@@ -1,4 +1,4 @@
-# ax3
+# ax4
 
 This is an AS3 to Haxe converter that tries to be very smart and precise about rewriting code.
 To achieve that, it actually resembles the typical compiler a lot, so here's how it works:

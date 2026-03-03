@@ -4,9 +4,9 @@
 
 -D analyzer-optimize
 
-# --macro nullSafety("ax3")
+# --macro nullSafety("ax4")
 
--main ax3.Main
+-main ax4.Main
 
 # --- MODERNIZATION FIX ---
 # Instead of generating to a folder and copying (which fails on Windows),

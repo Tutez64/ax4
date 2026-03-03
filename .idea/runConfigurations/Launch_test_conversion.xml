@@ -4,7 +4,7 @@
     <option name="PROGRAM_PARAMETERS" value="tests\config.json" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="ALTERNATIVE_JRE_PATH" value="25" />
-    <module name="ax3" />
+    <module name="ax4" />
     <method v="2">
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Build" run_configuration_type="ShConfigurationType" />
     </method>

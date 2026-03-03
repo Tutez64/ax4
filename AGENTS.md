@@ -1,20 +1,20 @@
-# ax3 Codebase Guide for AI Agents
+# ax4 Codebase Guide for AI Agents
 
 ## Overview
-ax3 is an ActionScript 3 (AS3) to Haxe converter. It functions similarly to a compiler: parsing AS3 code, resolving types (including from SWC libraries), applying transformation filters, and generating Haxe code.
+ax4 is an ActionScript 3 (AS3) to Haxe converter. It functions similarly to a compiler: parsing AS3 code, resolving types (including from SWC libraries), applying transformation filters, and generating Haxe code.
 
 ## Architecture
-The conversion pipeline is sequential and defined in `src/ax3/Main.hx`:
-1. **Parsing**: AS3 source files are parsed into a `ParseTree` via the typing pass (`Typer.process`), which uses `src/ax3/Parser.hx` internally.
-2. **SWC Loading**: External types are loaded from SWC files into the `TypedTree` (`src/ax3/SWCLoader.hx`).
-3. **Typing**: The `ParseTree` is processed into a `TypedTree`, resolving imports and types (`src/ax3/Typer.hx`, `src/ax3/ExprTyper.hx`).
-4. **Filtering**: A series of filters modify the `TypedTree` to adapt AS3 patterns to Haxe (`src/ax3/Filters.hx`).
-5. **Generation**: Haxe code is generated from the modified `TypedTree` (`src/ax3/GenHaxe.hx`).
+The conversion pipeline is sequential and defined in `src/ax4/Main.hx`:
+1. **Parsing**: AS3 source files are parsed into a `ParseTree` via the typing pass (`Typer.process`), which uses `src/ax4/Parser.hx` internally.
+2. **SWC Loading**: External types are loaded from SWC files into the `TypedTree` (`src/ax4/SWCLoader.hx`).
+3. **Typing**: The `ParseTree` is processed into a `TypedTree`, resolving imports and types (`src/ax4/Typer.hx`, `src/ax4/ExprTyper.hx`).
+4. **Filtering**: A series of filters modify the `TypedTree` to adapt AS3 patterns to Haxe (`src/ax4/Filters.hx`).
+5. **Generation**: Haxe code is generated from the modified `TypedTree` (`src/ax4/GenHaxe.hx`).
 
 ### Key Data Structures
-*   **ParseTree** (`src/ax3/ParseTree.hx`): Represents the raw AST of AS3 code.
-*   **TypedTree** (`src/ax3/TypedTree.hx`): A semantic graph of the code with resolved types and symbols. This is the primary structure manipulated by filters.
-*   **Token** (`src/ax3/Token.hx`): Represents lexical tokens, preserving whitespace/comments (trivia) for high-fidelity code generation.
+*   **ParseTree** (`src/ax4/ParseTree.hx`): Represents the raw AST of AS3 code.
+*   **TypedTree** (`src/ax4/TypedTree.hx`): A semantic graph of the code with resolved types and symbols. This is the primary structure manipulated by filters.
+*   **Token** (`src/ax4/Token.hx`): Represents lexical tokens, preserving whitespace/comments (trivia) for high-fidelity code generation.
 
 ## Critical Workflows
 
@@ -35,14 +35,14 @@ The conversion pipeline is sequential and defined in `src/ax3/Main.hx`:
     *   Use this folder to create isolated reproduction cases for converter bugs or features.
     *   Structure: `tests/src/` (AS3 input), `tests/out/` (Haxe output), `tests/config.json`.
     *   **Requirement**: Each test file in `tests/src/` **must** include comments explaining the test case and expected behavior (see `tests/src/TestFilterRedundantSuperCtorCall.as` for example).
-    *   **Naming**: `tests/src` files for filters must be named `TestFilter{FilterName}.as` (e.g. `src/ax3/filters/RewriteAs.hx` -> `tests/src/TestFilterRewriteAs.as`). Other tests should follow `Test{Feature}.as`.
+    *   **Naming**: `tests/src` files for filters must be named `TestFilter{FilterName}.as` (e.g. `src/ax4/filters/RewriteAs.hx` -> `tests/src/TestFilterRewriteAs.as`). Other tests should follow `Test{Feature}.as`.
     *   **Error coverage**: Tests should intentionally trigger every non-blocking `reportError` produced by filters; only `throwError` cases are allowed to remain untested until explicitly targeted.
     *   **`reportError` that throws**: If triggering a `reportError` effectively causes a `throw` (as observed in practice), treat it as a `throwError` case — do not trigger it in tests unless explicitly requested.
     *   **Compat changes**: You may update `compat/` when needed, but you must update `compat-test/` accordingly and verify with `npx haxe test-compat.hxml`.
     *   Run: `java -jar converter.jar tests/config.json`.
 
 ### Debugging
-*   **Debugging**: `src/ax3/ParseTreeDump.hx` can dump ASTs. `TypedTree.dump()` can visualize the semantic tree.
+*   **Debugging**: `src/ax4/ParseTreeDump.hx` can dump ASTs. `TypedTree.dump()` can visualize the semantic tree.
 
 ## Project Patterns & Conventions
 
@@ -61,7 +61,7 @@ The conversion pipeline is sequential and defined in `src/ax3/Main.hx`:
 *   **Type Resolution**: `Typer` and `ExprTyper` handle type inference. `Context` holds global state.
 *   **Immutable-ish AST**: `TypedTreeTools.mk` and `WithMacro.with` are used to create modified copies of AST nodes, though the tree structure itself is mutable during filtering.
 
-### Filters (`src/ax3/filters/`)
+### Filters (`src/ax4/filters/`)
 *   **Structure**: Filters implement a `run(tree:TypedTree)` method.
 *   **Pattern**: Most filters iterate over the `TypedTree`, identify specific patterns (e.g., `RewriteForIn`), and mutate the tree or replace nodes.
 *   **Example**: `RewriteVectorDecl.hx` transforms `new Vector.<T>` to Haxe syntax.
@@ -76,8 +76,8 @@ The conversion pipeline is sequential and defined in `src/ax3/Main.hx`:
 *   **Haxe Generation**: `GenHaxe` handles the final printing, including specific Haxe constructs (e.g., `cast`, `Std.int`).
 
 ## Essential Files
-*   `src/ax3/Main.hx`: Entry point and pipeline definition.
-*   `src/ax3/TypedTree.hx`: Core semantic model definition.
-*   `src/ax3/ExprTyper.hx`: Logic for typing expressions.
-*   `src/ax3/GenHaxe.hx`: Haxe code printer.
-*   `src/ax3/Filters.hx`: Registry of all transformation filters.
+*   `src/ax4/Main.hx`: Entry point and pipeline definition.
+*   `src/ax4/TypedTree.hx`: Core semantic model definition.
+*   `src/ax4/ExprTyper.hx`: Logic for typing expressions.
+*   `src/ax4/GenHaxe.hx`: Haxe code printer.
+*   `src/ax4/Filters.hx`: Registry of all transformation filters.

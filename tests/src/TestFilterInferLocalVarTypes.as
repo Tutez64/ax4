@@ -166,10 +166,10 @@ package {
             hashA += hashCarry;
 
             // Case 18: Simulate RewriteForIn generated iteratee temp var naming.
-            // A synthetic "__ax3_iter_*" iteratee local should prefer Array<Any> over ASAny.
+            // A synthetic "__ax4_iter_*" iteratee local should prefer Array<Any> over ASAny.
             var data:* = {"attacks":[{"attackName":"A"}]};
-            var __ax3_iter_999:* = data.attacks;
-            for each (var attackEntry in __ax3_iter_999) {
+            var __ax4_iter_999:* = data.attacks;
+            for each (var attackEntry in __ax4_iter_999) {
                 var attackName:String = attackEntry.attackName;
             }
         }

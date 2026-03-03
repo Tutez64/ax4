@@ -5,7 +5,7 @@
 			"type": "java",
 			"name": "Debug (Launch)",
 			"request": "launch",
-			"mainClass": "ax3.Main",
+			"mainClass": "ax4.Main",
 			"classPaths": ["${workspaceFolder}/java_out/Main-Debug.jar"],
 			"args": "config-local.json",
 		},

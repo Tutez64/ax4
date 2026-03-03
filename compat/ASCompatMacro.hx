@@ -11,7 +11,7 @@ class ASCompatMacro {
 				Context.error("applyBoundMethod expects a string literal method name", methodNameExpr.pos);
 		}
 
-		var argsRef = macro __ax3ApplyArgs;
+		var argsRef = macro __ax4ApplyArgs;
 		var cases:Array<Case> = [];
 		var maxDirectArgs = 24;
 		var minArgs = 0;
@@ -85,10 +85,10 @@ class ASCompatMacro {
 			} : macro Reflect.callMethod($obj, Reflect.field($obj, $v{methodName}), $argsRef)
 		});
 
-		var setupArgs = macro var __ax3ApplyArgs = $argsExpr;
-		var ensureArgs = macro if (__ax3ApplyArgs == null) __ax3ApplyArgs = [];
+		var setupArgs = macro var __ax4ApplyArgs = $argsExpr;
+		var ensureArgs = macro if (__ax4ApplyArgs == null) __ax4ApplyArgs = [];
 		var switchExpr:Expr = {
-			expr: ESwitch(macro __ax3ApplyArgs.length, cases, null),
+			expr: ESwitch(macro __ax4ApplyArgs.length, cases, null),
 			pos: methodNameExpr.pos
 		};
 		return {
