@@ -23,6 +23,8 @@ class ASCompat {
 	// Represents the smallest positive Number value in AS3 (Number.MIN_VALUE)
 	public static inline final MIN_FLOAT = 4.9406564584124654e-324;
 
+	static final reflectedFieldCacheByClass:StringMap<StringMap<Bool>> = new StringMap();
+
 	#if !flash
 	#if cpp
 	static final dynamicPropertyStore:haxe.ds.WeakMap<{}, StringMap<Dynamic>> = new haxe.ds.WeakMap();
@@ -290,7 +292,7 @@ class ASCompat {
 		// 1. Use Reflect.getProperty to ensure Haxe getters are called correctly.
 		// Standard untyped access obj[fieldName] might return the raw backing field (0) instead of the getter value.
 		var v:Dynamic = (obj == null) ? null : Reflect.getProperty(obj, fieldName);
-		
+
 		// 2. To match AS3, missing fields (undefined) must return NaN, but existing null fields must return 0.
 		// Since both come back as null in Haxe, we use the __in__ operator to check existence.
 		// return (missing) ? NaN : Number(v)
@@ -438,8 +440,19 @@ class ASCompat {
 		try {
 			var clazz = Type.getClass(obj);
 			if (clazz != null) {
-				var fields = Type.getInstanceFields(clazz);
-				return fields.indexOf(name) > -1 || fields.indexOf("get_" + name) > -1 || fields.indexOf("set_" + name) > -1;
+				var className = Type.getClassName(clazz);
+				if (className != null) {
+					var cachedFields = reflectedFieldCacheByClass.get(className);
+					if (cachedFields == null) {
+						cachedFields = new StringMap<Bool>();
+						var fields = Type.getInstanceFields(clazz);
+						for (field in fields) {
+							cachedFields.set(field, true);
+						}
+						reflectedFieldCacheByClass.set(className, cachedFields);
+					}
+					return cachedFields.exists(name) || cachedFields.exists("get_" + name) || cachedFields.exists("set_" + name);
+				}
 			}
 		} catch (_:Dynamic) {
 		}
