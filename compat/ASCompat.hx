@@ -305,9 +305,24 @@ class ASCompat {
 				return toNumber(Reflect.callMethod(obj, getLen, []));
 			}
 		}
-		// For non-Flash targets, use Reflect to check field existence and get value.
-		if (obj == null || !Reflect.hasField(obj, fieldName)) return Math.NaN;
-		return toNumber(Reflect.field(obj, fieldName));
+		if (obj == null) {
+			return Math.NaN;
+		}
+		var value:Dynamic = null;
+		try {
+			value = Reflect.getProperty(obj, fieldName);
+			// Native OpenFL objects often expose properties via getters/setters without Reflect.hasField.
+			// Preserve explicit null getter results, and only fall through when the property is truly missing.
+			if (value != null || hasReflectedProperty(obj, fieldName)) {
+				return toNumber(value);
+			}
+		} catch (_:Dynamic) {
+		}
+		var dynamicProperties = getDynamicProperties(obj, false);
+		if (dynamicProperties != null && dynamicProperties.exists(fieldName)) {
+			return toNumber(dynamicProperties.get(fieldName));
+		}
+		return Math.NaN;
 		#end
 	}
 
