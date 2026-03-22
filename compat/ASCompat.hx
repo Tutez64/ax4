@@ -41,6 +41,21 @@ class ASCompat {
 		return true;
 	}
 
+	public static function iterateDynamicValues(v:Dynamic):Iterator<ASAny> {
+		if (Std.isOfType(v, Array)) {
+			return (cast v : Array<ASAny>).iterator();
+		}
+		if (Std.isOfType(v, ASArrayBase)) {
+			return (cast v : ASArrayBase).iterator();
+		}
+
+		#if flash
+		return new NativeValueIterator<ASAny>(v);
+		#else
+		return (cast v : haxe.DynamicAccess<ASAny>).iterator();
+		#end
+	}
+
 	static function reportNullIteratee(pos:haxe.PosInfos) {
 		haxe.Log.trace("FIXME: Null value passed as an iteratee for for-in/for-each expression!", pos);
 	}

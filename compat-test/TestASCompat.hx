@@ -147,6 +147,24 @@ class TestASCompat extends utest.Test {
 		equals(6, sum);
 	}
 
+	function testIterateDynamicValuesOnPlainObject() {
+		var values:ASObject = cast {a: 1, b: 2, c: 3};
+		var sum = 0;
+		for (value in ASCompat.iterateDynamicValues(values)) {
+			sum += ASCompat.toInt(value);
+		}
+		equals(6, sum);
+	}
+
+	function testIterateDynamicValuesOnArrayTypedAsObject() {
+		var values:ASObject = cast ([2, 4, 6] : Dynamic);
+		var items = [for (value in ASCompat.iterateDynamicValues(values)) ASCompat.toInt(value)];
+		equals(3, items.length);
+		equals(2, items[0]);
+		equals(4, items[1]);
+		equals(6, items[2]);
+	}
+
 	function testArrayPushUnshiftMultiple() {
 		var items = [1];
 		var len = ASCompat.ASArray.pushMultiple(items, 2, 3, 4);

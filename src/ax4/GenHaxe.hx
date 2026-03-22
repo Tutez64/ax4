@@ -1162,6 +1162,7 @@ class GenHaxe extends PrinterBase {
 			case (_.startsWith("ASCompat.") => true)
 			   | (_.startsWith("ASCompatMacro.") => true)
 			   | (_ == RewriteForIn.checkNullIterateeBuiltin => true)
+			   | (_ == RewriteForIn.iterateDynamicValuesBuiltin => true)
 			   : name;
 			case _:
 				throwError(token.pos, "unknown builtin: " + name);

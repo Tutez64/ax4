@@ -9,8 +9,10 @@ import haxe.ds.List;
 
 class RewriteForIn extends AbstractFilter {
 	static final tIteratorMethod = TTFun([], TTBuiltin);
+	static final tDynamicValueIterator = TTFun([TTObject(TTAny)], TTBuiltin);
 	static inline final tempLoopVarName = "_tmp_";
 	public static inline final checkNullIterateeBuiltin = "checkNullIteratee";
+	public static inline final iterateDynamicValuesBuiltin = "iterateDynamicValues";
 
 	final generateCheckNullIteratee:Bool;
 	var tempIterateeVarId:Int = 0;
@@ -282,7 +284,7 @@ class RewriteForIn extends AbstractFilter {
 				loopVarType = TTAny;
 
 			case TTObject(TTAny):
-				eobj = mkIteratorMethodCallExpr(eobj, "iterator");
+				eobj = mkDynamicValueIteratorExpr(eobj);
 				loopVarType = TTAny;
 
 			case TTAny:
@@ -352,6 +354,12 @@ class RewriteForIn extends AbstractFilter {
 		var eCheckBuiltin = mkBuiltin(checkNullIterateeBuiltin, TTBuiltin);
 		context.addToplevelImport("ASCompat.checkNullIteratee", Import);
 		return mkCall(eCheckBuiltin, [eobj], TTBoolean);
+	}
+
+	inline function mkDynamicValueIteratorExpr(eobj:TExpr):TExpr {
+		var eIterBuiltin = mkBuiltin(iterateDynamicValuesBuiltin, tDynamicValueIterator);
+		context.addToplevelImport("ASCompat.iterateDynamicValues", Import);
+		return mkCall(eIterBuiltin, [eobj], TTBuiltin);
 	}
 
 	/**
