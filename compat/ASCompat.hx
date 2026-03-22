@@ -284,7 +284,8 @@ class ASCompat {
 		#if flash
 		return untyped __global__["int"](d);
 		#else
-		return Std.int(toNumber(d));
+		var n = toNumber(d);
+		return if (Math.isNaN(n)) 0 else Std.int(n);
 		#end
 	}
 

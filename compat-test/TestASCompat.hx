@@ -370,6 +370,7 @@ class TestASCompat extends utest.Test {
 		isTrue(ASCompat.isUndefinedValue(undef));
 		#end
 		isFalse(ASCompat.toBool(undef));
+		equals(0, ASCompat.toInt(undef));
 		floatEquals(Math.NaN, ASCompat.toNumber(undef));
 		equals("undefined", ASCompat.toString(undef));
 		equals("undefined", ASCompat.typeof(undef));
