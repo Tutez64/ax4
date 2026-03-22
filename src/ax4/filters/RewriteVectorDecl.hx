@@ -4,43 +4,63 @@ class RewriteVectorDecl extends AbstractFilter {
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
 		return switch e.kind {
-			case TEVectorDecl(v = {elements: {elements: []}}):
-				// rewrite to just `new Vector<T>()`
-				var newKeyword = v.syntax.newKeyword;
-				if (newKeyword.trailTrivia.length == 0) {
-					newKeyword.trailTrivia.push(whitespace);
-				}
-				e.with(kind = TENew(newKeyword, TNType({
-					type: TTVector(v.type),
-					syntax: TVector({
-						name: mkIdent("Vector"),
-						dot: mkDot(),
-						t: v.syntax.typeParam
-					})
-				}), {
-					openParen: new Token(v.elements.syntax.openBracket.pos, TkParenOpen, "(", v.elements.syntax.openBracket.leadTrivia, v.elements.syntax.openBracket.trailTrivia),
-					args: [],
-					closeParen: new Token(v.elements.syntax.closeBracket.pos, TkParenClose, ")", v.elements.syntax.closeBracket.leadTrivia, v.elements.syntax.closeBracket.trailTrivia)
-				}));
-
 			case TEVectorDecl(v):
-				// rewrite to Vector.ofArray, adding a type-check if needed
-				var eConvertMethod = mkBuiltin("Vector.ofArray", TTFunction, v.syntax.newKeyword.leadTrivia);
-				var tArray = TTArray(v.type);
-				var eArrayDecl = mk(TEArrayDecl(v.elements), tArray, tArray);
-				var trailTrivia = removeTrailingTrivia(eArrayDecl);
+				if (isUntypedObjectVector(v.type, v.syntax.typeParam.type)) {
+					var tArray = TTArray(TTAny);
+					e.with(kind = TEArrayDecl(v.elements), type = tArray, expectedType = tArray);
+				} else if (v.elements.elements.length == 0) {
+					// rewrite to just `new Vector<T>()`
+					var newKeyword = v.syntax.newKeyword;
+					if (newKeyword.trailTrivia.length == 0) {
+						newKeyword.trailTrivia.push(whitespace);
+					}
+					e.with(kind = TENew(newKeyword, TNType({
+						type: TTVector(v.type),
+						syntax: TVector({
+							name: mkIdent("Vector"),
+							dot: mkDot(),
+							t: v.syntax.typeParam
+						})
+					}), {
+						openParen: new Token(v.elements.syntax.openBracket.pos, TkParenOpen, "(", v.elements.syntax.openBracket.leadTrivia, v.elements.syntax.openBracket.trailTrivia),
+						args: [],
+						closeParen: new Token(v.elements.syntax.closeBracket.pos, TkParenClose, ")", v.elements.syntax.closeBracket.leadTrivia, v.elements.syntax.closeBracket.trailTrivia)
+					}));
+				} else {
+					// rewrite to Vector.ofArray, adding a type-check if needed
+					var eConvertMethod = mkBuiltin("Vector.ofArray", TTFunction, v.syntax.newKeyword.leadTrivia);
+					var tArray = TTArray(v.type);
+					var eArrayDecl = mk(TEArrayDecl(v.elements), tArray, tArray);
+					var trailTrivia = removeTrailingTrivia(eArrayDecl);
 
-				if (arrayDeclNeedsTypeCheck(v.elements, v.type)) {
-					eArrayDecl = eArrayDecl.with(kind = TEHaxeRetype(eArrayDecl));
+					if (arrayDeclNeedsTypeCheck(v.elements, v.type)) {
+						eArrayDecl = eArrayDecl.with(kind = TEHaxeRetype(eArrayDecl));
+					}
+
+					e.with(kind = TECall(eConvertMethod, {
+						openParen: mkOpenParen(),
+						args: [{expr: eArrayDecl, comma: null}],
+						closeParen: new Token(v.elements.syntax.closeBracket.pos, TkParenClose, ")", [], trailTrivia)
+					}));
 				}
-
-				e.with(kind = TECall(eConvertMethod, {
-					openParen: mkOpenParen(),
-					args: [{expr: eArrayDecl, comma: null}],
-					closeParen: new Token(v.elements.syntax.closeBracket.pos, TkParenClose, ")", [], trailTrivia)
-				}));
 
 			case TECall({kind: TEVector(v, elemType)}, args):
+				if (isUntypedObjectVector(elemType, v.t.type)) {
+					switch args.args {
+						case [{expr: eArg = {kind: TEArrayDecl(_)}}]:
+							processLeadingToken(t -> t.leadTrivia = removeLeadingTrivia(e).concat(t.leadTrivia), eArg);
+							processTrailingToken(t -> t.trailTrivia = t.trailTrivia.concat(removeTrailingTrivia(e)), eArg);
+							eArg.with(type = TTArray(TTAny), expectedType = TTArray(TTAny));
+
+						case [{expr: eArg = {type: TTArray(_) | TTAny | TTVector(_)}}]:
+							var tArray = TTArray(TTAny);
+							var eRetyped = eArg.with(expectedType = tArray);
+							mk(TEHaxeRetype(eRetyped), tArray, tArray);
+
+						case _:
+							throwError(exprPos(e), "Unsupported Vector<Object> call");
+					}
+				} else {
 				switch args.args {
 					case [{expr: eOtherVector = {type: TTVector(actualElemType)}}]:
 						if (typeEq(elemType, actualElemType)) {
@@ -85,9 +105,21 @@ class RewriteVectorDecl extends AbstractFilter {
 					case _:
 						throwError(exprPos(e), "Unsupported Vector<...> call");
 				}
+				}
 
 			case _:
 				e;
+		}
+	}
+
+	static inline function isUntypedObjectVector(t:TType, syntax:SyntaxType):Bool {
+		return switch t {
+			case TTObject(TTAny): true;
+			case _:
+				switch syntax {
+					case TPath(path): ParseTree.dotPathToString(path) == "Object";
+					case _: false;
+				}
 		}
 	}
 

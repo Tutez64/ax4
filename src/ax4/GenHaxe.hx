@@ -869,6 +869,8 @@ class GenHaxe extends PrinterBase {
 			case TTXML: buf.add("compat.XML");
 			case TTXMLList: buf.add("compat.XMLList");
 			case TTRegExp: buf.add("compat.RegExp");
+			case TTVector(TTObject(TTAny)):
+				buf.add("Array<Dynamic>");
 			case TTVector(t):
 				importVector();
 				buf.add("Vector<"); printTType(t); buf.add(">");
@@ -946,13 +948,20 @@ class GenHaxe extends PrinterBase {
 					buf.add(">");
 				}
 
-			case TTVector(t):
-				importVector();
-				buf.add("Vector");
-				if (printTypeParams) {
-					buf.add("<");
-					printTType(t);
-					buf.add(">");
+			case TTVector(elemType):
+				if (isVectorOfObjectSyntax(t.syntax)) {
+					buf.add("Array");
+					if (printTypeParams) {
+						buf.add("<Dynamic>");
+					}
+				} else {
+					importVector();
+					buf.add("Vector");
+					if (printTypeParams) {
+						buf.add("<");
+						printTType(elemType);
+						buf.add(">");
+					}
 				}
 
 			case TTDictionary(k, v):
@@ -984,7 +993,9 @@ class GenHaxe extends PrinterBase {
 		} else {
 			buf.add(":");
 		}
-		if (hint.syntax != null && hint.type == TTAny && isDynamicSyntax(hint.syntax.type)) {
+		if (hint.syntax != null && isVectorOfObjectSyntax(hint.syntax.type)) {
+			buf.add("Array<Dynamic>");
+		} else if (hint.syntax != null && hint.type == TTAny && isDynamicSyntax(hint.syntax.type)) {
 			buf.add("Dynamic");
 		} else {
 			printTType(hint.type);
@@ -997,6 +1008,20 @@ class GenHaxe extends PrinterBase {
 	static function isDynamicSyntax(t:SyntaxType):Bool {
 		return switch t {
 			case TPath(path): ParseTree.dotPathToString(path) == "Dynamic";
+			case _: false;
+		}
+	}
+
+	static function isVectorOfObjectSyntax(t:SyntaxType):Bool {
+		return switch t {
+			case TVector(v): isObjectSyntax(v.t.type);
+			case _: false;
+		}
+	}
+
+	static function isObjectSyntax(t:SyntaxType):Bool {
+		return switch t {
+			case TPath(path): ParseTree.dotPathToString(path) == "Object";
 			case _: false;
 		}
 	}

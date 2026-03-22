@@ -238,6 +238,17 @@ class TestASCompat extends utest.Test {
 		equals(6, sum);
 	}
 
+	function testArrayDynamicPreservesObjectFields() {
+		var values:Array<Dynamic> = [];
+		var weapon:ASObject = new ASObject();
+		ASCompat.setProperty(weapon, "type", 16003);
+		ASCompat.setProperty(weapon, "rarity", 4);
+		values.push(weapon);
+
+		equals(16003, ASCompat.toInt(ASCompat.getProperty(values[0], "type")));
+		equals(4, ASCompat.toInt(ASCompat.getProperty(values[0], "rarity")));
+	}
+
 	function testFilterXmlList() {
 		var x = new compat.XML('<root><a id="1"/><b/><a id="2"/></root>');
 		var list = x.children();
