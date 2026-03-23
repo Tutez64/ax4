@@ -1193,6 +1193,54 @@ class ASCompat {
 	// These methods handle array operations on dynamically-typed objects
 	// -------------------------------------------------------------------------
 
+	static function readDynamicIndex(index:Dynamic):Null<Int> {
+		if (index == null) {
+			return null;
+		}
+		if (Std.isOfType(index, Int)) {
+			return index;
+		}
+		if (Std.isOfType(index, Float)) {
+			var f:Float = cast index;
+			if (Math.isNaN(f) || Math.floor(f) != f) {
+				return null;
+			}
+			return Std.int(f);
+		}
+		if (Std.isOfType(index, String)) {
+			var text:String = cast index;
+			if (~/^-?\d+$/.match(text)) {
+				return Std.parseInt(text);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Reads obj[index] on dynamically-typed values while preserving array semantics
+	 * when a prior dynamic lookup produced an Array/ASArrayBase/vector-like value.
+	 * Falls back to normal dynamic property access for non-numeric indices.
+	 */
+	public static function dynGetIndex(obj:Dynamic, index:Dynamic):Dynamic {
+		if (obj == null) {
+			return null;
+		}
+		var numericIndex = readDynamicIndex(index);
+		if (numericIndex != null) {
+			if (Std.isOfType(obj, ASArrayBase)) {
+				return (cast obj : ASArrayBase).get(numericIndex);
+			}
+			if (Std.isOfType(obj, Array)) {
+				return (cast obj : Array<Dynamic>)[numericIndex];
+			}
+			var getMethod = Reflect.field(obj, "get");
+			if (getMethod != null && Reflect.isFunction(getMethod)) {
+				return Reflect.callMethod(obj, getMethod, [numericIndex]);
+			}
+		}
+		return getProperty(obj, index);
+	}
+
 	/**
 	 * Calls push() on a dynamically-typed object that may be an Array or ASArrayBase.
 	 * Returns the new length of the array.

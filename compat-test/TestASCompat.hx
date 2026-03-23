@@ -165,6 +165,18 @@ class TestASCompat extends utest.Test {
 		equals(6, items[2]);
 	}
 
+	function testDynGetIndexOnArrayTypedAsObject() {
+		var values:ASObject = cast ([5, 10, 15] : Dynamic);
+		equals(10, ASCompat.toInt(ASCompat.dynGetIndex(values, 1)));
+		equals(15, ASCompat.toInt(ASCompat.dynGetIndex(values, "2")));
+	}
+
+	function testDynGetIndexFallsBackToObjectProperties() {
+		var values:ASObject = cast {a: 4, "0": 9};
+		equals(4, ASCompat.toInt(ASCompat.dynGetIndex(values, "a")));
+		equals(9, ASCompat.toInt(ASCompat.dynGetIndex(values, 0)));
+	}
+
 	function testArrayPushUnshiftMultiple() {
 		var items = [1];
 		var len = ASCompat.ASArray.pushMultiple(items, 2, 3, 4);
