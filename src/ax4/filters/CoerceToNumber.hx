@@ -227,22 +227,16 @@ class CoerceToNumber extends AbstractFilter {
 		}
 	}
 
-	static function coerceBoolForEquality(e:TExpr, otherType:TType):TExpr {
-		return switch otherType {
-			case TTInt | TTUint:
-				mkToIntCall(e);
-			case _:
-				mkToNumberCall(e);
-		}
+	static function coerceBoolForEquality(e:TExpr, _otherType:TType):TExpr {
+		// AS3 loose equality with numeric values uses Number coercion semantics.
+		// Using int() here breaks cases like "1.5" == 1 and *object* == 0 after NaN-to-int normalization.
+		return mkToNumberCall(e);
 	}
 
-	static function coerceAnyForEquality(e:TExpr, otherType:TType):TExpr {
-		return switch otherType {
-			case TTInt | TTUint:
-				mkToIntCall(e);
-			case _:
-				mkToNumberCall(e);
-		}
+	static function coerceAnyForEquality(e:TExpr, _otherType:TType):TExpr {
+		// AS3 loose equality with numeric values uses Number coercion semantics.
+		// Using int() here breaks cases like "1.5" == 1 and *object* == 0 after NaN-to-int normalization.
+		return mkToNumberCall(e);
 	}
 
 	function rewriteIncDecUnsafe(target:TExpr, isInc:Bool, original:TExpr):Null<TExpr> {

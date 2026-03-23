@@ -4,6 +4,7 @@
  * - ASAny to int/uint/Number in assignments and args.
  * - String/Boolean to int/uint/Number.
  * - Number to int/uint truncation.
+ * - Loose equality against numeric values must use Number semantics, not int().
  * - Field access on * typed objects (uses toNumberField for undefined handling).
  */
 package {
@@ -32,12 +33,22 @@ package {
             var cmp3:Boolean = b2 >= 0;
             var cmp4:Boolean = 0 <= b2;
 
+            var eqArrayZero:Boolean = passthroughAny([1, 2]) == 0;
+            var neqObjectZero:Boolean = passthroughAny({}) != 0;
+            var eqDecimalInt:Boolean = passthroughAny("1.5") == 1;
+
             takesInt(any);
             takesUInt(any);
             takesNumber(any);
 
             if (cmp1 || cmp2 || cmp3 || cmp4) {
                 trace(cmp1, cmp2, cmp3, cmp4);
+            }
+
+            // Array/Object numeric equality must stay false/true via Number(...) semantics.
+            // "1.5" == 1 must stay false and must not be truncated through int().
+            if (eqArrayZero || !neqObjectZero || eqDecimalInt) {
+                trace(eqArrayZero, neqObjectZero, eqDecimalInt);
             }
 
             // Test field access on * typed object - should use toNumberField
@@ -50,6 +61,10 @@ package {
         private function takesInt(v:int):void {}
         private function takesUInt(v:uint):void {}
         private function takesNumber(v:Number):void {}
+
+        private function passthroughAny(v:*):* {
+            return v;
+        }
 
         private function testFieldAccessOnAny(param1:*):void {
             // When param1.length is undefined (field doesn't exist), AS3 Number(undefined) = NaN
