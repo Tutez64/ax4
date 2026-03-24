@@ -162,6 +162,12 @@ abstract ASAny(Dynamic)
 	@:op(a <= b) static function ___lte2(a:Float, b:ASAny):Bool return a <= b.___toFloat();
 
 	@:op([]) function ___arrayGet(name:ASAny):ASAny {
+		if (Std.isOfType(this, Array)) {
+			var index = parseArrayIndex(ASCompat.toString(name));
+			if (index != null) {
+				return (cast this : Array<Dynamic>)[index];
+			}
+		}
 		if (Std.isOfType(this, ASArrayBase)) {
 			var index = parseArrayIndex(ASCompat.toString(name));
 			if (index != null) {
@@ -183,6 +189,13 @@ abstract ASAny(Dynamic)
 	}
 
 	@:op([]) function ___arraySet(name:ASAny, value:ASAny):ASAny {
+		if (Std.isOfType(this, Array)) {
+			var index = parseArrayIndex(ASCompat.toString(name));
+			if (index != null) {
+				(cast this : Array<Dynamic>)[index] = value;
+				return value;
+			}
+		}
 		if (Std.isOfType(this, ASArrayBase)) {
 			var index = parseArrayIndex(ASCompat.toString(name));
 			if (index != null) {

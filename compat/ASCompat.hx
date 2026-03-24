@@ -352,6 +352,9 @@ class ASCompat {
 			return Reflect.callMethod(obj, proxyGetter, [fieldName]);
 		}
 		var name = propertyName(fieldName);
+		if (name == "length" && Std.isOfType(obj, Array)) {
+			return (cast obj : Array<Dynamic>).length;
+		}
 		var value:Dynamic = null;
 		try {
 			value = Reflect.getProperty(obj, name);

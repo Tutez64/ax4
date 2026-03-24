@@ -177,6 +177,17 @@ class TestASCompat extends utest.Test {
 		equals(9, ASCompat.toInt(ASCompat.dynGetIndex(values, 0)));
 	}
 
+	function testJsonParsedNativeArraysViaASObject() {
+		var data:ASObject = cast haxe.Json.parse('{"arr":[{"x":1},{"x":2}]}');
+
+		equals(2, ASCompat.toInt(data.arr.length));
+		equals(1, ASCompat.toInt(data.arr[0].x));
+		equals(2, ASCompat.toInt(data.arr[1].x));
+
+		data.arr[0] = cast {x: 5};
+		equals(5, ASCompat.toInt(data.arr[0].x));
+	}
+
 	function testArrayPushUnshiftMultiple() {
 		var items = [1];
 		var len = ASCompat.ASArray.pushMultiple(items, 2, 3, 4);
