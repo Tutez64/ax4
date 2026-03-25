@@ -4,7 +4,9 @@
  * - cover all valid arities for apply (0, 1 and 2 args) and call (0, >=1 args)
  * - null/undefined/parens null thisArg handling in apply
  * - typed bound method closures rewrite to ASCompatMacro.applyBoundMethod
- * - dynamic receivers and non-bound closures keep Reflect.callMethod fallback
+ * - apply(null|undefined, args) on non-bound closures rewrites to ASCompatMacro.applyClosure
+ * - receivers that still resolve to typed methods through aliases keep ASCompatMacro.applyBoundMethod
+ * - non-null thisArg keeps Reflect.callMethod fallback
  */
 package {
 	public class TestFilterFunctionApply {
@@ -37,14 +39,14 @@ package {
 			this.add.apply(this, [15]);
 			this.add.call(this, 16);
 
-			// Dynamic receiver: no typed macro rewrite
+			// Alias receiver: still resolves to the typed method and keeps the bound-method macro rewrite
 			var dyn:* = this;
 			dyn.add.apply(null, [17]);
 			dyn.add.apply(undefined, [18]);
 			dyn.add.call(null, 19);
 			dyn.add.call(dyn, 20);
 
-			// Non-bound function closure reference: no typed macro rewrite
+			// Non-bound function closure reference: apply(null|undefined, args) uses applyClosure
 			var methodRef:Function = this.add;
 			methodRef.apply(null, [21]);
 			methodRef.apply(this, [22]);

@@ -607,6 +607,26 @@ class TestASCompat extends utest.Test {
 		equals(1, target.touchCount);
 	}
 
+	function testApplyClosure() {
+		var target = new TestASCompatApplyClosureTarget();
+		var bound:Dynamic = target.addAndTrack;
+		var plain:Dynamic = function(a:Int, b:Int):Int {
+			return a * b;
+		};
+
+		var boundResult = ASCompatMacro.applyClosure(bound, [2, 3]);
+		equals(10, boundResult);
+		equals(1, target.callCount);
+		equals(10, target.total);
+
+		var touchResult = ASCompatMacro.applyClosure(target.touch, null);
+		equals(null, touchResult);
+		equals(2, target.callCount);
+
+		var plainResult = ASCompatMacro.applyClosure(plain, [4, 5]);
+		equals(20, plainResult);
+	}
+
 	function testDateApi() {
 		var dTime = Date.fromTime(0);
 		ASCompat.ASDate.setTime(dTime, 1234567);
@@ -886,6 +906,23 @@ private class TestASCompatApplyTarget {
 
 	public function touch():Void {
 		touchCount++;
+	}
+}
+
+private class TestASCompatApplyClosureTarget {
+	public var total:Int = 5;
+	public var callCount:Int = 0;
+
+	public function new() {}
+
+	public function addAndTrack(a:Int, b:Int):Int {
+		callCount++;
+		total += a + b;
+		return total;
+	}
+
+	public function touch():Void {
+		callCount++;
 	}
 }
 

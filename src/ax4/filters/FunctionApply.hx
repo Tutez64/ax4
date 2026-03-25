@@ -2,6 +2,7 @@ package ax4.filters;
 
 class FunctionApply extends AbstractFilter {
 	static final tcallMethod = TTFun([TTAny, TTFunction, TTArray(TTAny)], TTAny);
+	static final tApplyClosure = TTFun([TTAny, TTArray(TTAny)], TTAny);
 	static final tApplyBoundMethod = TTFun([TTAny, TTString, TTArray(TTAny)], TTAny);
 	static final eEmptyArray = mk(TEArrayDecl({syntax: {openBracket: mkOpenBracket(), closeBracket: mkCloseBracket()}, elements: []}), tUntypedArray, tUntypedArray);
 
@@ -18,7 +19,6 @@ class FunctionApply extends AbstractFilter {
 							e.with(kind = TECall(eFun, args.with(args = [])));
 						} else {
 							var eCallMethod = mkBuiltin("Reflect.callMethod", tcallMethod, removeLeadingTrivia(eFun));
-							thisArg = resolveThisArgForMethodClosure(thisArg, eFun);
 							if (thisArg.comma == null) thisArg.comma = commaWithSpace;
 							e.with(kind = TECall(eCallMethod, args.with(args = [
 								thisArg, {expr: eFun, comma: commaWithSpace}, {expr: eEmptyArray, comma: null}
@@ -26,8 +26,8 @@ class FunctionApply extends AbstractFilter {
 						}
 					case [thisArg, eArgs]:
 						if (isNullLikeThisArg(thisArg.expr)) {
-							switch extractBoundMethod(eFun) {
-								case {obj: eobj, name: methodName, token: methodToken} if (canUseTypedBoundApply(eobj)):
+							switch extractTypedBoundMethod(eFun) {
+								case {obj: eobj, name: methodName, token: methodToken}:
 									var eApplyBoundMethod = mkBuiltin("ASCompatMacro.applyBoundMethod", tApplyBoundMethod, removeLeadingTrivia(eFun));
 									var eMethodName = mk(
 										TELiteral(TLString(new Token(methodToken.pos, TkStringDouble, haxe.Json.stringify(methodName), methodToken.leadTrivia, []))),
@@ -41,15 +41,13 @@ class FunctionApply extends AbstractFilter {
 										eArgs
 									])));
 								case _:
-									var eCallMethod = mkBuiltin("Reflect.callMethod", tcallMethod, removeLeadingTrivia(eFun));
-									thisArg = resolveThisArgForMethodClosure(thisArg, eFun);
-									e.with(kind = TECall(eCallMethod, args.with(args = [
-										thisArg, {expr: eFun, comma: commaWithSpace}, eArgs
+									var eApplyClosure = mkBuiltin("ASCompatMacro.applyClosure", tApplyClosure, removeLeadingTrivia(eFun));
+									e.with(kind = TECall(eApplyClosure, args.with(args = [
+										{expr: eFun, comma: commaWithSpace}, eArgs
 									])));
 							}
 						} else {
 							var eCallMethod = mkBuiltin("Reflect.callMethod", tcallMethod, removeLeadingTrivia(eFun));
-							thisArg = resolveThisArgForMethodClosure(thisArg, eFun);
 							e.with(kind = TECall(eCallMethod, args.with(args = [
 								thisArg, {expr: eFun, comma: commaWithSpace}, eArgs
 							])));
@@ -90,34 +88,6 @@ class FunctionApply extends AbstractFilter {
 		}
 	}
 
-	static inline function canUseTypedBoundApply(eobj:TExpr):Bool {
-		return switch eobj.type {
-			case TTAny | TTObject(_) | TTBuiltin:
-				false;
-			case _:
-				true;
-		}
-	}
-
-	static function extractBoundMethod(eFun:TExpr):Null<{obj:TExpr, name:String, token:Token}> {
-		return switch eFun.kind {
-			case TEField({kind: TOExplicit(_, eobj)}, name, token):
-				{obj: eobj, name: name, token: token};
-			case TEParens(_, inner, _) | TEHaxeRetype(inner):
-				extractBoundMethod(inner);
-			case _:
-				null;
-		}
-	}
-
-	static inline function resolveThisArgForMethodClosure(arg:{expr:TExpr, comma:Null<Token>}, eFun:TExpr):{expr:TExpr, comma:Null<Token>} {
-		if (!isNullLikeThisArg(arg.expr)) {
-			return arg;
-		}
-		var boundObj = boundObjectForMethodClosure(eFun);
-		return if (boundObj == null) arg else {expr: boundObj, comma: arg.comma};
-	}
-
 	static function isNullLikeThisArg(e:TExpr):Bool {
 		return switch e.kind {
 			case TELiteral(TLNull(_) | TLUndefined(_)):
@@ -131,24 +101,57 @@ class FunctionApply extends AbstractFilter {
 		}
 	}
 
-	static function boundObjectForMethodClosure(eFun:TExpr):Null<TExpr> {
+	static function extractTypedBoundMethod(eFun:TExpr):Null<{obj:TExpr, name:String, token:Token}> {
 		return switch eFun.kind {
-			case TEField(obj, _, fieldToken):
-				switch obj.kind {
-					case TOExplicit(_, eobj):
-						eobj;
-					case TOImplicitThis(cls):
-						mk(TELiteral(TLThis(mkIdent("this", fieldToken.leadTrivia, []))), TTInst(cls), TTInst(cls));
-					case TOImplicitClass(_):
+			case TEField(obj, fieldName, fieldToken):
+				switch resolveMethodField(obj, fieldName) {
+					case {objExpr: objExpr}:
+						{obj: objExpr, name: fieldName, token: fieldToken};
+					case null:
 						null;
 				}
 			case _:
 				switch eFun.kind {
 					case TEParens(_, inner, _) | TEHaxeRetype(inner):
-						boundObjectForMethodClosure(inner);
+						extractTypedBoundMethod(inner);
 					case _:
 						null;
 				}
+		}
+	}
+
+	static function resolveMethodField(obj:TFieldObject, fieldName:String):Null<{objExpr:TExpr}> {
+		return switch obj.kind {
+			case TOExplicit(_, eobj):
+				return if (isTypedMethodField(eobj.type, fieldName, false)) {objExpr: eobj} else null;
+			case TOImplicitThis(cls):
+				return if (isTypedMethodField(TTInst(cls), fieldName, false)) {
+					{objExpr: mk(TELiteral(TLThis(mkIdent("this"))), TTInst(cls), TTInst(cls))}
+				} else null;
+			case TOImplicitClass(cls):
+				return if (isTypedMethodField(TTStatic(cls), fieldName, true)) {
+					{objExpr: mkDeclRef({first: mkIdent(cls.name), rest: []}, {name: cls.name, kind: TDClassOrInterface(cls)}, null)}
+				} else null;
+		}
+	}
+
+	static function isTypedMethodField(t:TType, fieldName:String, isStatic:Bool):Bool {
+		return switch t {
+			case TTInst(cls):
+				isMethodField(cls, fieldName, isStatic);
+			case TTStatic(cls):
+				isMethodField(cls, fieldName, true);
+			case _:
+				false;
+		}
+	}
+
+	static function isMethodField(cls:TClassOrInterfaceDecl, fieldName:String, isStatic:Bool):Bool {
+		return switch cls.findFieldInHierarchy(fieldName, isStatic) {
+			case {field: {kind: TFFun(_)}}:
+				true;
+			case _:
+				false;
 		}
 	}
 }
