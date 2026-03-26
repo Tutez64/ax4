@@ -592,6 +592,14 @@ class TestASCompat extends utest.Test {
 		isFalse(ASCompat.hasProperty(root, "missing_label"));
 	}
 
+	function testGetPropertyMovieClipChildNameSurvivesDetach() {
+		var source = new TestASCompatNamedTooltipSource();
+		isTrue(ASCompat.getProperty(source.root, "tooltip") == source.tooltip);
+		source.detachTooltip();
+		isTrue(ASCompat.getProperty(source.root, "tooltip") == source.tooltip);
+		isTrue(ASCompat.hasProperty(source.root, "tooltip"));
+	}
+
 	function testApplyBoundMethod() {
 		var target = new TestASCompatApplyTarget();
 		var pushed = ASCompatMacro.applyBoundMethod(target, "pushValues", [1, 2, 3]);
@@ -934,6 +942,38 @@ private class TestASCompatHasPropertyMemberClip extends flash.display.MovieClip 
 		label = new flash.display.MovieClip();
 		label.name = "label";
 		addChild(label);
+	}
+}
+
+private class TestASCompatNamedTooltipSource {
+	public var root:flash.display.MovieClip;
+	public var tooltip:flash.display.MovieClip;
+
+	public function new() {
+		#if flash
+		root = new TestASCompatNamedChildClip();
+		tooltip = cast root.tooltip;
+		#else
+		root = new flash.display.MovieClip();
+		tooltip = new flash.display.MovieClip();
+		tooltip.name = "tooltip";
+		root.addChild(tooltip);
+		#end
+	}
+
+	public function detachTooltip():Void {
+		root.removeChild(tooltip);
+	}
+}
+
+private class TestASCompatNamedChildClip extends flash.display.MovieClip {
+	public var tooltip:flash.display.MovieClip;
+
+	public function new() {
+		super();
+		tooltip = new flash.display.MovieClip();
+		tooltip.name = "tooltip";
+		addChild(tooltip);
 	}
 }
 

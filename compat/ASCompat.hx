@@ -364,17 +364,11 @@ class ASCompat {
 			}
 		} catch (_:Dynamic) {
 		}
-		var dynamicProperties = getDynamicProperties(obj, false);
-		if (dynamicProperties != null && dynamicProperties.exists(name)) {
-			return dynamicProperties.get(name);
-		}
 		// OpenFL native bindings (e.g. symbols from SWF) often expose timeline instances via children names.
-		var getChildByName = Reflect.field(obj, "getChildByName");
-		if (getChildByName != null && Reflect.isFunction(getChildByName)) {
-			var child = Reflect.callMethod(obj, getChildByName, [name]);
-			if (child != null) {
-				return child;
-			}
+		// Cache them so they remain reachable after being detached from the display list, like in Flash.
+		var namedChild = getCachedNamedChildProperty(obj, name);
+		if (namedChild != null) {
+			return namedChild;
 		}
 		return value;
 		#end
@@ -446,15 +440,8 @@ class ASCompat {
 		if (dynamicProperties != null && dynamicProperties.exists(name)) {
 			return true;
 		}
-		// For OpenFL runtime MovieClips, timeline instances are often only addressable by child name.
-		var getChildByName = Reflect.field(obj, "getChildByName");
-		if (getChildByName != null && Reflect.isFunction(getChildByName)) {
-			try {
-				if (Reflect.callMethod(obj, getChildByName, [name]) != null) {
-					return true;
-				}
-			} catch (_:Dynamic) {
-			}
+		if (getCachedNamedChildProperty(obj, name) != null) {
+			return true;
 		}
 		#end
 		return false;
@@ -494,6 +481,28 @@ class ASCompat {
 	}
 
 	#if !flash
+	static function getCachedNamedChildProperty(obj:Dynamic, name:String):Dynamic {
+		var dynamicProperties = getDynamicProperties(obj, false);
+		var cachedValue:Dynamic = null;
+		if (dynamicProperties != null && dynamicProperties.exists(name)) {
+			cachedValue = dynamicProperties.get(name);
+		}
+		var getChildByName = Reflect.field(obj, "getChildByName");
+		if (getChildByName != null && Reflect.isFunction(getChildByName)) {
+			try {
+				var child = Reflect.callMethod(obj, getChildByName, [name]);
+				if (child != null) {
+					if (cachedValue != child) {
+						setDynamicProperty(obj, name, child);
+					}
+					return child;
+				}
+			} catch (_:Dynamic) {
+			}
+		}
+		return cachedValue;
+	}
+
 	static function getDynamicProperties(obj:Dynamic, createIfMissing:Bool):Null<StringMap<Dynamic>> {
 		if (!canUseDynamicPropertyStore(obj)) {
 			return null;
