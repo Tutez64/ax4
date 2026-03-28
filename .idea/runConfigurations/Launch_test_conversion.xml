@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Launch test conversion" type="JarApplication">
     <option name="JAR_PATH" value="$PROJECT_DIR$/converter.jar" />
-    <option name="PROGRAM_PARAMETERS" value="tests\config.json" />
+    <option name="PROGRAM_PARAMETERS" value="tests/config.json" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="ALTERNATIVE_JRE_PATH" value="25" />
     <module name="ax4" />
