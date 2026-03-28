@@ -27,7 +27,7 @@
 -cpp test-cpp
 --remap flash:openfl
 
--cmd .\test-cpp\Main.exe
+-cmd npx haxe -cp compat-test --run RunCompiledMain test-cpp/Main
 
 --next
 
