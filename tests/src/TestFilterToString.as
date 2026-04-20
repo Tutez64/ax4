@@ -5,6 +5,7 @@
  * - Custom class with its own toString should remain unchanged.
  * - Primitive toString() and radix toString() stay mapped correctly.
  * - String concatenation with dynamic values should stringify dynamic operands to avoid hxcpp invalid numeric branch.
+ * - Array values passed where String is expected should be coerced through ASCompat.toString.
  */
 package {
     public class TestFilterToString {
@@ -28,10 +29,17 @@ package {
             var dyn:* = passthrough(any.value);
             trace("prefix=" + dyn);
             trace(dyn + "=suffix");
+
+            var values:Array = ["a", "b"];
+            takesString(values);
         }
 
         private function passthrough(value:*):* {
             return value;
+        }
+
+        private function takesString(value:String):void {
+            trace(value);
         }
     }
 }

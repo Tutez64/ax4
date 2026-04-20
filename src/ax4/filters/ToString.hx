@@ -47,6 +47,17 @@ class ToString extends AbstractFilter {
 						var eToString = mk(TEField({kind: TOExplicit(mkDot(), e), type: e.type}, "toString", mkIdent("toString")), tToString, tToString);
 						mkCall(eToString, [], TTString, removeTrailingTrivia(e));
 
+					case [TTArray(_) | TTVector(_), TTString]:
+						var eToString = mkBuiltin("ASCompat.toString", tStdString, removeLeadingTrivia(e));
+						e.with(
+							kind = TECall(eToString, {
+								openParen: mkOpenParen(),
+								args: [{expr: e.with(expectedType = e.type), comma: null}],
+								closeParen: mkCloseParen(removeTrailingTrivia(e))
+							}),
+							type = TTString
+						);
+
 					// these are not really about "ToString", but I haven't found a better place to add them without introducing yet another filter
 					// normally this can't happen in AS3, unless you do `for (var i:int in someObject)` then it can ¯\_(ツ)_/¯
 					case [TTString, TTInt | TTUint]: mkCastCall("toInt", e, TTInt);
