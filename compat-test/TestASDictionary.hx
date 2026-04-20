@@ -21,6 +21,9 @@ class TestASDictionary extends utest.Test {
 		isTrue(dict.exists(true));
 		isTrue(dict.exists("1"));
 		isTrue(dict.exists(1.5));
+		isTrue(dict.hasOwnProperty(1));
+		isTrue(dict.hasOwnProperty("1"));
+		isFalse(dict.hasOwnProperty("missing"));
 	}
 
 	function testPrimitiveKeysDoNotCollide() {
