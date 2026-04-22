@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="node node_modules/lix/bin/haxeshim.js build.hxml" />
+    <option name="SCRIPT_TEXT" value="npm run build" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
