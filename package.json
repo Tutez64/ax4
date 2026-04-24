@@ -1,9 +1,4 @@
 {
-  "scripts": {
-    "build": "haxe build.hxml",
-    "run": "haxe run.hxml",
-    "test:compat": "haxe test-compat.hxml"
-  },
   "dependencies": {
     "lix": "^16.0.2"
   }
