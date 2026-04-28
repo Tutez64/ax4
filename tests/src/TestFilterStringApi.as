@@ -44,6 +44,12 @@ package {
             var anyObj:Object = { Name: "hero" };
             var upperAny:String = anyObj.Name.toUpperCase();
             var charAny:String = anyObj.Name.charAt(0);
+            var replaceAny:String = anyObj.Name.replace("h", "z");
+            var matchAny:Array = anyObj.Name.match(/h/);
+            var splitAny:Array = anyObj.Name.split("");
+            var searchAny:int = anyObj.Name.search("r");
+            var concatAny:String = anyObj.Name.concat("es");
+            var localeCompareAny:int = anyObj.Name.localeCompare("hero");
 
             // Calling string methods on typed objects should NOT be coerced.
             // URLRequestHeader.name is known as String.

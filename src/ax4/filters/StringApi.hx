@@ -148,7 +148,7 @@ class StringApi extends AbstractFilter {
 			case TEField({type: TTString}, name = "replace" | "match" | "split" | "concat" | "search" | "localeCompare", _):
 				throwError(exprPos(e), "closure on String." + name);
 
-			case TECall({kind: TEField(fieldObject = {kind: TOExplicit(dot, eObject)}, methodName = "toUpperCase" | "toLowerCase" | "toLocaleUpperCase" | "toLocaleLowerCase" | "charAt" | "charCodeAt" | "substr" | "substring", fieldToken)}, args)
+			case TECall({kind: TEField(fieldObject = {kind: TOExplicit(dot, eObject)}, methodName = "toUpperCase" | "toLowerCase" | "toLocaleUpperCase" | "toLocaleLowerCase" | "charAt" | "charCodeAt" | "substr" | "substring" | "replace" | "match" | "split" | "search" | "concat" | "localeCompare", fieldToken)}, args)
 				if (isEffectivelyAny(eObject)):
 				var eCoerced = coerceToString(processExpr(eObject));
 				var newFieldObj:TFieldObject = {kind: TOExplicit(dot, eCoerced), type: TTString};
