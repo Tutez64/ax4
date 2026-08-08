@@ -7,6 +7,9 @@ class Main {
 			new TestASCompat(),
 			new TestASArrayBase(),
 			new TestASDictionary(),
+			#if (cpp || flash)
+			new TestASDictionaryLifetime(),
+			#end
 			new TestASProxyBase(),
 			new TestRegExp(),
 		]) {

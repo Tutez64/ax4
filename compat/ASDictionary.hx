@@ -6,7 +6,11 @@ private typedef Dictionary<K,V> = flash.utils.Dictionary;
 
 abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K,V> { //TODO: remove implicit cast?
 	#if !flash
-    static final primitiveStore:haxe.ds.WeakMap<{}, haxe.ds.StringMap<Dynamic>> = new haxe.ds.WeakMap();
+	#if cpp
+	static final primitiveStore:haxe.ds.WeakMap<{}, haxe.ds.StringMap<Dynamic>> = new haxe.ds.WeakMap();
+	#else
+	static final primitiveStore:haxe.ds.ObjectMap<Dynamic, haxe.ds.StringMap<Dynamic>> = new haxe.ds.ObjectMap();
+	#end
 
 	static inline function isPrimitiveKey(key:Dynamic):Bool {
 		return Std.isOfType(key, String) || Std.isOfType(key, Int) || Std.isOfType(key, Float) || Std.isOfType(key, Bool);
