@@ -29,6 +29,7 @@ java -jar converter.jar config.json
 | `dataext`            | `string[]`                       | `null`                        | Optional extension allow-list (without dot, example: `["png","xml"]`).               |
 | `datafiles`          | `string[]`                       | `null`                        | Optional explicit file allow-list plus explicit extra files to copy.                 |
 | `copyNonAs`          | `bool`                           | `true`                        | Copy non-AS files discovered under `src` during walk.                                |
+| `skipXmlLiterals`    | `bool`                           | `false`                       | Replace XML literals (`<tag>...</tag>`) with `/*...*/ null` instead of failing       |
 | `unpackout`          | `string`                         | `null`                        | Directory where `library.swf` extracted from SWCs is written.                        |
 | `unpackswc`          | `string[]`                       | `null`                        | SWC files to unpack into `unpackout`.                                                |
 | `hxoutClean`         | `bool`                           | `false`                       | Delete `hxout` contents before conversion.                                           |

@@ -27,8 +27,11 @@ class Scanner {
 
 	public var lastConsumedToken(default,null):Token;
 
-	public function new(text) {
+	final skipXmlLiterals:Bool;
+
+	public function new(text, skipXmlLiterals:Bool = false) {
 		this.text = text;
+		this.skipXmlLiterals = skipXmlLiterals;
 		end = text.length;
 		pos = tokenStartPos = 0;
 	}
@@ -674,7 +677,216 @@ class Scanner {
 	}
 
 	function scanXml() {
-		throw "XML is not supported yet!";
+		if (!skipXmlLiterals) {
+			throw "XML is not supported yet! Set skipXmlLiterals to true in the config to comment out XML literals as null.";
+		}
+		// `pos` is already past the opening `<` (tokenStartPos points at it).
+		scanXmlAfterLt();
+	}
+
+	function scanXmlAfterLt() {
+		if (pos >= end) {
+			throw "Unterminated XML literal at " + tokenStartPos;
+		}
+		// <!-- comment -->
+		if (matchAt("!--")) {
+			pos += 3;
+			while (pos + 2 < end) {
+				if (text.fastCodeAt(pos) == "-".code && text.fastCodeAt(pos + 1) == "-".code && text.fastCodeAt(pos + 2) == ">".code) {
+					pos += 3;
+					return;
+				}
+				pos++;
+			}
+			throw "Unterminated XML comment at " + tokenStartPos;
+		}
+		// <![CDATA[ ... ]]>
+		if (matchAt("![CDATA[")) {
+			pos += 8;
+			while (pos + 2 < end) {
+				if (text.fastCodeAt(pos) == "]".code && text.fastCodeAt(pos + 1) == "]".code && text.fastCodeAt(pos + 2) == ">".code) {
+					pos += 3;
+					return;
+				}
+				pos++;
+			}
+			throw "Unterminated XML CDATA at " + tokenStartPos;
+		}
+		// <? ... ?>
+		if (pos < end && text.fastCodeAt(pos) == "?".code) {
+			pos++;
+			while (pos + 1 < end) {
+				if (text.fastCodeAt(pos) == "?".code && text.fastCodeAt(pos + 1) == ">".code) {
+					pos += 2;
+					return;
+				}
+				pos++;
+			}
+			throw "Unterminated XML processing instruction at " + tokenStartPos;
+		}
+		scanXmlElementBody();
+	}
+
+	function scanXmlElementBody() {
+		// Element name (optional for <> list literals — rare; still allow letters/_/:)
+		while (pos < end) {
+			var ch = text.fastCodeAt(pos);
+			if (isIdentPart(ch) || ch == ":".code || ch == "-".code || ch == ".".code) {
+				pos++;
+			} else {
+				break;
+			}
+		}
+		scanXmlAttributesOrEnd();
+	}
+
+	function scanXmlAttributesOrEnd() {
+		while (true) {
+			skipXmlWhitespace();
+			if (pos >= end) {
+				throw "Unterminated XML literal at " + tokenStartPos;
+			}
+			var ch = text.fastCodeAt(pos);
+			if (ch == "/".code) {
+				pos++;
+				if (pos < end && text.fastCodeAt(pos) == ">".code) {
+					pos++; // self-closing />
+					return;
+				}
+				throw "Invalid XML literal at " + tokenStartPos;
+			}
+			if (ch == ">".code) {
+				pos++;
+				scanXmlContentUntilEndTag();
+				return;
+			}
+			// attribute name
+			if (!(isIdentStart(ch) || ch == ":".code)) {
+				throw "Invalid XML literal at " + pos;
+			}
+			while (pos < end) {
+				ch = text.fastCodeAt(pos);
+				if (isIdentPart(ch) || ch == ":".code || ch == "-".code || ch == ".".code) {
+					pos++;
+				} else {
+					break;
+				}
+			}
+			skipXmlWhitespace();
+			if (pos >= end || text.fastCodeAt(pos) != "=".code) {
+				throw "Invalid XML attribute at " + tokenStartPos;
+			}
+			pos++; // =
+			skipXmlWhitespace();
+			if (pos >= end) {
+				throw "Unterminated XML attribute at " + tokenStartPos;
+			}
+			ch = text.fastCodeAt(pos);
+			if (ch == "\"".code || ch == "'".code) {
+				var quote = ch;
+				pos++;
+				while (pos < end) {
+					var c = text.fastCodeAt(pos);
+					if (c == quote) {
+						pos++;
+						break;
+					}
+					if (c == "<".code) {
+						// nested markup in attribute is invalid in AS3 literals; still stop cleanly
+						throw "Invalid XML attribute value at " + tokenStartPos;
+					}
+					pos++;
+				}
+			} else if (ch == "{".code) {
+				// AS3 allows {expr} in XML attributes/content — brace-balanced skip
+				scanBalancedBraces();
+			} else {
+				throw "Invalid XML attribute value at " + tokenStartPos;
+			}
+		}
+	}
+
+	function scanXmlContentUntilEndTag() {
+		while (pos < end) {
+			var ch = text.fastCodeAt(pos);
+			if (ch == "{".code) {
+				scanBalancedBraces();
+				continue;
+			}
+			if (ch != "<".code) {
+				pos++;
+				continue;
+			}
+			// Look ahead: end tag, comment, cdata, pi, or nested element
+			if (pos + 1 < end && text.fastCodeAt(pos + 1) == "/".code) {
+				pos += 2; // </
+				while (pos < end) {
+					ch = text.fastCodeAt(pos);
+					if (isIdentPart(ch) || ch == ":".code || ch == "-".code || ch == ".".code) {
+						pos++;
+					} else {
+						break;
+					}
+				}
+				skipXmlWhitespace();
+				if (pos >= end || text.fastCodeAt(pos) != ">".code) {
+					throw "Unterminated XML end tag at " + tokenStartPos;
+				}
+				pos++;
+				return;
+			}
+			pos++; // consume <
+			scanXmlAfterLt();
+		}
+		throw "Unterminated XML literal at " + tokenStartPos;
+	}
+
+	function scanBalancedBraces() {
+		// pos at '{'
+		pos++;
+		var depth = 1;
+		while (pos < end) {
+			var ch = text.fastCodeAt(pos);
+			if (ch == "{".code) {
+				depth++;
+				pos++;
+			} else if (ch == "}".code) {
+				pos++;
+				depth--;
+				if (depth == 0) return;
+			} else if (ch == "\"".code || ch == "'".code) {
+				var quote = ch;
+				pos++;
+				while (pos < end) {
+					var c = text.fastCodeAt(pos);
+					if (c == "\\".code) {
+						pos += 2;
+						continue;
+					}
+					pos++;
+					if (c == quote) break;
+				}
+			} else {
+				pos++;
+			}
+		}
+		throw "Unterminated XML embedded expression at " + tokenStartPos;
+	}
+
+	function skipXmlWhitespace() {
+		while (pos < end) {
+			var ch = text.fastCodeAt(pos);
+			if (ch == " ".code || ch == "\t".code || ch == "\r".code || ch == "\n".code) {
+				pos++;
+			} else {
+				break;
+			}
+		}
+	}
+
+	function matchAt(s:String):Bool {
+		if (pos + s.length > end) return false;
+		return text.substr(pos, s.length) == s;
 	}
 
 	function mkTrivia(kind:TriviaKind):Trivia {

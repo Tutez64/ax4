@@ -7,5 +7,6 @@
   "packagePartRenames": {
     "floor": "floorpkg"
   },
-  "testCloneExpr": true
+  "testCloneExpr": true,
+  "skipXmlLiterals": true
 }

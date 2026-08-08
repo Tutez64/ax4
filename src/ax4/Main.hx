@@ -240,7 +240,7 @@ class Main {
 		// print('Parsing $path');
 		var t = stamp();
 		var content = stripBOM(ctx.fileLoader.getContent(path));
-		var scanner = new Scanner(content);
+		var scanner = new Scanner(content, ctx.config.skipXmlLiterals == true);
 		var parser = new Parser(scanner, path);
 		var parseTree = null;
 		try {

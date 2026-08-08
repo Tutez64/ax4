@@ -599,9 +599,21 @@ class Parser {
 				return makePreUnop(PreDecr(scanner.consume()), parseExpr(allowComma));
 			case TkBracketOpen:
 				return parseExprNext(EArrayDecl(parseArrayDecl(scanner.consume())), allowComma);
+			case TkXml:
+				return parseSkippedXmlLiteral(scanner.consume(), allowComma);
 			case _:
 				return null;
 		}
+	}
+
+	function parseSkippedXmlLiteral(xmlToken:Token, allowComma:Bool):Expr {
+		// Keep the literal as a block comment and emit `null`
+		// Useful for now unused Flash JS bridges
+		var safe = xmlToken.text.split("*/").join("* /");
+		var comment = new Trivia(TrBlockComment, "/*" + safe + "*/");
+		var lead = xmlToken.leadTrivia.concat([comment, new Trivia(TrWhitespace, " ")]);
+		var nullTok = new Token(xmlToken.pos, TkIdent, "null", lead, xmlToken.trailTrivia.copy());
+		return parseExprNext(EIdent(nullTok), allowComma);
 	}
 
 	function makePreUnop(op:PreUnop, e:Expr):Expr {

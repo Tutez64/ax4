@@ -33,6 +33,7 @@ class Context {
 	public inline function getToplevelImports() return toplevelImports.keyValueIterator();
 }
 
+/** See docs/Config.md **/
 typedef Config = {
 	var ?src:EitherType<String,Array<String>>;
 	var ?swc:Array<String>;
@@ -48,6 +49,7 @@ typedef Config = {
 	var ?dataext:Array<String>;
 	var ?datafiles:Array<String>;
 	var ?copyNonAs:Bool;
+	var ?skipXmlLiterals:Bool;
 	var ?unpackout:String;
 	var ?unpackswc:Array<String>;
 	var ?hxoutClean:Bool;
