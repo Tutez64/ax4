@@ -7,7 +7,11 @@ private typedef XMLImpl = #if flash flash.xml.XML #else StdXml #end;
 
 abstract XML(XMLImpl) from XMLImpl to XMLImpl {
 	#if !flash
+	#if cpp
+	static final attrOrder = new haxe.ds.WeakMap<{}, Array<String>>();
+	#else
 	static final attrOrder = new ObjectMap<StdXml, Array<String>>();
+	#end
 	#end
 
 	public static inline function typeReference() {
