@@ -207,7 +207,15 @@ class CoerceToBool extends AbstractFilter {
 				}), TTBoolean, TTBoolean);
 
 			case TTVoid:
-				throwError(exprPos(e), "void used as Bool?");
+				// AVM2: reading a void return yields undefined (falsy). Keep the call for side effects.
+				reportError(exprPos(e), "void used as Bool (undefined → false)");
+				var lead = removeLeadingTrivia(e);
+				var trail = removeTrailingTrivia(e);
+				var eSide = e.with(expectedType = TTVoid);
+				processLeadingToken(t -> t.leadTrivia = lead.concat(t.leadTrivia), eSide);
+				var falseExpr = mk(TELiteral(TLBool(new Token(0, TkIdent, "false", [], trail))), TTBoolean, TTBoolean);
+				// GenHaxe prints comma as `{a; b;}` — same as Haxe block expression.
+				return mk(TEBinop(eSide, OpComma(new Token(0, TkComma, ",", [], [])), falseExpr), TTBoolean, TTBoolean);
 
 			case TTBuiltin:
 				throwError(exprPos(e), "TODO: bool coecion");
