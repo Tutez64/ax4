@@ -58,6 +58,8 @@ class RewriteSwitch extends AbstractFilter {
 							return [];
 
 						case _:
+							// Non-terminal last expr: either last case (falls off switch) or fall-through
+							// already rewritten by duplicating the suffix into this body.
 							if (!allowNonTerminalLast) {
 								throwError(exprPos(lastExpr), "Non-terminal expression inside a switch case, possible fall-through?");
 							}
@@ -92,15 +94,29 @@ class RewriteSwitch extends AbstractFilter {
 						}
 
 						var isLast = (i == s.cases.length - 1) && s.def == null;
+						var rewroteFallThrough = false;
 
-						var breakTrivia = processCaseBody(c.body, isLast);
+						// AS3 fall-through: non-terminal case body continues into later cases.
+						// Haxe has no fall-through — duplicate the executed suffix into this case.
+						if (!isLast && !caseBodyTerminates(c.body)) {
+							var bodyExprs = getCaseBodyExprs(c.body);
+							var warnPos = if (bodyExprs.length > 0) exprPos(bodyExprs[bodyExprs.length - 1].expr) else exprPos(value);
+							reportError(warnPos, "Switch case fall-through (rewritten by duplicating subsequent case body)");
+							for (be in collectFallThroughSuffix(s.cases, i + 1, s.def)) {
+								bodyExprs.push(be);
+							}
+							rewroteFallThrough = true;
+						}
+
+						var breakTrivia = processCaseBody(c.body, isLast || rewroteFallThrough);
 
 						var colonTrivia = removeTrailingTrivia(values[values.length - 1]);
 						if (breakTrivia.length > 0) {
-							if (c.body.length == 0) {
+							if (getCaseBodyExprs(c.body).length == 0) {
 								colonTrivia = colonTrivia.concat(breakTrivia);
 							} else {
-								var lastBlockExpr = c.body[c.body.length - 1];
+								var exprs = getCaseBodyExprs(c.body);
+								var lastBlockExpr = exprs[exprs.length - 1];
 								if (lastBlockExpr.semicolon != null) {
 									lastBlockExpr.semicolon.trailTrivia = lastBlockExpr.semicolon.trailTrivia.concat(breakTrivia);
 								} else {
@@ -157,6 +173,54 @@ class RewriteSwitch extends AbstractFilter {
 			case _:
 				e;
 		}
+	}
+
+	/** Statements of a case body, unwrapping a single braced block when present. */
+	static function getCaseBodyExprs(body:Array<TBlockExpr>):Array<TBlockExpr> {
+		return switch body {
+			case [{expr: {kind: TEBlock(b)}}]: b.exprs;
+			case _: body;
+		};
+	}
+
+	static function caseBodyTerminates(body:Array<TBlockExpr>):Bool {
+		var exprs = getCaseBodyExprs(body);
+		if (exprs.length == 0) return false;
+		return switch exprs[exprs.length - 1].expr.kind {
+			case TEBreak(_) | TEReturn(_) | TEContinue(_) | TEThrow(_): true;
+			case _: false;
+		};
+	}
+
+	/**
+		Clone statements executed after falling through from `fromIndex` until a terminating case
+		(or through `default` / end of switch).
+	**/
+	function collectFallThroughSuffix(cases:Array<TSwitchCase>, fromIndex:Int, def:Null<TSwitchDefault>):Array<TBlockExpr> {
+		var result:Array<TBlockExpr> = [];
+		for (j in fromIndex...cases.length) {
+			var cj = cases[j];
+			if (cj.body.length == 0) continue;
+			for (be in getCaseBodyExprs(cj.body)) {
+				result.push(cloneBlockExpr(be));
+			}
+			if (caseBodyTerminates(cj.body)) {
+				return result;
+			}
+		}
+		if (def != null) {
+			for (be in getCaseBodyExprs(def.body)) {
+				result.push(cloneBlockExpr(be));
+			}
+		}
+		return result;
+	}
+
+	static function cloneBlockExpr(be:TBlockExpr):TBlockExpr {
+		return {
+			expr: cloneExpr(be.expr),
+			semicolon: if (be.semicolon == null) null else be.semicolon.clone()
+		};
 	}
 
 	function hasSwitchBreakExpr(expr:TExpr, loopDepth:Int):Bool {
