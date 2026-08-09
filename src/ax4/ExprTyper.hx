@@ -1218,6 +1218,11 @@ class ExprTyper {
 
 				var type = switch [a.type, b.type] {
 					case [TTString, _] | [_, TTString]: TTString; // string concat
+					// AVM2 add ToNumber-coerces Boolean (true→1, false→0), e.g. `0 + (x == y)`
+					case [TTBoolean, (TTNumber | TTInt | TTUint | TTBoolean)]
+					   | [(TTNumber | TTInt | TTUint), TTBoolean]:
+						err("Boolean + operation!", plus.pos);
+						TTNumber;
 					case [TTNumber, (TTNumber | TTInt | TTUint)] | [(TTInt | TTUint), TTNumber]: TTNumber; // always number
 					case [TTInt, TTUint] | [TTUint, (TTInt | TTUint)]: TTUint; // always uint
 					case [TTInt, TTInt]: TTInt; // int addition
@@ -1235,6 +1240,11 @@ class ExprTyper {
 				var b = typeExpr(b, TTNumber);
 
 				var type = switch [a.type, b.type] {
+					// Same AVM2 ToNumber coercion as OpAdd
+					case [TTBoolean, (TTNumber | TTInt | TTUint | TTBoolean)]
+					   | [(TTNumber | TTInt | TTUint), TTBoolean]:
+						err("Boolean arithmetic operation!", token.pos);
+						TTNumber;
 					case [TTNumber, (TTNumber | TTInt | TTUint)] | [(TTInt | TTUint), TTNumber]: TTNumber; // always number
 					case [TTInt, TTUint] | [TTUint, (TTInt | TTUint)]: TTUint; // always uint
 					case [TTInt, TTInt]: TTInt;

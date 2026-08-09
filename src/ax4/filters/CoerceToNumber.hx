@@ -33,6 +33,20 @@ class CoerceToNumber extends AbstractFilter {
 				}
 				applyExpectedCoercion(e.with(kind = TEBinop(a2, op, b2)));
 
+			// AVM2 arithmetic ToNumber-coerces Boolean (e.g. `0 + (x == y)` from ASC).
+			// Only Boolean — do not wrap Any/Dynamic here (that stacked toNumber on already-numeric adds).
+			case TEBinop(a, op = OpAdd(_) | OpSub(_) | OpMul(_) | OpDiv(_) | OpMod(_), b)
+				if (e.type != TTString && (a.type == TTBoolean || b.type == TTBoolean)):
+				var a2 = processExpr(a);
+				var b2 = processExpr(b);
+				if (a2.type == TTBoolean) {
+					a2 = mkToNumberCall(a2);
+				}
+				if (b2.type == TTBoolean) {
+					b2 = mkToNumberCall(b2);
+				}
+				applyExpectedCoercion(e.with(kind = TEBinop(a2, op, b2)));
+
 			case TEBinop(a, op = OpEquals(_) | OpNotEquals(_), b):
 				var a2 = processExpr(a);
 				var b2 = processExpr(b);

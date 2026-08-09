@@ -6,6 +6,7 @@
  * - Number to int/uint truncation.
  * - Loose equality against numeric values must use Number semantics, not int().
  * - Field access on * typed objects (uses toNumberField for undefined handling).
+ * - Boolean in arithmetic (`0 + (x == y)`): ASCompat.toNumber on operands;
  */
 package {
     public class TestFilterCoerceToNumber {
@@ -56,6 +57,16 @@ package {
             // instead of 0 (which would happen with toNumber receiving null)
             testFieldAccessOnAny({length: 5});
             testFieldAccessOnAny({}); // Object without length field - should not trigger condition
+
+            // AVM2 ToNumber-coerces Boolean in arithmetic
+            var r:int = 3;
+            var sum:Number = 0 + ((r & 2) == 2);
+            var mixed:Number = ((r & 1) == 1 ? 1 : (0 + ((r & 2) == 2) ? 1 : 0)) + ((r & 4) == 4) ? 1 : 0;
+            var sub:Number = 5 - ((r & 1) == 1);
+            var mul:Number = 2 * ((r & 2) == 2);
+            if (sum + mixed + sub + mul < -1) {
+                throw new Error("keep live");
+            }
         }
 
         private function takesInt(v:int):void {}
