@@ -130,6 +130,7 @@ class TPackage {
 	}
 
 	public inline function renameModule(module:TModule, newName:String) {
+		if (module.name == newName) return;
 		if (modules.exists(newName)) throw 'Module $newName already exists!';
 		modules.remove(module.name);
 		modules[newName] = module;
