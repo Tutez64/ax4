@@ -151,6 +151,7 @@ Example:
   },
   "rootImports": "config/root-imports.hx",
   "keepTypes": true,
+  "skipXmlLiterals": true,
   "copy": [
     { "unit": "compat", "to": "out/compat" }
   ],

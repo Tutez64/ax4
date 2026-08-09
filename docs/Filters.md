@@ -39,3 +39,17 @@ When debugging a behavior change:
 2. Open corresponding file in `src/ax4/filters/`
 3. Add a minimal test in `tests/src`
 4. Re-run conversion with `tests/config.json`
+
+## Warnings vs rewrites
+
+Many filters both **rewrite** and **report**. Warnings are aggregated at end of run; meanings and triage notes live in [Diagnostics](Diagnostics.md).
+
+Examples tied to recent fidelity work:
+
+| Filter | Related behavior |
+|--------|------------------|
+| `CoerceToNumber` / typer | Boolean in numeric arithmetic → `ASCompat.toNumber`, warning `Boolean +` / `Boolean arithmetic` |
+| `RewriteSwitch` | AS3 fall-through → duplicated case-body suffix in Haxe, warning `Switch case fall-through…` |
+| `CoerceToBool` | `void` used as condition → `{ call; false; }`, warning `void used as Bool…` |
+
+The table is illustrative, not exhaustive — `Filters.hx` remains authoritative for order and membership.

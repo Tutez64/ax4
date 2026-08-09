@@ -10,6 +10,8 @@ It is a high-level overview based on recent development history (roughly the lat
 - Much broader non-Flash target support, especially C++/hxcpp-oriented compatibility behavior.
 - Significant expansion of compatibility runtime (`compat/`) and tests (`compat-test/`).
 - Better handling of dynamic access, dictionary/object semantics, XML/E4X patterns, arrays/vectors, and coercions.
+- Stronger **AVM2 fidelity** on awkward-but-valid AS3 (Boolean in arithmetic, switch fall-through, `void` used as a condition) instead of aborting.
+- End-of-run **diagnostics summary** (counts by warning kind) plus a [Diagnostics](Diagnostics.md) catalogue.
 - More practical project tooling/docs (new docs set, troubleshooting guidance, wiki sync workflow).
 
 ## Converter and filter improvements
@@ -22,6 +24,10 @@ Main areas improved in typing/filtering/generation:
 - Type inference and coercions:
   - better local inference in loops and cyclic flows
   - improved numeric/bitwise coercions and Any/Object conversions
+  - Boolean operands in `+` / arithmetic accepted like AVM2 `ToNumber`
+  - `void` used as Bool rewritten to preserve side effects and falsy AVM2 `undefined` semantics
+- Control flow:
+  - switch fall-through rewritten by duplicating executed case-body suffixes
 - Class/constructor handling:
   - fixes for ctor initialization ordering and super-call placement
   - better handling of class casts and `new` on dynamic/callable values
@@ -62,6 +68,8 @@ Notable workflow/config changes include:
   - `copyNonAs` option (default `true`)
   - `dataout` fallback behavior and filtering with `dataext` / `datafiles`
 - added docs structure under `docs/` and one-way wiki sync
+- `skipXmlLiterals` to neutralize AS3 XML literals instead of failing the run
+- diagnostic aggregation at end of conversion (see [Diagnostics](Diagnostics.md))
 
 ## Migration notes for ax3 users
 
@@ -71,3 +79,4 @@ If you are coming from ax3:
 2. Ensure `compat/` is included in your target project.
 3. Re-check any custom assumptions around dynamic behavior, array/vector helpers, and XML/E4X conversions.
 4. If output still fails to compile, use [Troubleshooting](Troubleshooting.md) and reduce to a repro in `tests/src/`.
+5. After conversion, read the diagnostics summary and [Diagnostics](Diagnostics.md) before assuming warnings are converter bugs.
