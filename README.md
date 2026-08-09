@@ -11,8 +11,9 @@ To achieve that, it actually resembles the typical compiler a lot, so here's how
 
 ## Disclaimer
 
-This is a fork of [ax3](https://github.com/innogames/ax3) and [this other fork](https://github.com/addreality/ax3).
-My initial goal is to make a fully working (fan-made) [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/) C++ version, after which I would like to convert another game and to keep this project alive, but since I'm doing it in my free time, this isn't a guarantee.
+ax4 is a fork of [ax3](https://github.com/innogames/ax3) and [this other fork](https://github.com/addreality/ax3), developed to make a (fan-made) [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/)
+native port (see [Dungeon Rampage Haxe](https://github.com/Tutez64/Dungeon-Rampage-Haxe)). \
+I may or may not continue to maintain ax4, and port other games in the future.
 
 ## Quick start
 
