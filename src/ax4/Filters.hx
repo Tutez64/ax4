@@ -23,6 +23,7 @@ class Filters {
 			detectStaticInstanceConflicts,
 			new RewriteRedefinedPrivate.RenameRedefinedFields(context, detectFieldRedefinitions),
 			new HandleStaticInstanceConflict.RenameStaticInstanceConflicts(context, detectStaticInstanceConflicts),
+			new EscapeHaxeKeywords(context),
 			new RewriteAssignOps(context),
 			new WrapModuleLevelDecls(context),
 			new HandleVisibilityModifiers(context),
