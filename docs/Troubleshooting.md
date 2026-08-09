@@ -121,6 +121,18 @@ Recommended diagnostic workflow:
    - unsupported rewrite pattern.
 4. If it is a converter issue, create a focused repro in `tests/src/` and iterate there before patching production code.
 
+## Conversion log is huge / hard to read
+
+Cause:
+
+- ax4 reports many non-fatal warnings (dynamic ops, untyped calls, local inference on vars, etc.) while still converting.
+
+What to do:
+
+1. Scroll to the end of the run: after `-- TOTAL`, a **diagnostics summary** lists each warning *kind* with a count.
+2. Use [Diagnostics](Diagnostics.md) for meaning and recommendations.
+3. Grep the per-line stderr log only for kinds you care about (or for a specific `.as` file).
+
 ## Formatter step fails silently
 
 Cause:

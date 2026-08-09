@@ -119,6 +119,7 @@ class Main {
 		if (Timers.formatter > 0)
 		print("formatter " + Timers.formatter);
 		print("-- TOTAL  " + total);
+		ctx.printDiagnosticSummary();
 	}
 
 	static function checkSet(value: Any, name: String): Void {

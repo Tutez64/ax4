@@ -58,6 +58,7 @@ java -jar converter.jar config.json
 - [Config examples](docs/Examples.md)
 - [Differences from ax3](docs/ForkDifferences.md)
 - [Filters overview](docs/Filters.md)
+- [Diagnostics catalogue](docs/Diagnostics.md)
 - [Troubleshooting](docs/Troubleshooting.md)
 - [Contributing](docs/Contributing.md)
 - [GitHub wiki setup and sync](docs/Wiki.md)

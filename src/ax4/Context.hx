@@ -14,6 +14,7 @@ enum abstract ToplevelImportKind(String) to String {
 class Context {
 	public final fileLoader = new FileLoader();
 	public final config:Config;
+	public final diagnostics = new DiagnosticStats();
 	final toplevelImports = new Map<String,ToplevelImportKind>();
 
 	public function new(config:Config) {
@@ -23,8 +24,13 @@ class Context {
 	}
 
 	public function reportError(path:String, pos:Int, message:String) {
+		diagnostics.record(message);
 		var posStr = fileLoader.formatPosition(path, pos);
 		printerr('$posStr: $message');
+	}
+
+	public function printDiagnosticSummary() {
+		diagnostics.printSummary();
 	}
 
 	public inline function addToplevelImport(path, kind) toplevelImports[path] = kind;

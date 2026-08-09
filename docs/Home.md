@@ -8,10 +8,12 @@ This documentation is for users migrating ActionScript 3 projects to Haxe with `
 2. Prepare your `config.json` using [Config reference](Config.md)
 3. Compare with [Examples](Examples.md)
 4. If conversion fails, check [Troubleshooting](Troubleshooting.md)
+5. After a run, read the diagnostics summary — see [Diagnostics](Diagnostics.md)
 
 ## Technical references
 
 - [Filters overview](Filters.md)
+- [Diagnostics catalogue](Diagnostics.md)
 - [Differences from ax3](ForkDifferences.md)
 - [Contributing](Contributing.md)
 - [GitHub wiki setup and sync](Wiki.md)
