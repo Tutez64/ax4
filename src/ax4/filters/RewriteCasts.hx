@@ -3,10 +3,16 @@ package ax4.filters;
 import ax4.filters.NumberToInt.tStdInt;
 
 class RewriteCasts extends AbstractFilter {
-	static final tToBool = TTFun([TTAny], TTBoolean);
 	static final tToInt = TTFun([TTAny], TTInt);
 	static final tToNumber = TTFun([TTAny], TTNumber);
 	static final tToString = TTFun([TTAny], TTString);
+
+	final coerceToBool:CoerceToBool;
+
+	public function new(context:Context, coerceToBool:CoerceToBool) {
+		super(context);
+		this.coerceToBool = coerceToBool;
+	}
 
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
@@ -90,15 +96,12 @@ class RewriteCasts extends AbstractFilter {
 					case [TTBoolean, TTBoolean]:
 						stripCast();
 
-					// Boolean(other)
+					// Boolean(other) — use CoerceToBool so object/&&/|| truthiness becomes
+					// `!= null` (etc.) instead of a raw ASCompat.toBool.
 					case [_, TTBoolean]:
-						// TODO: share some logic with CoerceToBool here
-						var eCastMethod = mkBuiltin("ASCompat.toBool", tToBool, removeLeadingTrivia(e));
-						e.with(kind = TECall(eCastMethod, {
-							openParen: syntax.openParen,
-							args: [{expr: expr, comma: null}],
-							closeParen: syntax.closeParen
-						}));
+						processLeadingToken(t -> t.leadTrivia = removeLeadingTrivia(e).concat(t.leadTrivia), expr);
+						processTrailingToken(t -> t.trailTrivia = t.trailTrivia.concat(removeTrailingTrivia(e)), expr);
+						coerceToBool.coerce(expr.with(expectedType = TTBoolean));
 
 					// String(already a string)
 					case [TTString, TTString]:
