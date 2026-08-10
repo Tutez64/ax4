@@ -8,7 +8,7 @@ package {
 	public class TestFilterEscapeHaxeKeywords {
 		public var inline:int = 1;
 
-		public function registerMouseCursor(override:Boolean = false):Boolean {
+		public function tryRegister(override:Boolean = false):Boolean {
 			if (!override) {
 				return false;
 			}
