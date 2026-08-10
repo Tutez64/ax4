@@ -4,6 +4,8 @@
  * - arguments in a basic function (single decl, multiple uses).
  * - arguments with rest args (concat).
  * - nested functions get their own arguments.
+ * - a parameter literally named `arguments` must stay a normal parameter
+ *   (shadows the AS3 arguments object; must not inject var arguments = [...]).
  */
 package {
 public class TestFilterRewriteArguments {
@@ -23,6 +25,12 @@ public class TestFilterRewriteArguments {
             trace(arguments.length);
         };
         trace(outerArgs.length);
+    }
+
+    public function processArguments(arguments:Array):void {
+        trace(arguments.length);
+        var first:* = arguments[0];
+        trace(first);
     }
 }
 }

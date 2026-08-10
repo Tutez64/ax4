@@ -408,7 +408,16 @@ class ExprTyper {
 			case "AS3": mk(TELiteral(TLNull(i)), TTAny, expectedType);
 			case "null": mk(TELiteral(TLNull(i)), TTAny, expectedType);
 			case "undefined": mk(TELiteral(TLUndefined(i)), TTAny, expectedType);
-			case "arguments": mk(TEBuiltin(i, "arguments"), TTBuiltin, expectedType);
+			case "arguments":
+				// A local/parameter named `arguments` shadows the AS3 arguments object
+				// (same as AVM2). Resolve it as a normal local so RewriteArguments does not
+				// inject `var arguments = [arguments]` and break initialization.
+				var argumentsLocal = locals["arguments"];
+				if (argumentsLocal != null) {
+					mk(TELocal(i, argumentsLocal), argumentsLocal.type, expectedType);
+				} else {
+					mk(TEBuiltin(i, "arguments"), TTBuiltin, expectedType);
+				}
 			case "trace": mk(TEBuiltin(i, "trace"), TTFun([], TTVoid, TRestSwc), expectedType);
 			case "int": mk(TEBuiltin(i, "int"), TTBuiltin, expectedType);
 			case "uint": mk(TEBuiltin(i, "int"), TTBuiltin, expectedType);
