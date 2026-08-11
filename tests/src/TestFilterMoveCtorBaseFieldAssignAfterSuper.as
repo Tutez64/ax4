@@ -6,9 +6,11 @@
  * - Assignments to subclass fields before super() stay in place.
  * - Assignments nested inside other statements (like if blocks) are not moved.
  * - Constructors where super() is already first remain unchanged.
- * - Default (reorderFieldInitsForCtorDeps off): trailing base assigns that a child
- *   field init reads still move after super(); MoveFieldInits places the init at
- *   the start of the ctor (ASC: field inits see the default value).
+ * - Base-field assigns read by a later pre-super statement stay before super()
+ *   (e.g. mHost = x; mHelper = new Helper(mHost); super()).
+ * - Default (reorderFieldInitsForCtorDeps off): trailing base assigns that only a
+ *   child field init reads still move after super(); MoveFieldInits places the
+ *   init at the start of the ctor (ASC: field inits see the default value).
  *   Expect warning from MoveFieldInits on ChildWithBaseFieldDep.
  */
 package {
@@ -18,6 +20,7 @@ package {
             var b:ChildSuperFirst = new ChildSuperFirst();
             var c:ChildNoSuperCall = new ChildNoSuperCall();
             var d:ChildWithBaseFieldDep = new ChildWithBaseFieldDep(5);
+            var e:ChildWithBaseFieldReadBeforeSuper = new ChildWithBaseFieldReadBeforeSuper({});
         }
     }
 }
@@ -73,6 +76,30 @@ class ChildWithBaseFieldDep extends BaseWithProtectedField {
     }
 }
 
+// Base field assigned then read by a later pre-super statement.
+// mHost must stay before super() (and before the Helper construction).
+class BaseWithHost {
+    protected var mHost:Object;
+
+    public function BaseWithHost(host:Object) {
+        mHost = host;
+    }
+}
+
+class ChildWithBaseFieldReadBeforeSuper extends BaseWithHost {
+    private var mHelper:Helper;
+
+    public function ChildWithBaseFieldReadBeforeSuper(host:Object) {
+        mHost = host;
+        mHelper = new Helper(mHost);
+        super(host);
+    }
+}
+
 class Component {
     public function Component(val:int) {}
+}
+
+class Helper {
+    public function Helper(host:Object) {}
 }

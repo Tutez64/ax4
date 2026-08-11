@@ -4,8 +4,8 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 	override function processClass(c:TClassOrInterfaceDecl) {
 		// When reorderFieldInitsForCtorDeps is on, MoveFieldInits places moved inits
 		// after pre-super assigns that they read — keep those assigns before super().
-		// Default (off): ASC-faithful field inits do not see those assigns, so trailing
-		// base-field assigns can move after super() as usual.
+		// Also never move a base-field assign if a later pre-super statement reads it
+		// (e.g. mHost = x; mHelper = new Helper(mHost); super()).
 		var fieldInitDeps = reorderFieldInitsForCtorDepsEnabled()
 			? collectFieldInitDeps(c)
 			: new Map<String, Bool>();
@@ -41,7 +41,7 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 				case TMField(field):
 					switch field.kind {
 						case TFVar(v) if (v.init != null):
-							collectDepsFromExpr(v.init.expr, deps);
+							collectFieldReads(v.init.expr, deps);
 						case _:
 					}
 				case _:
@@ -50,12 +50,12 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 		return deps;
 	}
 
-	function collectDepsFromExpr(e:TExpr, deps:Map<String, Bool>):Void {
+	function collectFieldReads(e:TExpr, deps:Map<String, Bool>):Void {
 		switch e.kind {
 			case TEField(obj, name, _) if (isThisObject(obj)):
 				deps[name] = true;
 			case _:
-				iterExpr(e2 -> collectDepsFromExpr(e2, deps), e);
+				iterExpr(e2 -> collectFieldReads(e2, deps), e);
 		}
 	}
 
@@ -84,7 +84,10 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 					}
 					for (i in 0...before.length) {
 						var expr = before[i];
-						if (i > lastNonSimpleIndex && isAssignToBaseField(expr.expr, currentClass, fieldInitDeps)) {
+						var fieldName = getBaseFieldAssignName(expr.expr, currentClass);
+						if (i > lastNonSimpleIndex && fieldName != null
+							&& !fieldInitDeps.exists(fieldName)
+							&& !isFieldReadInRange(before, i + 1, fieldName)) {
 							moveAfter.push(expr);
 						} else {
 							keepBefore.push(expr);
@@ -123,28 +126,55 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 	}
 
 	/**
-	 * Check if an expression is an assignment to a base class field.
-	 * Returns true only if the field is inherited AND not needed by child class field initializations.
+	 * If `e` assigns an inherited instance field, return that field name; else null.
 	 */
-	function isAssignToBaseField(e:TExpr, currentClass:TClassOrInterfaceDecl, fieldInitDeps:Map<String, Bool>):Bool {
+	function getBaseFieldAssignName(e:TExpr, currentClass:TClassOrInterfaceDecl):Null<String> {
 		return switch e.kind {
-			case TEParens(_, inner, _): isAssignToBaseField(inner, currentClass, fieldInitDeps);
+			case TEParens(_, inner, _): getBaseFieldAssignName(inner, currentClass);
 			case TEBinop(left, OpAssign(_), _):
 				switch left.kind {
 					case TEField(obj, name, _) if (isThisObject(obj)):
 						var found = currentClass.findFieldInHierarchy(name, false);
-						// It's a base field if it's declared in a parent class
 						if (found != null && found.declaringClass != currentClass) {
-							// BUT don't move it if child class field initializations depend on it
-							!fieldInitDeps.exists(name);
+							name;
 						} else {
-							false;
+							null;
 						}
 					case _:
-						false;
+						null;
 				}
 			case _:
-				false;
+				null;
+		}
+	}
+
+	function isFieldReadInRange(exprs:Array<TBlockExpr>, start:Int, fieldName:String):Bool {
+		for (i in start...exprs.length) {
+			if (exprReadsField(exprs[i].expr, fieldName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function exprReadsField(e:TExpr, fieldName:String):Bool {
+		return switch e.kind {
+			case TEField(obj, name, _) if (name == fieldName && isThisObject(obj)):
+				true;
+			case TEBinop(left, OpAssign(_), right):
+				// RHS (and nested) may read the field; LHS of the assign is a write.
+				exprReadsField(right, fieldName) || switch left.kind {
+					case TEField(_, _, _): false;
+					case _: exprReadsField(left, fieldName);
+				};
+			case _:
+				var found = false;
+				iterExpr(function(inner) {
+					if (!found && exprReadsField(inner, fieldName)) {
+						found = true;
+					}
+				}, e);
+				found;
 		}
 	}
 
