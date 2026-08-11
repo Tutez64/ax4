@@ -6,7 +6,11 @@
  * - Instance field init calling an instance method.
  * - Field init that does not touch this (should stay).
  * - Derived class with a super() call.
- * - Field init depending on base class field assigned before super().
+ * - Field init depending on a slot assigned in the ctor (e.g. before super()):
+ *   ASC runs field inits before the ctor body (default value). Default ax4
+ *   placement matches that; settings.reorderFieldInitsForCtorDeps places the
+ *   init after pre-super assigns to those slots instead. Expect warning:
+ *   Field initializer depends on a slot assigned in the constructor (ASC uses the default value)
  */
 package {
     public class TestFilterMoveFieldInits extends BaseMoveFieldInits {
@@ -31,12 +35,10 @@ class BaseMoveFieldInits {
     }
 }
 
-// Test case: field init depending on base class field assigned before super()
-// The field init must be inserted BEFORE super() to preserve AS3 semantics
+// Field init depends on mBaseField assigned before super().
+// ASC: mComponent sees the default (0). Default ax4: init at start of ctor.
 class TestMoveFieldInitsBeforeSuper extends BaseWithProtectedField {
     protected var mHelper:Helper;
-    // This field init depends on mBaseField which is assigned before super()
-    // Therefore it must be initialized BEFORE super() is called
     protected var mComponent:Component = new Component(mBaseField);
 
     public function TestMoveFieldInitsBeforeSuper(param1:int) {
@@ -49,8 +51,6 @@ class BaseWithProtectedField {
     protected var mBaseField:int;
 
     public function BaseWithProtectedField(val:int) {
-        // In AS3, child field inits happen before this constructor runs
-        // So mComponent is already initialized here
     }
 }
 

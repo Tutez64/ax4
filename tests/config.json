@@ -8,5 +8,8 @@
     "floor": "floorpkg"
   },
   "testCloneExpr": true,
-  "skipXmlLiterals": true
+  "skipXmlLiterals": true,
+  "settings" : {
+    "reorderFieldInitsForCtorDeps": true
+  }
 }

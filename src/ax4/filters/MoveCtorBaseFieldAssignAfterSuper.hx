@@ -2,10 +2,13 @@ package ax4.filters;
 
 class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 	override function processClass(c:TClassOrInterfaceDecl) {
-		// Collect field dependencies from instance field initializations in this class
-		// These fields will be moved to the constructor by MoveFieldInits,
-		// so we need to know if they depend on base class fields
-		var fieldInitDeps = collectFieldInitDeps(c);
+		// When reorderFieldInitsForCtorDeps is on, MoveFieldInits places moved inits
+		// after pre-super assigns that they read — keep those assigns before super().
+		// Default (off): ASC-faithful field inits do not see those assigns, so trailing
+		// base-field assigns can move after super() as usual.
+		var fieldInitDeps = reorderFieldInitsForCtorDepsEnabled()
+			? collectFieldInitDeps(c)
+			: new Map<String, Bool>();
 
 		for (m in c.members) {
 			switch (m) {
@@ -17,6 +20,10 @@ class MoveCtorBaseFieldAssignAfterSuper extends AbstractFilter {
 				case _:
 			}
 		}
+	}
+
+	inline function reorderFieldInitsForCtorDepsEnabled():Bool {
+		return context.config.settings != null && context.config.settings.reorderFieldInitsForCtorDeps == true;
 	}
 
 	static inline function isCtorName(name:String, className:String):Bool {

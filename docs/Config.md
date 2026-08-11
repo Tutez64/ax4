@@ -40,11 +40,12 @@ java -jar converter.jar config.json
 
 ## `settings` fields
 
-| Key                 | Type                                   | Default  | Description                                                                       |
-|---------------------|----------------------------------------|----------|-----------------------------------------------------------------------------------|
-| `checkNullIteratee` | `bool`                                 | `false`  | Adds `ASCompat.checkNullIteratee(...)` guards in rewritten `for...in`/`for each`. |
-| `haxeRobotlegs`     | `bool`                                 | `false`  | Enables Robotlegs-specific typing behavior.                                       |
-| `flashProperties`   | `"none" \| "externInterface" \| "all"` | `"none"` | Controls `@:flash.property` metadata generation.                                  |
+| Key                            | Type                                   | Default  | Description                                                                                                                              |
+|--------------------------------|----------------------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `checkNullIteratee`            | `bool`                                 | `false`  | Adds `ASCompat.checkNullIteratee(...)` guards in rewritten `for...in`/`for each`.                                                        |
+| `haxeRobotlegs`                | `bool`                                 | `false`  | Enables Robotlegs-specific typing behavior.                                                                                              |
+| `flashProperties`              | `"none" \| "externInterface" \| "all"` | `"none"` | Controls `@:flash.property` metadata generation.                                                                                         |
+| `reorderFieldInitsForCtorDeps` | `bool`                                 | `false`  | Place moved field inits after pre-`super()` ctor assigns they read (diverges from ASC). Default: init at ctor start (ASC default value). |
 
 ## `injection` object
 
@@ -143,7 +144,8 @@ Example:
   "settings": {
     "checkNullIteratee": true,
     "haxeRobotlegs": false,
-    "flashProperties": "externInterface"
+    "flashProperties": "externInterface",
+    "reorderFieldInitsForCtorDeps": true
   },
   "haxeTypes": {
     "flash.display.DisplayObject.filters$get": "return:Array<flash.filters.BitmapFilter>",

@@ -37,6 +37,10 @@ class MoveFieldInits extends AbstractFilter {
 		ctor.fun.expr = insertAssignments(c, ctor.fun.expr, pending);
 	}
 
+	inline function reorderFieldInitsForCtorDepsEnabled():Bool {
+		return context.config.settings != null && context.config.settings.reorderFieldInitsForCtorDeps == true;
+	}
+
 	static inline function isCtorName(name:String, className:String):Bool {
 		return name == "new" || name == className;
 	}
@@ -104,32 +108,42 @@ class MoveFieldInits extends AbstractFilter {
 		// Determine insert position
 		var insertAt = 0;
 		if (superIndex >= 0) {
-			// Check if any dependencies are assigned before super()
 			var hasDepsBeforeSuper = false;
+			var hasDepsAssignedInCtor = false;
 			if (deps.keys().hasNext()) {
-				for (i in 0...superIndex) {
+				for (i in 0...block.exprs.length) {
 					if (assignsToDeps(block.exprs[i].expr, deps)) {
-						hasDepsBeforeSuper = true;
-						break;
+						hasDepsAssignedInCtor = true;
+						if (i < superIndex) {
+							hasDepsBeforeSuper = true;
+						}
 					}
 				}
 			}
 
-			if (hasDepsBeforeSuper) {
-				// If dependencies are assigned before super(), we must insert before super()
-				// to preserve AS3 semantics (field inits happen before parent constructor)
-				insertAt = superIndex;
-				// Find the earliest position after all dependency assignments
-				var i = superIndex - 1;
-				while (i >= 0) {
-					if (assignsToDeps(block.exprs[i].expr, deps)) {
-						insertAt = i + 1;
-						break;
+			if (hasDepsAssignedInCtor) {
+				// ASC runs instance field inits before the constructor body, so they
+				// see the default value — not ctor assignments (including ones that
+				// were before super() and may already have been moved after it).
+				var warnPos = exprPos(pending[0].init.expr);
+				reportError(warnPos, "Field initializer depends on a slot assigned in the constructor (ASC uses the default value)");
+				if (reorderFieldInitsForCtorDepsEnabled() && hasDepsBeforeSuper) {
+					// Opt-in: place after pre-super assignments so the init can observe them.
+					insertAt = superIndex;
+					var i = superIndex - 1;
+					while (i >= 0) {
+						if (assignsToDeps(block.exprs[i].expr, deps)) {
+							insertAt = i + 1;
+							break;
+						}
+						i--;
 					}
-					i--;
+				} else {
+					// Default: ASC-faithful — inits at the start of the ctor body.
+					insertAt = 0;
 				}
 			} else {
-				// No dependencies before super(), insert after super() (default behavior)
+				// No ctor assignments to deps: insert after super().
 				insertAt = superIndex + 1;
 			}
 		}

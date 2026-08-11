@@ -6,7 +6,10 @@
  * - Assignments to subclass fields before super() stay in place.
  * - Assignments nested inside other statements (like if blocks) are not moved.
  * - Constructors where super() is already first remain unchanged.
- * - Base field assignments needed by child field initializations stay before super().
+ * - Default (reorderFieldInitsForCtorDeps off): trailing base assigns that a child
+ *   field init reads still move after super(); MoveFieldInits places the init at
+ *   the start of the ctor (ASC: field inits see the default value).
+ *   Expect warning from MoveFieldInits on ChildWithBaseFieldDep.
  */
 package {
     public class TestFilterMoveCtorBaseFieldAssignAfterSuper {
@@ -53,8 +56,8 @@ class ChildNoSuperCall extends BaseWithFields {
     }
 }
 
-// Test case: base field assignment needed by child field initialization
-// The base field assignment must stay BEFORE super() because the child field init depends on it
+// Field init depends on mBaseValue assigned before super().
+// Default: trailing mBaseValue moves after super; mComponent init at ctor start.
 class BaseWithProtectedField {
     protected var mBaseValue:int;
 
@@ -62,11 +65,10 @@ class BaseWithProtectedField {
 }
 
 class ChildWithBaseFieldDep extends BaseWithProtectedField {
-    // This field init depends on mBaseValue from the base class
     protected var mComponent:Component = new Component(mBaseValue);
 
     public function ChildWithBaseFieldDep(v:int) {
-        mBaseValue = v;  // should stay before super() - needed by mComponent init
+        mBaseValue = v;
         super(v);
     }
 }

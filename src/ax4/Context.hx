@@ -74,6 +74,7 @@ typedef Settings = {
 	var ?checkNullIteratee:Bool;
 	var ?haxeRobotlegs:Bool;
 	var ?flashProperties:FlashPropertiesSetting;
+	var ?reorderFieldInitsForCtorDeps:Bool;
 }
 
 enum abstract FlashPropertiesSetting(String) {

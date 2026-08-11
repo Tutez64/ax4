@@ -157,6 +157,13 @@ These are judgment labels for triage, not strict severity levels. The same warni
 - **Notes:** Using `void` as a condition is almost never a deliberate style; it is still well-defined. Changing the callee to return `Boolean` / `true` / `false` **changes** runtime behavior relative to the SWF — do that only as an intentional project fix, after checking ABC (signature + `returnvoid` vs `returnvalue`).
 - **Recommendation:** Default: keep ax4’s rewrite for parity. If the `then` branch should be reachable, fix the AS3 contract (return type and returned value) to match the intended logic, then reconvert.
 
+#### `Field initializer depends on a slot assigned in the constructor (ASC uses the default value)`
+
+- **Meaning:** An instance field initializer reads a slot that the constructor also assigns. ASC runs field initializers **before** the constructor body, so the initializer sees the **default** value, not that assignment. By default ax4 keeps that ASC order when moving the init into the Haxe constructor (init at the start of the ctor body).
+- **Category:** Suspicious.
+- **Notes:** Valid AS3 with defined semantics, but pairing a field init with a later ctor assign to the same slot is rarely deliberate ASC style (the init would not see that value). `settings.reorderFieldInitsForCtorDeps` places the moved init after pre-`super()` assigns to those slots instead (and may keep related base-field assigns before `super()`). That usually matches the likely intended runtime; it diverges from strict ASC/SWF field-init ordering.
+- **Recommendation:** Default: keep ASC-faithful placement. If the default value looks wrong, enable `reorderFieldInitsForCtorDeps` or move the logic into the constructor body in AS3, then reconvert.
+
 ---
 
 ### Risk
