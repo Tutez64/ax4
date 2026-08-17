@@ -560,29 +560,32 @@ class ASCompat {
 		return if (Std.isOfType(v, String)) cast v else null;
 	}
 
-	public static inline function asNumber(v:Any):Null<Float> {
-		return if (Std.isOfType(v, Float)) cast v else null;
+	// AS3 `as` on primitives can yield null. Returning ASAny keeps that null
+	// through ==/!=: hxcpp unboxes Null<Int>/Null<Bool> (and Null<Float> to NaN).
+	// Not inline: a String argument must stay `Any`, or hxcpp can emit `string >= 0`.
+	public static function asNumber(v:Any):ASAny {
+		return if (Std.isOfType(v, Float)) (cast v : Float) else null;
 	}
 
-	public static inline function asInt(v:Any):Null<Int> {
-		return if (Std.isOfType(v, Int)) cast v else null;
+	public static function asInt(v:Any):ASAny {
+		return if (Std.isOfType(v, Int)) (cast v : Int) else null;
 	}
 
-	public static inline function asUint(v:Any):Null<Int> {
+	public static function asUint(v:Any):ASAny {
 		#if flash
-		return if (untyped __is__(v, untyped __global__["uint"])) cast v else null;
+		return if (untyped __is__(v, untyped __global__["uint"])) (cast v : Int) else null;
 		#else
-		return if (Std.isOfType(v, Int) && (cast v : Int) >= 0) cast v else null;
+		return if (Std.isOfType(v, Int) && (cast v : Int) >= 0) (cast v : Int) else null;
 		#end
 	}
 
-	public static inline function asBool(v:Any):Null<Bool> {
+	public static function asBool(v:Any):ASAny {
 		#if flash
-		return if (untyped __is__(v, untyped __global__["Boolean"])) cast v else null;
+		return if (untyped __is__(v, untyped __global__["Boolean"])) (cast v : Bool) else null;
 		#elseif js
-		return if (js.Syntax.typeof(v) == "boolean") cast v else null;
+		return if (js.Syntax.typeof(v) == "boolean") (cast v : Bool) else null;
 		#else
-		return if (Std.isOfType(v, Bool)) cast v else null;
+		return if (Std.isOfType(v, Bool)) (cast v : Bool) else null;
 		#end
 	}
 

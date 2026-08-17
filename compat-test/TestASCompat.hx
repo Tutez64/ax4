@@ -372,14 +372,33 @@ class TestASCompat extends utest.Test {
 		equals(123, ASCompat.asUint(123));
 		equals(null, ASCompat.asUint(-1));
 		equals(null, ASCompat.asUint(123.4));
+		// AS3: failed `as uint` is null, and null != uint(0) is true.
+		var asUintFailed:Any = "1";
+		var zeroUInt:UInt = 0;
+		var oneUInt:UInt = 1;
+		isTrue(ASCompat.asUint(asUintFailed) != zeroUInt);
+		isTrue(ASCompat.asUint(asUintFailed) != oneUInt);
+		isFalse(ASCompat.asUint(0) != zeroUInt);
+		isFalse(ASCompat.asUint(1) != oneUInt);
+		equals(0, (ASCompat.asUint(asUintFailed) : UInt));
+		equals(1, (ASCompat.asUint(1) : UInt));
+		var asUintFailedString:String = "1";
+		isTrue(ASCompat.asUint(asUintFailedString) != zeroUInt);
 
 		equals(123.4, ASCompat.asNumber(123.4));
 		equals(123, ASCompat.asNumber(123));
 		equals(null, ASCompat.asNumber("123.4"));
+		isTrue(ASCompat.asNumber("123.4") != 0);
+		isTrue(ASCompat.asNumber("123.4") != (0 : UInt));
+		floatEquals(0, (ASCompat.asNumber("123.4") : Float));
 
 		equals(true, ASCompat.asBool(true));
 		equals(false, ASCompat.asBool(false));
 		equals(null, ASCompat.asBool(1));
+		isTrue(ASCompat.asBool(1) != false);
+		isTrue(ASCompat.asBool("true") != false);
+		isFalse(ASCompat.asBool(false) != false);
+		equals(false, (ASCompat.asBool(1) : Bool));
 
 		var xml = new compat.XML("<root/>");
 		equals(xml, ASCompat.asXML(xml));
