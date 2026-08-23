@@ -1132,6 +1132,8 @@ class ASCompat {
 
 	public static macro function processNull<T>(e:ExprOf<Null<T>>):ExprOf<T>;
 
+	public static macro function setPropertyIsEnumerable(obj:Expr, name:ExprOf<String>, isEnum:ExprOf<Bool>):Expr;
+
 	public static inline function processNullInt(v:Null<Int>):Int {
 		#if flash
 		return v;

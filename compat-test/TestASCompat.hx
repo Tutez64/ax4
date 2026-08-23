@@ -27,6 +27,13 @@ class TestASCompat extends utest.Test {
 		equals(1, callCount);
 	}
 
+	function testSetPropertyIsEnumerableIsSafeToCall() {
+		var obj:ASObject = new ASObject();
+		obj["alias"] = 1;
+		obj.setPropertyIsEnumerable("alias", false);
+		equals(1, obj["alias"]);
+	}
+
 	function testIsAnyVector() {
 		isTrue(ASCompat.isVector(new flash.Vector<String>(), (_:ASAny)));
 	}

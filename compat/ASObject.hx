@@ -44,6 +44,10 @@ abstract ASObject(flash.utils.Object)
 		return false;
 	}
 
+	public inline function setPropertyIsEnumerable(name:String, isEnum:Bool = true):Void {
+		ASCompat.setPropertyIsEnumerable(this, name, isEnum);
+	}
+
 	#if flash
 	@:to public inline function ___toString():String return cast this;
 	@:to inline function ___toBool():Bool return cast this;

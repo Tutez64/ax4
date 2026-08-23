@@ -1,6 +1,7 @@
 #if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 using haxe.macro.Tools;
 
 class ASCompat {
@@ -140,6 +141,51 @@ class ASCompat {
 
 	static inline function textFieldGetXMLText(field:Dynamic, ?beginIndex:Int, ?endIndex:Int):String {
 		return "";
+	}
+
+	static function typeHasMethod(typePath:String, methodName:String):Bool {
+		var t = try Context.getType(typePath) catch (_:Dynamic) return false;
+		t = Context.follow(t);
+		return switch t {
+			case TAbstract(_.get() => abs, _):
+				if (abs.impl == null) {
+					false;
+				} else {
+					var found = false;
+					for (f in abs.impl.get().statics.get()) {
+						if (f.name == methodName) {
+							found = true;
+							break;
+						}
+					}
+					found;
+				}
+			case TInst(_.get() => cl, _):
+				var found = false;
+				while (cl != null && !found) {
+					for (f in cl.fields.get()) {
+						if (f.name == methodName) {
+							found = true;
+							break;
+						}
+					}
+					cl = if (cl.superClass != null) cl.superClass.t.get() else null;
+				}
+				found;
+			default:
+				false;
+		}
+	}
+
+	static function setPropertyIsEnumerable(obj:Expr, name:Expr, isEnum:Expr):Expr {
+		var pos = Context.currentPos();
+		if (Context.defined("flash")) {
+			return macro @:pos(pos) untyped $obj.setPropertyIsEnumerable($name, $isEnum);
+		}
+		if (typeHasMethod("openfl.utils.Object", "setPropertyIsEnumerable")) {
+			return macro @:pos(pos) (cast $obj : openfl.utils.Object).setPropertyIsEnumerable($name, $isEnum);
+		}
+		return macro @:pos(pos) {};
 	}
 }
 
