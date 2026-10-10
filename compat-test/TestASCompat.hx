@@ -18,11 +18,23 @@ class TestASCompat extends utest.Test {
 		equals(null, ASCompat.coerce(null, flash.display.Sprite));
 		equals(null, ASCompat.coerce(new ASDictionary<String, ASAny>()["missing"], flash.display.Sprite));
 		equals(sprite, ASCompat.coerce(sprite, flash.display.DisplayObject));
-		raises(() -> ASCompat.coerce(sprite, flash.display.MovieClip), flash.errors.TypeError);
-		raises(() -> ASCompat.coerce("text", flash.display.Sprite), flash.errors.TypeError);
 		var list:Array<Dynamic> = [1];
 		equals(list, ASCompat.coerce(list, Array));
-		raises(() -> ASCompat.coerce({}, Array), flash.errors.TypeError);
+		if (canCatchErrors()) {
+			raises(() -> ASCompat.coerce(sprite, flash.display.MovieClip), flash.errors.TypeError);
+			raises(() -> ASCompat.coerce("text", flash.display.Sprite), flash.errors.TypeError);
+			raises(() -> ASCompat.coerce({}, Array), flash.errors.TypeError);
+		}
+	}
+
+	// Haxe's flash catch normalizes getStackTrace(), which is null outside debug players (and in Ruffle).
+	// https://github.com/HaxeFoundation/haxe/pull/13064
+	static function canCatchErrors():Bool {
+		#if flash
+		return new flash.errors.Error().getStackTrace() != null;
+		#else
+		return true;
+		#end
 	}
 
 	function testFloatToIntMatchesAs3Int() {
