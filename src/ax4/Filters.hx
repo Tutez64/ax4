@@ -96,7 +96,6 @@ class Filters {
 			new ToString(context),
 			new CoerceFromAny(context),
 			new FixNonInlineableDefaultArgs(context),
-			new NamespacedToPublic(context),
 			new MoveCtorBaseFieldAssignAfterSuper(context),
 			new MoveFieldInits(context),
 			new HoistLocalDecls(context),
