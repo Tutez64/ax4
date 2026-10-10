@@ -3,7 +3,7 @@
  * Covers:
  * - ASAny to class types via ASCompat.coerce (TypeError on a wrong type, like AVM2).
  * - ASAny to ByteArray via ASCompat.asByteArray helper.
- * - ASAny to array types via ASCompat.coerce.
+ * - ASAny to array types via ASCompat.coerce, to Function via ASCompat.coerceFunction.
  * - Untyped array literals mixing different types in ASAny context.
  */
 package {
@@ -36,7 +36,8 @@ package {
             // An untyped parameter cannot be inferred: both assignments go through ASCompat.coerce.
             var sprite:Sprite = value;
             var list:Array = value;
-            trace(sprite, list);
+            var fn:Function = value;
+            trace(sprite, list, fn);
         }
 
         private function acceptAnyBytes(value:*):void {

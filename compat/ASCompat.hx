@@ -803,6 +803,17 @@ class ASCompat {
 		throw new flash.errors.TypeError('Error #1034: Type Coercion failed: cannot convert ${typeNameOf(v)} to ${Type.getClassName(c)}.');
 	}
 
+	// Implicit coercion of an untyped value to Function: like coerce, a TypeError on a non-function.
+	public static function coerceFunction(v:Dynamic):Null<ASFunction> {
+		if (v == null || isUndefinedValue(v)) {
+			return null;
+		}
+		if (Reflect.isFunction(v)) {
+			return v;
+		}
+		throw new flash.errors.TypeError('Error #1034: Type Coercion failed: cannot convert ${typeNameOf(v)} to Function.');
+	}
+
 	static function typeNameOf(v:Dynamic):String {
 		return switch Type.typeof(v) {
 			case TClass(c): Type.getClassName(c);

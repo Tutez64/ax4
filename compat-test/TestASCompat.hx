@@ -27,6 +27,16 @@ class TestASCompat extends utest.Test {
 		}
 	}
 
+	function testCoerceFunctionMatchesAvm2ImplicitCoercion() {
+		var f = function():Int return 1;
+		equals(null, ASCompat.coerceFunction(null));
+		equals(null, ASCompat.coerceFunction(new ASDictionary<String, ASAny>()["missing"]));
+		isTrue(ASCompat.coerceFunction(f) == f);
+		if (canCatchErrors()) {
+			raises(() -> ASCompat.coerceFunction("text"), flash.errors.TypeError);
+		}
+	}
+
 	// Haxe's flash catch normalizes getStackTrace(), which is null outside debug players (and in Ruffle).
 	// https://github.com/HaxeFoundation/haxe/pull/13064
 	static function canCatchErrors():Bool {

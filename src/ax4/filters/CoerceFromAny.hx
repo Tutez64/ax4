@@ -16,7 +16,7 @@ class CoerceFromAny extends AbstractFilter {
 		}
 		return switch e.expectedType {
 			case TTFunction | TTFun(_):
-				wrapAsFunction(e);
+				wrapCoerceFunction(e);
 			case TTInst(cls) if (isByteArrayClass(cls)):
 				wrapAsByteArray(e);
 			case TTInst(cls) if (cls.name != "String"):
@@ -33,10 +33,10 @@ class CoerceFromAny extends AbstractFilter {
 		}
 	}
 
-	function wrapAsFunction(e:TExpr):TExpr {
+	function wrapCoerceFunction(e:TExpr):TExpr {
 		var lead = removeLeadingTrivia(e);
 		var trail = removeTrailingTrivia(e);
-		var eMethod = mkBuiltin("ASCompat.asFunction", TTFunction, lead);
+		var eMethod = mkBuiltin("ASCompat.coerceFunction", TTFunction, lead);
 		return mk(TECall(eMethod, {
 			openParen: mkOpenParen(),
 			args: [{expr: e, comma: null}],
