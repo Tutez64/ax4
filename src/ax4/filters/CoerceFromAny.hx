@@ -20,11 +20,11 @@ class CoerceFromAny extends AbstractFilter {
 			case TTInst(cls) if (isByteArrayClass(cls)):
 				wrapAsByteArray(e);
 			case TTInst(cls) if (cls.name != "String"):
-				wrapDynamicAs(e, cls, e.expectedType);
+				wrapCoerce(e, cls, e.expectedType);
 			case TTObject(TTAny): // ASObject
 				wrapDynamicAsType(e, "ASObject", e.expectedType);
 			case TTArray(_):
-				wrapDynamicAsType(e, "Array", e.expectedType);
+				wrapDynamicAsType(e, "Array", e.expectedType, "ASCompat.coerce");
 			case TTVector(_):
 				// Vector cast is tricky, leaving as retype for now
 				e.with(kind = TEHaxeRetype(e), type = e.expectedType, expectedType = e.expectedType);
@@ -55,10 +55,10 @@ class CoerceFromAny extends AbstractFilter {
 		}), e.expectedType, e.expectedType);
 	}
 
-	function wrapDynamicAs(inner:TExpr, targetClass:TClassOrInterfaceDecl, targetType:TType):TExpr {
+	function wrapCoerce(inner:TExpr, targetClass:TClassOrInterfaceDecl, targetType:TType):TExpr {
 		var lead = removeLeadingTrivia(inner);
 		var trail = removeTrailingTrivia(inner);
-		var eMethod = mkBuiltin("ASCompat.dynamicAs", TTFunction, lead);
+		var eMethod = mkBuiltin("ASCompat.coerce", TTFunction, lead);
 		var fullName = targetClass.parentModule != null && targetClass.parentModule.path == currentPath
 			? targetClass.name
 			: (targetClass.parentModule.parentPack.name == "" ? targetClass.name : targetClass.parentModule.parentPack.name + "." + targetClass.name);
@@ -74,10 +74,10 @@ class CoerceFromAny extends AbstractFilter {
 		}), targetType, targetType);
 	}
 
-	function wrapDynamicAsType(inner:TExpr, typeName:String, targetType:TType):TExpr {
+	function wrapDynamicAsType(inner:TExpr, typeName:String, targetType:TType, method = "ASCompat.dynamicAs"):TExpr {
 		var lead = removeLeadingTrivia(inner);
 		var trail = removeTrailingTrivia(inner);
-		var eMethod = mkBuiltin("ASCompat.dynamicAs", TTFunction, lead);
+		var eMethod = mkBuiltin(method, TTFunction, lead);
 		var path = dotPathFromString(typeName, []);
 		var eType = mkBuiltin(typeName, TTClass, [], []);
 		return mk(TECall(eMethod, {

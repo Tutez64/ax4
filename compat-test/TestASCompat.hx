@@ -13,6 +13,18 @@ class TestASCompat extends utest.Test {
 		floatEquals(Math.NaN, ASCompat.processNull((undefined : Null<Float>)));
 	}
 
+	function testCoerceMatchesAvm2ImplicitCoercion() {
+		var sprite = new flash.display.Sprite();
+		equals(null, ASCompat.coerce(null, flash.display.Sprite));
+		equals(null, ASCompat.coerce(new ASDictionary<String, ASAny>()["missing"], flash.display.Sprite));
+		equals(sprite, ASCompat.coerce(sprite, flash.display.DisplayObject));
+		raises(() -> ASCompat.coerce(sprite, flash.display.MovieClip), flash.errors.TypeError);
+		raises(() -> ASCompat.coerce("text", flash.display.Sprite), flash.errors.TypeError);
+		var list:Array<Dynamic> = [1];
+		equals(list, ASCompat.coerce(list, Array));
+		raises(() -> ASCompat.coerce({}, Array), flash.errors.TypeError);
+	}
+
 	function testFloatToIntMatchesAs3Int() {
 		equals(3, ASCompat.floatToInt(3.9));
 		equals(-3, ASCompat.floatToInt(-3.9));

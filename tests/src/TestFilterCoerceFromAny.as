@@ -1,9 +1,9 @@
 /**
  * Test case for CoerceFromAny filter.
  * Covers:
- * - ASAny to class types.
+ * - ASAny to class types via ASCompat.coerce (TypeError on a wrong type, like AVM2).
  * - ASAny to ByteArray via ASCompat.asByteArray helper.
- * - ASAny to array types.
+ * - ASAny to array types via ASCompat.coerce.
  * - Untyped array literals mixing different types in ASAny context.
  */
 package {
@@ -30,6 +30,13 @@ package {
             var args:Array = [1, 2, 3];
             mixedStore["bind"] = [fn, args];
             mixedStore["menu"] = new Array(10, args, "label");
+        }
+
+        private function acceptAnyValue(value:*):void {
+            // An untyped parameter cannot be inferred: both assignments go through ASCompat.coerce.
+            var sprite:Sprite = value;
+            var list:Array = value;
+            trace(sprite, list);
         }
 
         private function acceptAnyBytes(value:*):void {
