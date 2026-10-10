@@ -55,3 +55,7 @@ Future direction:
 3. Implement filter/typer/gen fix.
 4. Re-run converter.
 5. Run `npx haxe test-compat.hxml` if compat/runtime was touched.
+
+## Auditing compat calls in a converted project
+
+`tools/CompatAudit.hx` counts the `ASCompat`/`ASAny` calls of a converted project by static argument types, so coercions on already-typed values (`toInt(Int)`, `toNumber(Float)`...) show up as converter work. Usage is in its header comment.
