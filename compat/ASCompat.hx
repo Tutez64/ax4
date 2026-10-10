@@ -365,9 +365,8 @@ class ASCompat {
 			return null;
 		}
 		#if !flash
-		var proxyGetter = Reflect.field(obj, "getProperty");
-		if (proxyGetter != null && Reflect.isFunction(proxyGetter)) {
-			return Reflect.callMethod(obj, proxyGetter, [fieldName]);
+		if (Std.isOfType(obj, ASProxyBase)) {
+			return (cast obj : ASProxyBase).getProperty(fieldName);
 		}
 		var name = propertyName(fieldName);
 		if (name == "length" && Std.isOfType(obj, Array)) {
@@ -398,9 +397,8 @@ class ASCompat {
 			return value;
 		}
 		#if !flash
-		var proxySetter = Reflect.field(obj, "setProperty");
-		if (proxySetter != null && Reflect.isFunction(proxySetter)) {
-			Reflect.callMethod(obj, proxySetter, [fieldName, value]);
+		if (Std.isOfType(obj, ASProxyBase)) {
+			(cast obj : ASProxyBase).setProperty(fieldName, value);
 			return value;
 		}
 		var name = propertyName(fieldName);
@@ -425,9 +423,8 @@ class ASCompat {
 			return true;
 		}
 		#if !flash
-		var proxyDelete = Reflect.field(obj, "deleteProperty");
-		if (proxyDelete != null && Reflect.isFunction(proxyDelete)) {
-			return toBool(Reflect.callMethod(obj, proxyDelete, [fieldName]));
+		if (Std.isOfType(obj, ASProxyBase)) {
+			return (cast obj : ASProxyBase).deleteProperty(fieldName);
 		}
 		var name = propertyName(fieldName);
 		var deleted = false;

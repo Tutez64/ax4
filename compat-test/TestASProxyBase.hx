@@ -65,6 +65,30 @@ class TestASProxyBase extends utest.Test {
 		isTrue(ASCompat.deleteProperty(o, "a"));
 		equals(null, ASCompat.getProperty(o, "a"));
 	}
+
+	function testPlainClassWithProxyNamedMethodsIsNotAProxy() {
+		var o = new NotAProxy();
+		equals(1, ASCompat.getProperty(o, "value"));
+		equals(2, ASCompat.setProperty(o, "value", 2));
+		equals(2, o.value);
+		equals(0, o.hookCalls);
+	}
+}
+
+private class NotAProxy {
+	public var value:Int = 1;
+	public var hookCalls:Int = 0;
+
+	public function new() {}
+
+	public function getProperty(name:Dynamic):Dynamic {
+		hookCalls++;
+		return null;
+	}
+
+	public function setProperty(name:Dynamic, value:Dynamic):Void {
+		hookCalls++;
+	}
 }
 
 private class CountingProxy extends ProxyBase {
