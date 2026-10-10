@@ -1232,8 +1232,13 @@ class ASCompat {
 		#if flash
 		return v;
 		#else
-		return !!v;
+		return v != null && !isUndefinedValue(v) && (v : Bool);
 		#end
+	}
+
+	// A missing typed Dictionary value of any other type: undefined reads as null.
+	public static inline function processNullValue<T>(v:Null<T>):Null<T> {
+		return if (isUndefinedValue(v)) null else v;
 	}
 
 	/**

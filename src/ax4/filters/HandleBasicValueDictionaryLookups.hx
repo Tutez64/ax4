@@ -48,6 +48,9 @@ class HandleBasicValueDictionaryLookups extends AbstractFilter {
 			case [TEArrayAccess({eobj: {type: TTDictionary(_, TTInt | TTUint)}}), TTInt | TTUint]: true;
 			case [TEArrayAccess({eobj: {type: TTDictionary(_, TTNumber)}}), TTNumber]: true;
 			case [TEArrayAccess({eobj: {type: TTDictionary(_, TTBoolean)}}), TTBoolean]: true;
+			// A missing key reads as undefined, which a typed String or object value must see as null.
+			case [TEArrayAccess({eobj: {type: TTDictionary(_, valueType = TTString | TTInst(_) | TTArray(_) | TTVector(_) | TTFunction | TTFun(_))}}), expected]
+				if (typeEq(valueType, expected)): true;
 			case _: false;
 		}
 	}

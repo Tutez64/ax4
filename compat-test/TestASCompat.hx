@@ -11,6 +11,15 @@ class TestASCompat extends utest.Test {
 
 		var undefined = new ASDictionary<Int,Float>()[10];
 		floatEquals(Math.NaN, ASCompat.processNull((undefined : Null<Float>)));
+		equals(0, ASCompat.processNull(new ASDictionary<Int,Int>()[10]));
+		equals(false, ASCompat.processNull(new ASDictionary<Int,Bool>()[10]));
+		equals(null, ASCompat.processNull(new ASDictionary<Int,String>()[10]));
+		var names = new ASDictionary<Int,String>();
+		names[1] = "one";
+		equals("one", ASCompat.processNull(names[1]));
+		var flags = new ASDictionary<Int,Bool>();
+		flags[1] = true;
+		equals(true, ASCompat.processNull(flags[1]));
 	}
 
 	function testCoerceMatchesAvm2ImplicitCoercion() {
