@@ -59,7 +59,7 @@ private class FlashTestOutput {
 				if (token == progressToken && !done) {
 					tf.text += 'Fatal error? Stalled on ' + currentTest;
 				}
-			}, 100);
+			}, 250);
 		});
 
 		runner.onComplete.add(function(_):Void { done = true; });
