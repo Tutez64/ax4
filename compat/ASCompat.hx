@@ -688,7 +688,7 @@ class ASCompat {
 
 	public static inline function isUndefinedValue(value:Dynamic):Bool {
 		#if js
-		return js.Syntax.code("typeof {0} === 'undefined'", value);
+		return js.Syntax.code("(typeof {0} === 'undefined')", value);
 		#elseif flash
 		return false;
 		#else
