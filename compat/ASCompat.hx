@@ -284,9 +284,27 @@ class ASCompat {
 		#if flash
 		return untyped __global__["int"](d);
 		#else
-		var n = toNumber(d);
-		return if (Math.isNaN(n)) 0 else Std.int(n);
+		return floatToInt(toNumber(d));
 		#end
+	}
+
+	// int(n) for a Number: NaN and infinities give 0, out-of-range values wrap modulo 2^32.
+	// Std.int already does this on flash and js; native targets leave it undefined.
+	public static inline function floatToInt(n:Float):Int {
+		#if (flash || js)
+		return Std.int(n);
+		#else
+		return if (n >= -2147483648.0 && n < 2147483648.0) Std.int(n) else floatToIntWrap(n);
+		#end
+	}
+
+	static function floatToIntWrap(n:Float):Int {
+		if (!Math.isFinite(n)) {
+			return 0;
+		}
+		var m = (n < 0 ? Math.fceil(n) : Math.ffloor(n)) % 4294967296.0;
+		if (m < 0) m += 4294967296.0;
+		return Std.int(m >= 2147483648.0 ? m - 4294967296.0 : m);
 	}
 
 	// Number(d)

@@ -28,7 +28,7 @@ class RewriteCasts extends AbstractFilter {
 				switch [expr.type, castType] {
 					// int(number)
 					case [TTNumber, TTInt]:
-						var stdInt = mkBuiltin("Std.int", tStdInt, removeLeadingTrivia(e));
+						var stdInt = mkBuiltin("ASCompat.floatToInt", tStdInt, removeLeadingTrivia(e));
 						e.with(kind = TECall(stdInt, {
 							openParen: syntax.openParen,
 							args: [{expr: expr, comma: null}],
@@ -37,7 +37,7 @@ class RewriteCasts extends AbstractFilter {
 
 					// uint(number)
 					case [TTNumber, TTUint]:
-						var stdInt = mkBuiltin("Std.int", tStdInt, removeLeadingTrivia(e));
+						var stdInt = mkBuiltin("ASCompat.floatToInt", tStdInt, removeLeadingTrivia(e));
 						var call = e.with(kind = TECall(stdInt, {
 							openParen: syntax.openParen,
 							args: [{expr: expr, comma: null}],

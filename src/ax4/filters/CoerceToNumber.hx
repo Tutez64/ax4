@@ -139,7 +139,7 @@ class CoerceToNumber extends AbstractFilter {
 			case TTUint:
 				mk(TEHaxeRetype(e), TTInt, TTInt);
 			case TTNumber:
-				mkStdIntCall(e);
+				mkFloatToIntCall(e);
 			case _:
 				mkToIntCall(e);
 		}
@@ -152,7 +152,7 @@ class CoerceToNumber extends AbstractFilter {
 			case TTInt:
 				retypeToUInt(e);
 			case TTNumber:
-				retypeToUInt(mkStdIntCall(e));
+				retypeToUInt(mkFloatToIntCall(e));
 			case _:
 				retypeToUInt(mkToIntCall(e));
 		}
@@ -169,8 +169,8 @@ class CoerceToNumber extends AbstractFilter {
 		}
 	}
 
-	static function mkStdIntCall(e:TExpr):TExpr {
-		var stdInt = mkBuiltin("Std.int", tStdInt, removeLeadingTrivia(e));
+	static function mkFloatToIntCall(e:TExpr):TExpr {
+		var stdInt = mkBuiltin("ASCompat.floatToInt", tStdInt, removeLeadingTrivia(e));
 		return mkCall(stdInt, [e.with(expectedType = TTNumber)], TTInt, removeTrailingTrivia(e));
 	}
 

@@ -13,6 +13,22 @@ class TestASCompat extends utest.Test {
 		floatEquals(Math.NaN, ASCompat.processNull((undefined : Null<Float>)));
 	}
 
+	function testFloatToIntMatchesAs3Int() {
+		equals(3, ASCompat.floatToInt(3.9));
+		equals(-3, ASCompat.floatToInt(-3.9));
+		equals(2147483647, ASCompat.floatToInt(2147483647.5));
+		equals(-2147483648, ASCompat.floatToInt(-2147483648.0));
+		equals(0, ASCompat.floatToInt(Math.NaN));
+		equals(0, ASCompat.floatToInt(Math.POSITIVE_INFINITY));
+		equals(0, ASCompat.floatToInt(Math.NEGATIVE_INFINITY));
+		equals(-2147483648, ASCompat.floatToInt(2147483648.0));
+		equals(-1294967296, ASCompat.floatToInt(3000000000.0));
+		equals(1, ASCompat.floatToInt(4294967297.5));
+		equals(-1, ASCompat.floatToInt(-4294967297.5));
+		equals(0, ASCompat.toInt("abc"));
+		equals(-1294967296, ASCompat.toInt("3000000000"));
+	}
+
 	function testASObjectBracketGetKeepsFunctionIdentity() {
 		var obj:ASObject = new ASObject();
 		var callCount = 0;

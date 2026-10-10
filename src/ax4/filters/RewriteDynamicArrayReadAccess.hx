@@ -64,7 +64,7 @@ class RewriteDynamicArrayReadAccess extends AbstractFilter {
 			case TEPostUnop(_, PostIncr(_) | PostDecr(_)):
 				true;
 
-			case TECall({kind: TEBuiltin(_, name)}, _) if (name == "ASCompat.toInt" || name == "ASCompat.toNumber" || name == "Std.int"):
+			case TECall({kind: TEBuiltin(_, name)}, _) if (name == "ASCompat.toInt" || name == "ASCompat.toNumber" || name == "ASCompat.floatToInt"):
 				true;
 
 			case _:

@@ -7,11 +7,11 @@ class NumberToInt extends AbstractFilter {
 		e = mapExpr(processExpr, e);
 		return switch [e.type, e.expectedType] {
 			case [TTNumber, TTInt]:
-				var stdInt = mkBuiltin("Std.int", tStdInt, removeLeadingTrivia(e));
+				var stdInt = mkBuiltin("ASCompat.floatToInt", tStdInt, removeLeadingTrivia(e));
 				mkCall(stdInt, [e.with(expectedType = TTNumber)], TTInt, removeTrailingTrivia(e));
 
 			case [TTNumber, TTUint]:
-				var stdInt = mkBuiltin("Std.int", tStdInt, removeLeadingTrivia(e));
+				var stdInt = mkBuiltin("ASCompat.floatToInt", tStdInt, removeLeadingTrivia(e));
 				var call = mkCall(stdInt, [e.with(expectedType = TTNumber)], TTInt, removeTrailingTrivia(e));
 				mk(TEHaxeRetype(call), TTUint, TTUint);
 			case _:

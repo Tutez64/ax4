@@ -7,6 +7,7 @@
  * - Loose equality against numeric values must use Number semantics, not int().
  * - Field access on * typed objects (uses toNumberField for undefined handling).
  * - Boolean in arithmetic (`0 + (x == y)`): ASCompat.toNumber on operands;
+ * - Number to int uses ASCompat.floatToInt (AS3 int(): NaN -> 0, wraps modulo 2^32).
  */
 package {
     public class TestFilterCoerceToNumber {
