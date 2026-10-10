@@ -78,9 +78,7 @@ class Filters {
 			new AddMissingAccessorInSuper(context),
 			new RewriteAccessorAccess(context),
 			new UnqualifiedSuperStatics(context),
-			// new AddParens(context),
 			new AddRequiredParens(context),
-			// new CheckExpectedTypes(context)
 			new DateApi(context),
 			new ArrayApi(context),
 			new FiltersApi(context),
