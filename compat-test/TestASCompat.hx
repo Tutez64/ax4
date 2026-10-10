@@ -29,6 +29,18 @@ class TestASCompat extends utest.Test {
 		equals(-1294967296, ASCompat.toInt("3000000000"));
 	}
 
+	function testAsBoolHelpersMatchAs3Boolean() {
+		isFalse(ASCompat.stringAsBool(null));
+		isFalse(ASCompat.stringAsBool(""));
+		isTrue(ASCompat.stringAsBool("0"));
+		isFalse(ASCompat.floatAsBool(0));
+		isFalse(ASCompat.floatAsBool(Math.NaN));
+		isTrue(ASCompat.floatAsBool(-0.5));
+		isFalse(ASCompat.intAsBool(0));
+		isTrue(ASCompat.intAsBool(-3));
+		isFalse(ASCompat.intAsBool((null : Null<Int>)));
+	}
+
 	function testASObjectBracketGetKeepsFunctionIdentity() {
 		var obj:ASObject = new ASObject();
 		var callCount = 0;

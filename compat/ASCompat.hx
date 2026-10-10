@@ -882,15 +882,25 @@ class ASCompat {
 	}
 
 	public static inline function stringAsBool(s:Null<String>):Bool {
-		return (s : ASAny);
+		return s != null && s.length > 0;
 	}
 
-	public static inline function floatAsBool(f:Null<Float>):Bool {
+	// Static targets take the basic type: a Null<T> parameter would box the value.
+	// A null argument already reads as 0 there, which is falsy like in AS3.
+	public static inline function floatAsBool(f:#if (js || flash) Null<Float> #else Float #end):Bool {
+		#if (js || flash)
 		return (f : ASAny);
+		#else
+		return f != 0 && !Math.isNaN(f);
+		#end
 	}
 
-	public static inline function intAsBool(i:Null<Int>):Bool {
+	public static inline function intAsBool(i:#if (js || flash) Null<Int> #else Int #end):Bool {
+		#if (js || flash)
 		return (i : ASAny);
+		#else
+		return i != 0;
+		#end
 	}
 
 	public static inline function allocArray<T>(length:Int):Array<T> {
@@ -1616,7 +1626,7 @@ class ASCompat {
 		return null;
 	}
 
-	static inline function toNumberNative(d:Dynamic):Float {
+	static function toNumberNative(d:Dynamic):Float {
 		if (isUndefinedValue(d)) {
 			return Math.NaN;
 		}
@@ -1675,7 +1685,7 @@ class ASCompat {
 		return s;
 	}
 
-	static inline function toBoolNative(d:Dynamic):Bool {
+	static function toBoolNative(d:Dynamic):Bool {
 		if (isUndefinedValue(d)) {
 			return false;
 		}
