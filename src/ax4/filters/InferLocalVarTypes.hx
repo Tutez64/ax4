@@ -613,6 +613,18 @@ class InferLocalVarTypes extends AbstractFilter {
 				reportError(info.decl.syntax.name.pos, 'Inferred local var type "${info.decl.v.name}" as ${typeToString(newType)} (was ASAny)');
 			}
 		}
+
+		// `loop` skips some local reads (increment operands, assignment targets) and may sync a read
+		// before a later use makes the local incompatible, so align every read with the final type.
+		function syncLocalReads(e:TExpr) {
+			switch e.kind {
+				case TELocal(_, v) if (infos.exists(v)):
+					e.type = v.type;
+				case _:
+					iterExpr(syncLocalReads, e);
+			}
+		}
+		syncLocalReads(fun.expr);
 	}
 
 	static function elementTypeFromIterableHint(hint:Null<TType>):Null<TType> {

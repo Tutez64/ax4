@@ -172,6 +172,21 @@ package {
             for each (var attackEntry in __ax4_iter_999) {
                 var attackName:String = attackEntry.attackName;
             }
+
+            // Case 19: Decompiled loop counter. Once `counter` is inferred as Int, every read
+            // (increment operand, index, comparison) takes that type: `counter++` stays as is,
+            // with no ASCompat.toInt(counter) + 1 and no toInt/toNumber around `counter + 1`.
+            var counter:* = 0;
+            while (counter < words.length) {
+                trace(words[counter + 1]);
+                counter++;
+            }
+
+            // Case 20: A later assignment makes `late` incompatible, so it stays ASAny and its
+            // increment keeps the dynamic rewrite even though early reads looked like Int.
+            var late:* = 0;
+            late++;
+            late = "text";
         }
     }
 }
