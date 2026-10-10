@@ -213,6 +213,30 @@ class TestASAny extends utest.Test {
 
 	function getValue(f:Int->Int, v:Int):Int return f(v);
 
+	function testForEachWalksArrayElements() {
+		var any:ASAny = [1, 2, 3];
+		var sum = 0;
+		for (v in any) sum += (v : Int);
+		equals(6, sum);
+
+		#if !flash // flash.utils.Object is not iterable from Haxe; converted code uses iterateDynamicValues there.
+		var obj:ASObject = cast [4, 5];
+		var objSum = 0;
+		for (v in obj) objSum += (v : Int);
+		equals(9, objSum);
+		#end
+
+		var arrayBase:ASAny = new ASArrayBase(7, 8);
+		var baseSum = 0;
+		for (v in arrayBase) baseSum += (v : Int);
+		equals(15, baseSum);
+
+		var plain:ASAny = {a: 10, b: 20};
+		var plainSum = 0;
+		for (v in plain) plainSum += (v : Int);
+		equals(30, plainSum);
+	}
+
 	function testUndefinedCoercesToNullString() {
 		var d = new ASDictionary<String, ASAny>();
 		var missing:ASAny = d["missing"];

@@ -24,12 +24,9 @@ abstract ASObject(flash.utils.Object)
 		#end
 	}
 
+	// `for each`: an Array or ASArrayBase walks its elements, anything else its property values.
 	@:to public inline function iterator() {
-		#if flash
-		return new NativeValueIterator<ASAny>(this);
-		#else
-		return (cast this : haxe.DynamicAccess<ASAny>).iterator();
-		#end
+		return ASCompat.iterateDynamicValues(this);
 	}
 
 	public function hasOwnProperty(name:String):Bool {
