@@ -37,7 +37,8 @@ abstract ASAny(Dynamic)
 	@:to inline function ___toFloat():Float return js.Syntax.code("Number")(this);
 	@:to inline function ___toInt():Int return Std.int(___toFloat());
 	#else
-	@:to public inline function ___toString():String return if (this == null) null else ASCompat.toString(this);
+	// Coercing undefined to String gives null in AS3; only String(undefined) is "undefined".
+	@:to public inline function ___toString():String return if (this == null || ASCompat.isUndefinedValue(this)) null else ASCompat.toString(this);
 
 	@:to function ___toBool():Bool {
 		return ASCompat.toBool(this);

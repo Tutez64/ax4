@@ -213,6 +213,14 @@ class TestASAny extends utest.Test {
 
 	function getValue(f:Int->Int, v:Int):Int return f(v);
 
+	function testUndefinedCoercesToNullString() {
+		var d = new ASDictionary<String, ASAny>();
+		var missing:ASAny = d["missing"];
+		var s:String = missing;
+		equals(null, s);
+		equals("undefined", ASCompat.toString(missing));
+	}
+
 	function testMethodReadKeepsIdentity() {
 		#if js
 		pass(); // Function.bind returns a new function on every read.
