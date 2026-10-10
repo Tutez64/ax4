@@ -77,9 +77,7 @@ abstract ASAny(Dynamic)
 			}
 		}
 		if (!handled) {
-			#if flash
-			result = ASCompat.getProperty(obj, name);
-			#elseif js
+			#if js
 			var value:Dynamic = ASCompat.getProperty(obj, name);
 			if (Reflect.isFunction(value)) {
 				result = value.bind(obj); // TODO: maybe we should (ab)use Haxe/JS $bind here for caching the bound methods?
@@ -87,14 +85,8 @@ abstract ASAny(Dynamic)
 				result = value;
 			}
 			#else
-			var value:Dynamic = ASCompat.getProperty(obj, name);
-			if (Reflect.isFunction(value)) {
-				result = Reflect.makeVarArgs(function(args:Array<Dynamic>):Dynamic {
-					return Reflect.callMethod(obj, value, args);
-				});
-			} else {
-				result = value;
-			}
+			// Elsewhere a method read through reflection is already bound to its object.
+			result = ASCompat.getProperty(obj, name);
 			#end
 		}
 		return result;
