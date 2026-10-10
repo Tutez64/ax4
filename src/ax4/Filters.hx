@@ -64,7 +64,6 @@ class Filters {
 			new RewriteHasOwnProperty(context),
 			new RewriteUndefinedLookupComparisons(context),
 			new RewriteDynamicArrayReadAccess(context),
-			new NumberToInt(context),
 			new CoerceToNumber(context),
 			new RewriteObjectCompare(context),
 			new RewriteCasts(context, coerceToBool),

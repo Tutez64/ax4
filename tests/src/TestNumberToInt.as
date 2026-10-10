@@ -1,11 +1,10 @@
 /**
- * Test case for NumberToInt filter.
- * AS3 often uses Numbers where Haxe expects Int.
- * This filter should add Std.int() where necessary.
+ * Test case: Number values used where an int/uint is expected.
+ * CoerceToNumber converts them with ASCompat.floatToInt (AS3 int() semantics).
  */
 package {
-    public class TestFilterNumberToInt {
-        public function TestFilterNumberToInt() {
+    public class TestNumberToInt {
+        public function TestNumberToInt() {
             var n:Number = 10.5;
             var i:int = n;
             

@@ -1,9 +1,9 @@
 package ax4.filters;
 
-import ax4.filters.NumberToInt.tStdInt;
 
 class RewriteCasts extends AbstractFilter {
 	static final tToInt = TTFun([TTAny], TTInt);
+	static final tStdInt = TTFun([TTNumber], TTInt);
 	static final tToNumber = TTFun([TTAny], TTNumber);
 	static final tToString = TTFun([TTAny], TTString);
 
