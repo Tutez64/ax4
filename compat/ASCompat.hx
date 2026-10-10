@@ -56,6 +56,26 @@ class ASCompat {
 		#end
 	}
 
+	// `for ... in`: an Array or ASArrayBase gives its indices as strings, anything else its property names.
+	public static function iterateDynamicKeys(v:Dynamic):Iterator<String> {
+		if (Std.isOfType(v, Array)) {
+			return indexKeys((cast v : Array<Dynamic>).length);
+		}
+		if (Std.isOfType(v, ASArrayBase)) {
+			return indexKeys((cast v : ASArrayBase).length);
+		}
+
+		#if flash
+		return new NativePropertyIterator<String>(v);
+		#else
+		return (cast v : haxe.DynamicAccess<ASAny>).keys().iterator();
+		#end
+	}
+
+	static function indexKeys(length:Int):Iterator<String> {
+		return [for (i in 0...length) Std.string(i)].iterator();
+	}
+
 	static function reportNullIteratee(pos:haxe.PosInfos) {
 		haxe.Log.trace("FIXME: Null value passed as an iteratee for for-in/for-each expression!", pos);
 	}

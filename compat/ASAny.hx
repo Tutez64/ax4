@@ -6,12 +6,9 @@ abstract ASAny(Dynamic)
 	public inline function new() this = cast {};
 
 	@:noCompletion
+	// `for ... in`: an Array or ASArrayBase walks its indices, anything else its property names.
 	public inline function ___keys() {
-		#if flash
-		return new NativePropertyIterator<ASAny>(this);
-		#else
-		return (cast this : haxe.DynamicAccess<ASAny>).keys();
-		#end
+		return ASCompat.iterateDynamicKeys(this);
 	}
 
 	// `for each`: an Array or ASArrayBase walks its elements, anything else its property values.

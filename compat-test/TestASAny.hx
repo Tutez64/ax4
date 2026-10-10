@@ -237,6 +237,18 @@ class TestASAny extends utest.Test {
 		equals(30, plainSum);
 	}
 
+	function testForInWalksArrayIndices() {
+		var any:ASAny = [10, 20, 30];
+		var keys = [for (k in any.___keys()) k];
+		equals("0,1,2", keys.join(","));
+
+		var arrayBase:ASAny = new ASArrayBase(7, 8);
+		equals("0,1", [for (k in arrayBase.___keys()) k].join(","));
+
+		var plain:ASAny = {a: 1};
+		equals("a", [for (k in plain.___keys()) k].join(","));
+	}
+
 	function testUndefinedCoercesToNullString() {
 		var d = new ASDictionary<String, ASAny>();
 		var missing:ASAny = d["missing"];
