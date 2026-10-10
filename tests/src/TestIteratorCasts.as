@@ -1,12 +1,12 @@
 /**
- * Test case for FixIteratorCasts filter.
+ * Test case: untyped iterators assigned to IIterator.
  * Assigning an untyped iterator to IIterator should be wrapped with a cast.
  */
 package {
     import org.as3commons.collections.framework.IIterator;
 
-    public class TestFilterFixIteratorCasts {
-        public function TestFilterFixIteratorCasts() {
+    public class TestIteratorCasts {
+        public function TestIteratorCasts() {
             var list:DummyList = new DummyList();
             var it:IIterator = list.iterator();
             if (it != null && it.hasNext()) {

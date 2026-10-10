@@ -1,5 +1,5 @@
 /**
- * Minimal stub for FixIteratorCasts test cases.
+ * Minimal stub for TestIteratorCasts.
  */
 package org.as3commons.collections.framework {
     public interface IIterator {
