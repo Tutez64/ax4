@@ -19,17 +19,17 @@ using StringTools;
 
 	`--no-inline` keeps the inline compat helpers as calls. Only classes whose file path starts
 	with the first argument are scanned. The report lists `count<TAB>call(argument types)`,
-	most frequent first, with up to four sample positions each.
+	most frequent first, with sample positions (an optional third argument sets how many, 4 by default).
 **/
 class CompatAudit {
-	static final maxSamples = 4;
-
 	static var prefix:String;
+	static var maxSamples:Int;
 	static var counts = new Map<String, Int>();
 	static var samples = new Map<String, Array<String>>();
 
-	public static function init(srcPrefix:String, outFile:String) {
+	public static function init(srcPrefix:String, outFile:String, samplesPerCall:Int = 4) {
 		prefix = srcPrefix;
+		maxSamples = samplesPerCall;
 		Context.onGenerate(types -> {
 			for (t in types) {
 				switch t {
@@ -92,9 +92,12 @@ class CompatAudit {
 		}
 	}
 
+	static var fileBytes = new Map<String, haxe.io.Bytes>();
+
 	static function lineOf(file:String, offset:Int):Int {
 		// Positions are byte offsets.
-		var bytes = sys.io.File.getBytes(file);
+		var bytes = fileBytes[file];
+		if (bytes == null) fileBytes[file] = bytes = sys.io.File.getBytes(file);
 		var line = 1;
 		for (i in 0...offset) {
 			if (bytes.get(i) == "\n".code) line++;
