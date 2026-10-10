@@ -60,6 +60,29 @@ abstract ASAny(Dynamic)
 
 	@:op(a.b) inline function ___get(name:String):ASAny return ASAny.getPropertyOrBoundMethod(this, name);
 
+	#if js
+	// One bound function per object and method, so reads don't allocate and compare equal like AS3 method closures.
+	static final boundMethods = new js.lib.WeakMap<js.lib.Map<Dynamic, Dynamic>>();
+
+	static function bindMethod(obj:Dynamic, method:Dynamic):Dynamic {
+		var kind = js.Syntax.typeof(obj);
+		if (kind != "object" && kind != "function") {
+			return method.bind(obj); // a WeakMap key must be an object
+		}
+		var byMethod = boundMethods.get(obj);
+		if (byMethod == null) {
+			byMethod = new js.lib.Map();
+			boundMethods.set(obj, byMethod);
+		}
+		var bound = byMethod.get(method);
+		if (bound == null) {
+			bound = method.bind(obj);
+			byMethod.set(method, bound);
+		}
+		return bound;
+	}
+	#end
+
 	#if flash inline #end
 	public static function getPropertyOrBoundMethod(obj:Any, name:String):ASAny {
 		var handled = false;
@@ -75,7 +98,7 @@ abstract ASAny(Dynamic)
 			#if js
 			var value:Dynamic = ASCompat.getProperty(obj, name);
 			if (Reflect.isFunction(value)) {
-				result = value.bind(obj); // TODO: maybe we should (ab)use Haxe/JS $bind here for caching the bound methods?
+				result = bindMethod(obj, value);
 			} else {
 				result = value;
 			}

@@ -258,15 +258,14 @@ class TestASAny extends utest.Test {
 	}
 
 	function testMethodReadKeepsIdentity() {
-		#if js
-		pass(); // Function.bind returns a new function on every read.
-		#else
 		var c:ASAny = new Cls(null);
 		var first:Dynamic = c.meth;
 		var second:Dynamic = c["meth"];
 		isTrue(first == second);
 		equals(23, first(3));
-		#end
+		var other:ASAny = new Cls(null);
+		var third:Dynamic = other.meth;
+		isFalse(first == third);
 	}
 
 	function testHasOwnProperty() {
