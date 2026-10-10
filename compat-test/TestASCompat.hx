@@ -646,6 +646,14 @@ class TestASCompat extends utest.Test {
 		isFalse(ASCompat.hasProperty(root, "missing_label"));
 	}
 
+	function testGetPropertyPrefersNullGetterOverSameNamedChild() {
+		var clip = new NullGetterClip();
+		var child = new flash.display.MovieClip();
+		child.name = "slot";
+		clip.addChild(child);
+		equals(null, ASCompat.getProperty(clip, "slot"));
+	}
+
 	function testGetPropertyMovieClipChildNameSurvivesDetach() {
 		var source = new TestASCompatNamedTooltipSource();
 		isTrue(ASCompat.getProperty(source.root, "tooltip") == source.tooltip);
@@ -1042,5 +1050,13 @@ private class TestASCompatComparatorOwner {
 	public function compareInts(a:Int, b:Int):Int {
 		calls++;
 		return (a + bias) - (b + bias);
+	}
+}
+
+private class NullGetterClip extends flash.display.MovieClip {
+	public var slot(get, never):Dynamic;
+
+	function get_slot():Dynamic {
+		return null;
 	}
 }

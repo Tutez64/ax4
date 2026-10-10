@@ -484,10 +484,14 @@ class ASCompat {
 						var fields = Type.getInstanceFields(clazz);
 						for (field in fields) {
 							cachedFields.set(field, true);
+							// An accessor also stands for its property.
+							if (field.startsWith("get_") || field.startsWith("set_")) {
+								cachedFields.set(field.substr(4), true);
+							}
 						}
 						reflectedFieldCacheByClass.set(className, cachedFields);
 					}
-					return cachedFields.exists(name) || cachedFields.exists("get_" + name) || cachedFields.exists("set_" + name);
+					return cachedFields.exists(name);
 				}
 			}
 		} catch (_:Dynamic) {
@@ -502,10 +506,9 @@ class ASCompat {
 		if (dynamicProperties != null && dynamicProperties.exists(name)) {
 			cachedValue = dynamicProperties.get(name);
 		}
-		var getChildByName = Reflect.field(obj, "getChildByName");
-		if (getChildByName != null && Reflect.isFunction(getChildByName)) {
+		if (Std.isOfType(obj, flash.display.DisplayObjectContainer)) {
 			try {
-				var child = Reflect.callMethod(obj, getChildByName, [name]);
+				var child:Dynamic = (cast obj : flash.display.DisplayObjectContainer).getChildByName(name);
 				if (child != null) {
 					if (cachedValue != child) {
 						setDynamicProperty(obj, name, child);
