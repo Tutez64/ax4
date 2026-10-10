@@ -72,9 +72,9 @@ class CoerceToNumber extends AbstractFilter {
 					var rewritten = rewriteIncDecUnsafe(mappedInner, op.match(PreIncr(_)), e);
 					if (rewritten != null) return rewritten;
 				} else {
-					return applyExpectedCoercion(e.with(kind = TEPreUnop(getPreUnopToken(e), mappedInner)));
+					return applyExpectedCoercion(refreshNumericType(e.with(kind = TEPreUnop(getPreUnopToken(e), mappedInner))));
 				}
-				return applyExpectedCoercion(e.with(kind = TEPreUnop(getPreUnopToken(e), mappedInner)));
+				return applyExpectedCoercion(refreshNumericType(e.with(kind = TEPreUnop(getPreUnopToken(e), mappedInner))));
 			case TEPostUnop(inner, op = PostIncr(_) | PostDecr(_)):
 				var mappedInner = mapExpr(processExpr, inner);
 				if (e.expectedType == TTVoid && isAnyLike(mappedInner.type) && mappedInner.kind.match(TELocal(_))) {
@@ -83,9 +83,9 @@ class CoerceToNumber extends AbstractFilter {
 					var rewritten = rewriteIncDecUnsafe(mappedInner, op.match(PostIncr(_)), e);
 					if (rewritten != null) return rewritten;
 				} else {
-					return applyExpectedCoercion(e.with(kind = TEPostUnop(mappedInner, getPostUnopToken(e))));
+					return applyExpectedCoercion(refreshNumericType(e.with(kind = TEPostUnop(mappedInner, getPostUnopToken(e)))));
 				}
-				return applyExpectedCoercion(e.with(kind = TEPostUnop(mappedInner, getPostUnopToken(e))));
+				return applyExpectedCoercion(refreshNumericType(e.with(kind = TEPostUnop(mappedInner, getPostUnopToken(e)))));
 
 			// Handle assignment to Int/Uint local variables - force coercion to match the target type
 			case TEBinop(a, op = OpAssign(_), b):
@@ -101,8 +101,33 @@ class CoerceToNumber extends AbstractFilter {
 				applyExpectedCoercion(e.with(kind = TEBinop(a2, op, b2)));
 
 			case _:
-				applyExpectedCoercion(mapExpr(processExpr, e));
+				applyExpectedCoercion(refreshNumericType(mapExpr(processExpr, e)));
 		}
+	}
+
+	// An expression typed before its operands were narrowed (inferred local types, dynamic reads
+	// rewritten to toNumberField...) keeps a stale Any type; recompute it like ExprTyper would.
+	static function refreshNumericType(e:TExpr):TExpr {
+		if (!isAnyLike(e.type)) return e;
+		var type = switch e.kind {
+			case TEBinop(a, OpAdd(_) | OpSub(_) | OpMul(_) | OpMod(_), b):
+				switch [a.type, b.type] {
+					case [TTNumber, (TTNumber | TTInt | TTUint)] | [(TTInt | TTUint), TTNumber]: TTNumber;
+					case [TTInt, TTUint] | [TTUint, (TTInt | TTUint)]: TTUint;
+					case [TTInt, TTInt]: TTInt;
+					case _: null;
+				}
+			case TEParens(_, inner, _) | TEPreUnop(PreIncr(_) | PreDecr(_) | PreNeg(_), inner) | TEPostUnop(inner, PostIncr(_) | PostDecr(_)):
+				if (isNumeric(inner.type)) inner.type else null;
+			case TETernary(t):
+				switch [t.ethen.type, t.eelse.type] {
+					case [TTInt | TTUint, TTNumber] | [TTNumber, TTInt | TTUint]: TTNumber;
+					case [a, b] if (isNumeric(a) && typeEq(a, b)): a;
+					case _: null;
+				}
+			case _: null;
+		}
+		return if (type == null) e else e.with(type = type);
 	}
 
 	static function getPreUnopToken(e:TExpr):PreUnop {

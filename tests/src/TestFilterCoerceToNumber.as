@@ -7,6 +7,8 @@
  * - Loose equality against numeric values must use Number semantics, not int().
  * - Field access on * typed objects (uses toNumberField for undefined handling).
  * - Boolean in arithmetic (`0 + (x == y)`): ASCompat.toNumber on operands;
+ * - Arithmetic typed before its operands were narrowed (field reads rewritten to
+ *   toNumberField, ternaries of numbers) is retyped: no toNumber/toInt around it.
  * - Number to int uses ASCompat.floatToInt (AS3 int(): NaN -> 0, wraps modulo 2^32).
  */
 package {
@@ -68,6 +70,16 @@ package {
             if (sum + mixed + sub + mul < -1) {
                 throw new Error("keep live");
             }
+        }
+
+        private function testStaleArithmeticTypes(clip:*, frame:Number, count:int):void {
+            // clip.firstFrame becomes toNumberField(...), a Number: both subtractions are Number.
+            var offset:Number = (frame - clip.firstFrame - 1) * 2;
+            // The ternary of two ints is an int: no int() around it.
+            var pick:int = count > 0 ? count - 1 : 0;
+            // int(Number) through floatToInt, even when the operand is a toNumberField result.
+            var frames:int = clip.totalFrames - clip.firstFrame + 1;
+            trace(offset, pick, frames);
         }
 
         private function takesInt(v:int):void {}
