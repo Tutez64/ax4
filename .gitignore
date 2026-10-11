@@ -1,7 +1,5 @@
-/SOURCE
-/OUT
 /structure.txt
-/java_out
+/out
 /node_modules
 test.js
 test.swf

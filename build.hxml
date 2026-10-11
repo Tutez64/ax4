@@ -12,10 +12,3 @@
 # Instead of generating to a folder and copying (which fails on Windows),
 # we compile directly to the final JAR using the new Haxe 4.3 syntax.
 --jvm converter.jar
-
-# --- OLD CONFIG (Commented out) ---
-# -java java_out
-# -D jvm
-# -cmd cp java_out/Main.jar converter.jar
-
-# -cmd java -jar converter.jar config-local.json

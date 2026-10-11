@@ -1,6 +1,0 @@
-{
-	"haxe.enableCompilationServer": false,
-	"editor.insertSpaces": false,
-	"as3mxml.sdk.framework": "c:\\airsdk",
-	"files.trimTrailingWhitespace": true
-}
