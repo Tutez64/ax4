@@ -59,3 +59,7 @@ Future direction:
 ## Auditing compat calls in a converted project
 
 `tools/CompatAudit.hx` counts the `ASCompat`/`ASAny` calls of a converted project by static argument types, so coercions on already-typed values (`toInt(Int)`, `toNumber(Float)`...) show up as converter work. Usage is in its header comment.
+
+## Releasing
+
+Set `version` and `releasenote` in `haxelib.json`, commit, then push a matching `vX.Y.Z` tag. The Release workflow rebuilds `converter.jar` and `run.n`, converts the test workspace, submits the package to lib.haxe.org (repository secret `HAXELIB_PASSWORD`) and attaches it to a GitHub release. Running the workflow by hand builds the package without publishing it.
