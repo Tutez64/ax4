@@ -58,6 +58,14 @@ For most projects, add this field to copy the compatibility runtime:
 java -jar converter.jar config.json
 ```
 
+Installed as a Haxe library (`haxelib git ax4 https://github.com/Tutez64/ax4`), it also runs from the project directory without the jar's path:
+
+```bash
+haxelib run ax4 config.json
+```
+
+`run.n` (built from `run.hxml`) passes the arguments to the library's `converter.jar`, with paths still relative to the directory you run it from.
+
 The converter will:
 
 1. Parse `.as` files under `src`
