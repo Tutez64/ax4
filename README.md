@@ -11,8 +11,9 @@ To achieve that, it actually resembles the typical compiler a lot, so here's how
 
 ## Disclaimer
 
-ax4 is a fork of [ax3](https://github.com/innogames/ax3), created by Dan Korostelev ([nadako](https://github.com/nadako)) at InnoGames, and [this other fork](https://github.com/addreality/ax3), developed to make a (fan-made) [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/)
-native port (see [Dungeon Rampage Haxe](https://github.com/Tutez64/Dungeon-Rampage-Haxe)). \
+ax4 is a fork of [ax3](https://github.com/innogames/ax3), created by Dan Korostelev ([nadako](https://github.com/nadako)) at InnoGames, by way of [another fork](https://github.com/addreality/ax3).
+I developed ax4 to make a fan-made native port of [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/) (see [Dungeon Rampage Haxe](https://github.com/Tutez64/Dungeon-Rampage-Haxe)).
+
 I may or may not continue to maintain ax4, and port other games in the future.
 
 ## Quick start
@@ -25,7 +26,7 @@ With a Java runtime and haxelib:
 haxelib install ax4
 ```
 
-To build it from source instead, see [Quickstart](docs/Quickstart.md).
+To build it from source instead, see [Quickstart](https://github.com/Tutez64/ax4/wiki/Quickstart).
 
 ### 2) Create a minimal `config.json`
 
@@ -47,21 +48,21 @@ haxelib run ax4 config.json
 
 ## Documentation
 
-- [Home](docs/Home.md)
-- [Quickstart](docs/Quickstart.md)
-- [Config reference](docs/Config.md)
-- [Config examples](docs/Examples.md)
-- [Differences from ax3](docs/ForkDifferences.md)
-- [Filters overview](docs/Filters.md)
-- [Diagnostics catalogue](docs/Diagnostics.md)
-- [Troubleshooting](docs/Troubleshooting.md)
-- [Contributing](docs/Contributing.md)
-- [GitHub wiki setup and sync](docs/Wiki.md)
+- [Home](https://github.com/Tutez64/ax4/wiki)
+- [Quickstart](https://github.com/Tutez64/ax4/wiki/Quickstart)
+- [Config reference](https://github.com/Tutez64/ax4/wiki/Config)
+- [Config examples](https://github.com/Tutez64/ax4/wiki/Examples)
+- [Differences from ax3](https://github.com/Tutez64/ax4/wiki/ForkDifferences)
+- [Filters overview](https://github.com/Tutez64/ax4/wiki/Filters)
+- [Diagnostics catalogue](https://github.com/Tutez64/ax4/wiki/Diagnostics)
+- [Troubleshooting](https://github.com/Tutez64/ax4/wiki/Troubleshooting)
+- [Contributing](https://github.com/Tutez64/ax4/wiki/Contributing)
+- [GitHub wiki setup and sync](https://github.com/Tutez64/ax4/wiki/Wiki)
 
 ## Compat runtime
 
 - `compat/` contains AS3 compatibility/runtime helpers used by generated Haxe code (`ASAny`, `ASDictionary`, XML helpers, etc.).
-- In most real migrations, converted code depends on this layer. Plan to include/copy `compat/` into your Haxe project.
+- Converted code depends on this layer: with the haxelib install, add `-lib ax4` to your Haxe build; otherwise copy `compat/` with the `copy` option (see [Quickstart](https://github.com/Tutez64/ax4/wiki/Quickstart)).
 - `compat-test/` contains tests for the compatibility layer itself and is not meant to be shipped with production output.
 - If you modify `compat/`, update `compat-test/` and run:
 
@@ -83,20 +84,4 @@ The pipeline is implemented in `src/ax4/Main.hx`:
 
 - The parser doesn't currently support ASI (automatic semicolon insertion). The only case where a semicolon can be omitted is the last expression of a block.
 - Only a small, most commonly used subset of E4X is supported. It's recommended to rewrite the unsupported things in AS3 sources to adapt it for conversion.
-
-## TODO (probably outdated)
-
-Most of the `TODO`s are actually in the code, so look there too, but still:
-
-- don't parse `*=` as a single token when parsing signatures (fix `a:*=b` parsing without spaces)
-- add a "final-step" filter to remove redundant `TEHaxeRetype`s too
-- rewrite `arr[arr.length] = value` to `arr.push(value)`
-- generate "type patch" files for loaded SWCs, replacing `Object` with `ASObject` and `*` with `ASAny`
-- review and cleanup `ASCompat` - rework some things as static extensions (e.g. Vector/Array compat methods)
-- add some more empty ctors to work around https://github.com/HaxeFoundation/haxe/issues/8531
-- add configuration options for some things (like omitting type hints and `private` keywords)
-- fix imports
-- add imports for fully-qualified names that can come from `@haxe-type`
-- remove duplicate imports (can happen when merging in out-of-package imports)
-- maybe add `inline` for arithmetic ops in static var inits where all operands are also static inline
-- remove `public` from `@:inject`/`@:postConstruct`/`@:preDestroy` as these should not really be part of public API
+- XML literals (`<a>...</a>`) are not supported: `skipXmlLiterals` comments them out as `null`.
