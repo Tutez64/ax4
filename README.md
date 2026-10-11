@@ -17,22 +17,17 @@ I may or may not continue to maintain ax4, and port other games in the future.
 
 ## Quick start
 
-### 1) Prerequisites
+### 1) Install
 
-- Java runtime (to run `converter.jar`)
-- Node.js + npm (for Lix-based Haxe toolchain setup)
-
-### 2) Build
+With a Java runtime and haxelib:
 
 ```bash
-npm i lix
-npx lix download
-npx haxe build.hxml
+haxelib install ax4
 ```
 
-This produces `converter.jar`.
+To build it from source instead, see [Quickstart](docs/Quickstart.md).
 
-### 3) Create a minimal `config.json`
+### 2) Create a minimal `config.json`
 
 ```json
 {
@@ -44,10 +39,10 @@ This produces `converter.jar`.
 }
 ```
 
-### 4) Run conversion
+### 3) Run conversion
 
 ```bash
-java -jar converter.jar config.json
+haxelib run ax4 config.json
 ```
 
 ## Documentation
