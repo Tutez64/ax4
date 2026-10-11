@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build",
+			"type": "shell",
+			"command": "npx haxe build.hxml",
+			"problemMatcher": ["$haxe-absolute", "$haxe"],
+			"group": {"kind": "build", "isDefault": true}
+		},
+		{
+			"label": "Run",
+			"type": "shell",
+			"command": "npx haxe run.hxml",
+			"problemMatcher": ["$haxe-absolute", "$haxe"],
+			"group": "build"
+		},
+		{
+			"label": "Launch test conversion",
+			"type": "shell",
+			"command": "java -jar converter.jar tests/config.json",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test compat",
+			"type": "shell",
+			"command": "npx haxe test-compat.hxml",
+			"problemMatcher": ["$haxe-absolute", "$haxe"],
+			"group": {"kind": "test", "isDefault": true}
+		}
+	]
+}
