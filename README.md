@@ -11,7 +11,7 @@ To achieve that, it actually resembles the typical compiler a lot, so here's how
 
 ## Disclaimer
 
-ax4 is a fork of [ax3](https://github.com/innogames/ax3) and [this other fork](https://github.com/addreality/ax3), developed to make a (fan-made) [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/)
+ax4 is a fork of [ax3](https://github.com/innogames/ax3), created by Dan Korostelev ([nadako](https://github.com/nadako)) at InnoGames, and [this other fork](https://github.com/addreality/ax3), developed to make a (fan-made) [Dungeon Rampage](https://store.steampowered.com/app/3053950/Dungeon_Rampage/)
 native port (see [Dungeon Rampage Haxe](https://github.com/Tutez64/Dungeon-Rampage-Haxe)). \
 I may or may not continue to maintain ax4, and port other games in the future.
 

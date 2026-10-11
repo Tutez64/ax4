@@ -1,10 +1,10 @@
 {
 	"name": "ax4",
-	"description": "AS3 to Haxe converter tool",
+	"description": "Powerful ActionScript 3 to Haxe converter",
 	"url": "https://github.com/Tutez64/ax4",
 	"license": "MIT",
-	"version": "0.1.0",
-	"releasenote": "Unreleased",
-	"contributors": ["nadako", "Tutez64"],
+	"version": "1.0.0",
+	"releasenote": "First release.",
+	"contributors": ["Tutez64"],
 	"classPath": "compat"
 }
