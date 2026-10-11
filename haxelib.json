@@ -3,8 +3,8 @@
 	"description": "Powerful ActionScript 3 to Haxe converter",
 	"url": "https://github.com/Tutez64/ax4",
 	"license": "MIT",
-	"version": "1.0.0",
-	"releasenote": "First release.",
+	"version": "1.0.1",
+	"releasenote": "README: haxelib usage, working documentation links and up to date info.",
 	"contributors": ["Tutez"],
 	"classPath": "compat"
 }
