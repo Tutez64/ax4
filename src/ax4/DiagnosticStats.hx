@@ -34,7 +34,7 @@ class DiagnosticStats {
 		});
 
 		print('diagnostics: $total total (${entries.length} kinds)');
-		print("See docs/Diagnostics.md for descriptions and recommendations.");
+		print("See https://github.com/Tutez64/ax4/wiki/Diagnostics for descriptions and recommendations.");
 		for (e in entries) {
 			print('  ${e.count}\t${e.key}');
 		}

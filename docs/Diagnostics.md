@@ -6,7 +6,7 @@ At the end of a successful run, a **summary** groups those messages by kind (wit
 
 ```text
 diagnostics: 1690 total (22 kinds)
-See docs/Diagnostics.md for descriptions and recommendations.
+See https://github.com/Tutez64/ax4/wiki/Diagnostics for descriptions and recommendations.
   595	Inferred local var type <name> as <Type> (was ASAny)
   283	IMPORTANT: Untyped method call. This can cause possible slowdowns!
   ...
