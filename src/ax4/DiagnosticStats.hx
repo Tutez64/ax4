@@ -77,9 +77,6 @@ class DiagnosticStats {
 		if (~/^Unsupported iteratee type: .+$/.match(message)) {
 			return "Unsupported iteratee type: <Type>";
 		}
-		if (~/^Missing type coercion: expected=.+, actual=.+$/.match(message)) {
-			return "Missing type coercion: expected=<Type>, actual=<Type>";
-		}
 		if (~/^E4X syntax is used on non-XML expression \(type: .+\)$/.match(message)) {
 			return "E4X syntax is used on non-XML expression (type: <Type>)";
 		}
