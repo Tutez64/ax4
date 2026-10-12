@@ -24,12 +24,12 @@ The conversion pipeline is sequential and defined in `src/ax4/Main.hx`:
 *   **Dependencies**: Requires `lix` for Haxe version management (`npm i lix`, `npx lix download`).
 
 ### Running
-*   **Command**: `java -jar converter.jar config.json`
+*   **Command**: `java -jar converter.jar config.json` (`haxelib run ax4 config.json` for haxelib installs)
 *   **Config**: JSON file specifying `src` (AS3 sources), `hxout` (Haxe output dir), and `swc` (libraries).
     *   **Optional**: `haxeTypes`, `dataout`, `rootImports`.
 
 ### Testing
-*   **Compat Tests**: `npx haxe test-compat.hxml` runs compatibility tests (JS then SWF via `--next`).
+*   **Compat Tests**: `npx haxe test-compat.hxml` runs compatibility tests (JS, C++ then SWF via `--next`).
     *   Validates the `compat/` library (ASAny, ASDictionary, XML, etc.).
 *   **Playground/Repro Tests**: `tests/` directory.
     *   Use this folder to create isolated reproduction cases for converter bugs or features.
@@ -69,11 +69,11 @@ The conversion pipeline is sequential and defined in `src/ax4/Main.hx`:
 
 ### External Dependencies
 *   **format**: Used for reading SWC/SWF files (`format.swf.Reader`).
-*   **haxe-type**: Special annotation `@haxe-type` in comments allows manual type overrides in AS3 sources (add it in source code when needed).
+*   **haxe-type**: Special annotation `@haxe-type` in comments allows manual type overrides in AS3 sources (add it in source code when needed). Trailing `// Array<T>`, `// Dictionary<K, V>` and `// Object<V>` comments type untyped locals (`RewriteTypesWithComment`).
 
 ## Integration Points
 *   **SWC Loading**: `SWCLoader` maps AS3 built-ins (like `Object`, `Array`) to internal types (`tUntypedObject`, `tUntypedArray`) or Haxe equivalents.
-*   **Haxe Generation**: `GenHaxe` handles the final printing, including specific Haxe constructs (e.g., `cast`, `Std.int`).
+*   **Haxe Generation**: `GenHaxe` handles the final printing, including specific Haxe constructs (e.g., `cast`, `ASCompat` calls).
 
 ## Essential Files
 *   `src/ax4/Main.hx`: Entry point and pipeline definition.

@@ -30,11 +30,12 @@ This repository includes `.github/workflows/wiki-sync.yml`.
 
 Behavior:
 
-1. Trigger on push to `master` when `docs/**` changes, or manually (`workflow_dispatch`)
+1. Trigger on push to `master` when `docs/**` or the workflow changes, or manually (`workflow_dispatch`)
 2. Clone `<repo>.wiki.git`
 3. Copy `docs/*.md` to wiki root
-4. Ensure `Home.md` exists in wiki (`docs/Home.md`)
-5. Commit and push changes only when needed
+4. Drop `.md` from links between pages (`[Config](Config.md)` becomes `[Config](Config)`), so they stay on the wiki
+5. Ensure `Home.md` exists in wiki (`docs/Home.md`)
+6. Commit and push changes only when needed
 
 Sync direction is one-way: `docs/` -> Wiki.
 

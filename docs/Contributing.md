@@ -8,6 +8,8 @@ npx lix download
 npx haxe build.hxml
 ```
 
+`npx haxe run.hxml` also builds `run.n`, which `haxelib run ax4` needs when the clone is installed with `haxelib dev ax4 .`.
+
 ## Run converter on test workspace
 
 ```bash
@@ -21,7 +23,7 @@ npx haxe test-compat.hxml
 ```
 
 `compat/` is the runtime compatibility layer used by converted projects.
-`compat-test/` is its test suite. When you change anything in `compat/`, update tests in `compat-test/` and run `npx haxe test-compat.hxml`.
+`compat-test/` is its test suite, run on JS (Node), C++ (hxcpp) and Flash (`test.swf`, opened with the system's Flash Player). When you change anything in `compat/`, update tests in `compat-test/` and run `npx haxe test-compat.hxml`.
 
 ## Test case conventions
 

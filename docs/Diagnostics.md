@@ -69,12 +69,6 @@ These are judgment labels for triage, not strict severity levels. The same warni
 
 ### Typing
 
-#### `Missing type coercion: expected=<Type>, actual=<Type>`
-
-- **Meaning:** Expected/actual types still disagree after filters.
-- **Category:** Typing (possible Gap).
-- **Recommendation:** Inspect the site; may need an ax4 fix or an explicit cast in AS3/Haxe.
-
 #### `Dynamic array access?` / `Untyped array access`
 
 - **Meaning:** Indexing through a dynamic/untyped value.

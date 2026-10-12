@@ -9,7 +9,7 @@ Cause:
 Fix:
 
 ```bash
-java -jar converter.jar config.json
+haxelib run ax4 config.json
 ```
 
 ## `<field> not set` (`src`, `hxout`, `swc`)
@@ -56,6 +56,16 @@ Fix:
 - Set `"keepTypes": true` to preserve hints.
 - Set `"keepTypes": false` (or omit) to allow cleaner inferred output.
 
+## Generated code is full of `ASAny` and dynamic access
+
+Cause:
+
+- The AS3 is untyped there (`*`, `Object`, untyped `Array` or `Dictionary`), so ax4 keeps AS3's dynamic semantics.
+
+Fix:
+
+- Type the AS3 where you can, or add comment type hints to the AS3 sources (see [Config reference](Config.md#type-hints-in-as3-sources)).
+
 ## `for...in` / `for each` behavior differs
 
 Cause:
@@ -89,13 +99,8 @@ Common causes and fixes:
 2. `compat/` runtime not included in the target Haxe project
    - Cause: converted code references compatibility helpers that are not on classpath.
    - Fix:
-     - Copy/include `compat/` in your output project (for example via `copy` config option).
-     - Ensure the build classpath includes that folder.
-     - If `compat/` was modified, run compatibility tests:
-
-```bash
-npx haxe test-compat.hxml
-```
+     - With the haxelib install, add `-lib ax4` to the build.
+     - Otherwise, copy `compat/` into your output project (for example with the `copy` config option) and add it to the build classpath.
 
 3. External dependency mismatch (SWC / ANE / platform libs)
    - Cause: conversion used SWC declarations, but compile target does not provide equivalent Haxe-side types/runtime.

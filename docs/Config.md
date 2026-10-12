@@ -3,6 +3,8 @@
 `ax4` expects exactly one argument: path to a JSON config file.
 
 ```bash
+haxelib run ax4 config.json
+# or, with a source build
 java -jar converter.jar config.json
 ```
 
@@ -113,6 +115,28 @@ Example:
     "flash.display.DisplayObject.filters$set": "p1:Array<flash.filters.BitmapFilter>"
   }
 }
+```
+
+## Type hints in AS3 sources
+
+Comments in the AS3 sources can type what AS3 leaves untyped.
+
+`// @haxe-type(...)` on the line before a declaration gives it a Haxe type, with the same syntax as `haxeTypes` values: a type for a variable or field, a signature for a function (parameters by name).
+
+```actionscript
+// @haxe-type(Dictionary<String, Dynamic>)
+var cache:Dictionary = new Dictionary();
+
+// @haxe-type(id:Int|return:Array<String>)
+function namesOf(id:*):Array { ... }
+```
+
+A trailing comment types an untyped Array local, or a `new Dictionary()` / `new Object()` and the local it initializes. It uses AS3 type names:
+
+```actionscript
+var ids:Array = []; // Array<int>
+var counts:Dictionary = new Dictionary(); // Dictionary<String, int>
+var names:Object = new Object(); // Object<String>
 ```
 
 ## Path and platform notes
