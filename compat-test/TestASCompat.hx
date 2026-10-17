@@ -72,6 +72,15 @@ class TestASCompat extends utest.Test {
 		equals(-1294967296, ASCompat.toInt("3000000000"));
 	}
 
+	function testToNumberReadsHexStrings() {
+		floatEquals(52224, ASCompat.toNumber("0x00cc00"));
+		floatEquals(12517631, ASCompat.toNumber(" 0XBF00FF "));
+		floatEquals(4294967295, ASCompat.toNumber("0xFFFFFFFF"));
+		equals(1880064, ASCompat.toInt("0x1CB000"));
+		floatEquals(Math.NaN, ASCompat.toNumber("0x"));
+		floatEquals(Math.NaN, ASCompat.toNumber("0x1g"));
+	}
+
 	function testAsBoolHelpersMatchAs3Boolean() {
 		isFalse(ASCompat.stringAsBool(null));
 		isFalse(ASCompat.stringAsBool(""));
