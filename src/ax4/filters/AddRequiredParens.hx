@@ -39,6 +39,10 @@ class AddRequiredParens extends AbstractFilter {
 			case TEBinop(a, op = OpGt(_) | OpGte(_) | OpLt(_) | OpLte(_) | OpIn(_) | OpIs(_), b):
 				binop(a, op, b, 7);
 
+			// Haxe's `??` binds tighter than a comparison and looser than a shift, unlike AS3's, below `||`
+			case TEBinop(a, op = OpNullCoalesce(_), b):
+				maybeWrap(e.with(kind = TEBinop(loop(a, 6), op, loop(b, 6))), 7);
+
 			case TEAs(e2, kwd, type):
 				maybeWrap(e.with(kind = TEAs(loop(e2, 7), kwd, type)), 7);
 

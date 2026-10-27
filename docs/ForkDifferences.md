@@ -19,6 +19,8 @@ It is a high-level overview, not a changelog.
 
 Main areas improved in typing/filtering/generation:
 
+- Syntax:
+  - AIR 50's nullish coalescing `??` and optional chaining `?.` (fields and method calls), converted to Haxe's own operators
 - Dynamic property access and assignments:
   - safer rewrites for reads/writes/compound assignments on dynamic values
   - improved `hasOwnProperty` handling and undefined lookup rewrites

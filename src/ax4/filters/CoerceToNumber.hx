@@ -210,7 +210,7 @@ class CoerceToNumber extends AbstractFilter {
 		switch e.kind {
 			case TEField(fieldObj, fieldName, _):
 				switch fieldObj.kind {
-					case TOExplicit(dot, eobj):
+					case TOExplicit(dot, eobj) if (dot.kind != TkQuestionDot): // `a?.b` keeps its `?.` inside toNumber
 						// For field access on Dynamic objects, use toNumberField
 						// to properly handle undefined values (which Haxe converts to null)
 						var objExpr = eobj.with(expectedType = eobj.type);

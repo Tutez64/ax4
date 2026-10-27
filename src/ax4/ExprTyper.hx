@@ -579,7 +579,12 @@ class ExprTyper {
 		// TODO: we don't need to re-type stuff,
 		// can iterate over fields, but let's do it later :-)
 		var eobj = typeExpr(eobj, TTAny);
-		return getTypedField(eobj, dot, name, expectedType);
+		var e = getTypedField(eobj, dot, name, expectedType);
+		// `a?.b` is undefined when `a` is null, so it is no plain Number, int or Boolean: `int(a?.b)` still converts
+		if (dot.kind == TkQuestionDot && e.type.match(TTInt | TTUint | TTNumber | TTBoolean)) {
+			e.type = TTAny;
+		}
+		return e;
 	}
 
 	inline function mkExplicitFieldAccess(obj:TExpr, dot:Token, fieldToken:Token, type:TType, expectedType:TType):TExpr {
@@ -1198,6 +1203,13 @@ class ExprTyper {
 				var b = typeExpr(b, expectedType);
 				var type = if (typeEq(a.type, b.type)) a.type else TTAny;
 				// these two must be further processed to be Haxe-friendly
+				return mk(TEBinop(a, op, b), type, expectedType);
+
+			case OpNullCoalesce(_):
+				// not coerced: `undefined` has to reach `??` as it is, not as NaN or 0
+				var a = typeExpr(a, TTAny);
+				var b = typeExpr(b, expectedType);
+				var type = if (typeEq(a.type, b.type)) a.type else TTAny;
 				return mk(TEBinop(a, op, b), type, expectedType);
 
 			case OpEquals(_) | OpNotEquals(_) | OpStrictEquals(_) | OpNotStrictEquals(_) |

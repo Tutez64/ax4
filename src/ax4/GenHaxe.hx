@@ -1518,6 +1518,7 @@ class GenHaxe extends PrinterBase {
 			case OpIn(t): throwError(t.pos, "unprocessed `in` operator");
 			case OpAnd(t): printTextWithTrivia("&&", t);
 			case OpOr(t): printTextWithTrivia("||", t);
+			case OpNullCoalesce(t): printTextWithTrivia("??", t);
 			case OpShl(t): printTextWithTrivia("<<", t);
 			case OpShr(t): printTextWithTrivia(">>", t);
 			case OpUshr(t): printTextWithTrivia(">>>", t);
@@ -1622,7 +1623,7 @@ class GenHaxe extends PrinterBase {
 				printTrivia(dot.leadTrivia);
 				printTrivia(dot.trailTrivia); // haxe doesn't support some.<whitespace>fieldName, so we move whitespace before the dot (hopefully there won't be any line comments)
 				printTrivia(token.leadTrivia);
-				buf.add(".");
+				buf.add(if (dot.kind == TkQuestionDot) "?." else ".");
 
 			case TOImplicitThis(_) | TOImplicitClass(_):
 				printTrivia(token.leadTrivia);

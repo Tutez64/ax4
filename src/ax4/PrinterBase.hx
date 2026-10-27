@@ -15,7 +15,7 @@ class PrinterBase {
 	}
 
 	inline function printDot(s:Token) {
-		printTextWithTrivia(".", s);
+		printTextWithTrivia(if (s.kind == TkQuestionDot) "?." else ".", s);
 	}
 
 	inline function printComma(c:Token) {

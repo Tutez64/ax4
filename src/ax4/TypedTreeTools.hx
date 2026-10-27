@@ -234,7 +234,7 @@ class TypedTreeTools {
 			case TEForIn(f): f.syntax.forKeyword.pos;
 			case TEForEach(f): f.syntax.forKeyword.pos;
 			case TEHaxeFor(f): f.syntax.forKeyword.pos;
-			case TEBinop(a, OpAdd(t) | OpSub(t) | OpDiv(t) | OpMul(t) | OpMod(t) | OpAssign(t) | OpEquals(t) | OpNotEquals(t) | OpStrictEquals(t) | OpNotStrictEquals(t) | OpGt(t) | OpGte(t) | OpLt(t) | OpLte(t) | OpIn(t) | OpIs(t) | OpAnd(t) | OpOr(t) | OpShl(t) | OpShr(t) | OpUshr(t) | OpBitAnd(t) | OpBitOr(t) | OpBitXor(t) | OpComma(t), b): t.pos;
+			case TEBinop(a, OpAdd(t) | OpSub(t) | OpDiv(t) | OpMul(t) | OpMod(t) | OpAssign(t) | OpEquals(t) | OpNotEquals(t) | OpStrictEquals(t) | OpNotStrictEquals(t) | OpGt(t) | OpGte(t) | OpLt(t) | OpLte(t) | OpIn(t) | OpIs(t) | OpAnd(t) | OpOr(t) | OpNullCoalesce(t) | OpShl(t) | OpShr(t) | OpUshr(t) | OpBitAnd(t) | OpBitOr(t) | OpBitXor(t) | OpComma(t), b): t.pos;
 			case TEBinop(a, OpAssignOp(AOpAdd(t) | AOpSub(t) | AOpMul(t) | AOpDiv(t) | AOpMod(t) | AOpAnd(t) | AOpOr(t) | AOpBitAnd(t) | AOpBitOr(t) | AOpBitXor(t) | AOpShl(t) | AOpShr(t) | AOpUshr(t)), b): t.pos;
 			case TEPreUnop(PreNot(t) | PreNeg(t) | PreIncr(t) | PreDecr(t) | PreBitNeg(t), e): t.pos;
 			case TEPostUnop(e, PostIncr(t) | PostDecr(t)): t.pos;
@@ -973,6 +973,7 @@ class TypedTreeTools {
 			case OpIn(t): OpIn(t.clone());
 			case OpAnd(t): OpAnd(t.clone());
 			case OpOr(t): OpOr(t.clone());
+			case OpNullCoalesce(t): OpNullCoalesce(t.clone());
 			case OpShl(t): OpShl(t.clone());
 			case OpShr(t): OpShr(t.clone());
 			case OpUshr(t): OpUshr(t.clone());

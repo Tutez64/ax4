@@ -353,6 +353,15 @@ class Scanner {
 
 				case "?".code:
 					pos++;
+					if (pos < end && text.fastCodeAt(pos) == "?".code) {
+						pos++;
+						return mk(TkQuestionQuestion);
+					}
+					// `a?.5:b` is a ternary on a number, as in ECMAScript: a digit after the dot is not a field
+					if (pos < end && text.fastCodeAt(pos) == ".".code && !(pos + 1 < end && isDigit(text.fastCodeAt(pos + 1)))) {
+						pos++;
+						return mk(TkQuestionDot);
+					}
 					return mk(TkQuestion);
 
 				case ">".code:

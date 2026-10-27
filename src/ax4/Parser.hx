@@ -1160,6 +1160,11 @@ class Parser {
 				return parseBinop(first, OpBitOr, allowComma);
 			case TkPipePipe:
 				return parseBinop(first, OpOr, allowComma);
+			case TkQuestionQuestion:
+				return parseBinop(first, OpNullCoalesce, allowComma);
+			case TkQuestionDot:
+				var dot = scanner.consume();
+				return parseExprNext(EField(first, dot, expectKind(TkIdent)), allowComma);
 			case TkPipePipeEquals:
 				return parseBinop(first, t -> OpAssignOp(AOpOr(t)), allowComma);
 			case TkPipeEquals:
@@ -1276,12 +1281,16 @@ class Parser {
 			case OpOr(_):
 				{p: 9, assoc: Left};
 
+			// Nullish coalescing, below logical OR as in ECMAScript (AIR 50)
+			case OpNullCoalesce(_):
+				{p: 10, assoc: Left};
+
 			// Assignment
 			case OpAssign(_) | OpAssignOp(_):
-				{p: 10, assoc: Right};
+				{p: 11, assoc: Right};
 
 			case OpComma(_):
-				{p: 11, assoc: Left};
+				{p: 12, assoc: Left};
 		}
 	}
 

@@ -579,6 +579,7 @@ class Printer extends PrinterBase {
 			case OpIs(t): printTextWithTrivia("is", t);
 			case OpAnd(t): printTextWithTrivia("&&", t);
 			case OpOr(t): printTextWithTrivia("||", t);
+			case OpNullCoalesce(t): printTextWithTrivia("??", t);
 			case OpShl(t): printTextWithTrivia("<<", t);
 			case OpShr(t): printTextWithTrivia(">>", t);
 			case OpUshr(t): printTextWithTrivia(">>>", t);

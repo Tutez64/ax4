@@ -136,6 +136,8 @@ enum TokenKind {
 	TkRegExp;
 	TkXml;
 	TkQuestion;
+	TkQuestionQuestion;
+	TkQuestionDot;
 	TkTilde;
 	TkAt;
 	TkExclamation;

@@ -570,6 +570,7 @@ enum Binop {
 	OpIn(t:Token);
 	OpAnd(t:Token);
 	OpOr(t:Token);
+	OpNullCoalesce(t:Token);
 	OpShl(t:Token);
 	OpShr(t:Token);
 	OpUshr(t:Token);
