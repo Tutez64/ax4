@@ -11,6 +11,10 @@
  * - Boolean(1 > 0 && child) -> 1 > 0 && child != null
  * - Boolean(stageRef) -> stageRef != null
  * - Boolean(bool || stageRef && bool) -> bool || stageRef != null && bool (no thisOrDefault)
+ *
+ * Object(typed).field reads a field the type does not declare, so it stays dynamic:
+ * - Object(stageRef).custom -> (stageRef : ASObject).custom
+ * - Object(stageRef).stageWidth -> the cast is dropped, as the field is declared
  */
 package {
     import flash.display.Stage;
@@ -42,6 +46,10 @@ package {
             if (Boolean(1 > 0 && child)) {}
             if (Boolean(stageRef) && Boolean(stageRef.stageWidth < 10)) {}
             if (Boolean(pos + size < 10 || stageRef && stageRef.stageWidth < pos + 10)) {}
+
+            // Object(...) around a typed value
+            var custom:String = String(Object(stageRef).custom);
+            var width:Number = Object(stageRef).stageWidth;
         }
     }
 }

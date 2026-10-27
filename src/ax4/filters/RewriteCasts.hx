@@ -15,6 +15,17 @@ class RewriteCasts extends AbstractFilter {
 	}
 
 	override function processExpr(e:TExpr):TExpr {
+		switch e.kind {
+			// Object(typed).field reads a field the type does not declare: keep it dynamic
+			case TEField(obj = {kind: TOExplicit(dot, eCast = {kind: TECast(c = {type: TTObject(TTAny)})})}, fieldName, fieldToken)
+				if (!c.expr.type.match(TTAny | TTObject(_)) && !declaresField(c.expr.type, fieldName)):
+				var inner = processExpr(c.expr);
+				processLeadingToken(t -> t.leadTrivia = removeLeadingTrivia(eCast).concat(t.leadTrivia), inner);
+				processTrailingToken(t -> t.trailTrivia = t.trailTrivia.concat(removeTrailingTrivia(eCast)), inner);
+				var retyped = mk(TEHaxeRetype(inner), tUntypedObject, tUntypedObject);
+				return e.with(kind = TEField(obj.with(kind = TOExplicit(dot, retyped), type = tUntypedObject), fieldName, fieldToken));
+			case _:
+		}
 		e = mapExpr(processExpr, e);
 		return switch e.kind {
 			case TECast({syntax: syntax, expr: expr, type: castType}):
@@ -143,6 +154,13 @@ class RewriteCasts extends AbstractFilter {
 
 			case _:
 				e;
+		}
+	}
+
+	static function declaresField(t:TType, name:String):Bool {
+		return switch t {
+			case TTInst(cls): cls.findFieldInHierarchy(name, false) != null;
+			case _: false;
 		}
 	}
 
