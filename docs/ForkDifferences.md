@@ -33,6 +33,7 @@ Main areas improved in typing/filtering/generation:
   - `void` used as Bool rewritten to preserve side effects and falsy AVM2 `undefined` semantics
 - Control flow:
   - switch fall-through rewritten by duplicating executed case-body suffixes
+  - `finally`, which Haxe lacks, lowered to a catch-all that runs it and rethrows, with a copy after the `try` and before each `return`, `break` or `continue` leaving it
 - Class/constructor handling:
   - fixes for ctor initialization ordering and super-call placement
   - better handling of class casts and `new` on dynamic/callable values

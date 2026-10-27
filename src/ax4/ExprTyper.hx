@@ -15,6 +15,17 @@ import ax4.TypedTreeTools.getConstructor;
 import ax4.TypedTreeTools.isFieldStatic;
 import ax4.TypedTreeTools.getFunctionTypeFromSignature;
 import ax4.TypedTreeTools.typeEq;
+import ax4.TypedTreeTools.cloneExpr;
+import ax4.TypedTreeTools.mapExpr;
+import ax4.TokenTools.mkIdent;
+import ax4.TokenTools.mkOpenParen;
+import ax4.TokenTools.mkCloseParen;
+import ax4.TokenTools.mkOpenBrace;
+import ax4.TokenTools.mkCloseBrace;
+import ax4.TokenTools.mkSemicolon;
+import ax4.TokenTools.mkTokenWithSpaces;
+import ax4.TokenTools.addTrailingNewline;
+import ax4.TokenTools.whitespace;
 
 typedef Locals = Map<String, TVar>;
 
@@ -1293,7 +1304,6 @@ class ExprTyper {
 	function typeTry(keyword:Token, block:BracedExprBlock, catches:Array<Catch>, finally_:Null<Finally>, expectedType:TType):TExpr {
 		if (expectedType != TTVoid) throw "assert";
 
-		if (finally_ != null) throwErr("finally is unsupported", finally_.keyword.pos);
 		var body = typeExpr(EBlock(block), TTVoid);
 		var tCatches = new Array<TCatch>();
 		for (c in catches) {
@@ -1313,11 +1323,88 @@ class ExprTyper {
 				expr: e
 			});
 		}
-		return mk(TETry({
-			keyword: keyword,
-			expr: body,
-			catches: tCatches
-		}), TTVoid, TTVoid);
+		if (finally_ == null) {
+			return mk(TETry({
+				keyword: keyword,
+				expr: body,
+				catches: tCatches
+			}), TTVoid, TTVoid);
+		}
+		return lowerFinally(keyword, body, tCatches, typeExpr(EBlock(finally_.block), TTVoid));
+	}
+
+	static var finallyId = 0;
+
+	/**
+		Haxe has no `finally`, so `try { A } catch (e:T) { B } finally { F }` becomes
+		`{ try { try { A } catch (e:T) { B } } catch (e:Dynamic) { F; throw e; } F; }`,
+		with `F` also run before each `return`, `break` or `continue` that leaves `A` or `B`.
+	**/
+	function lowerFinally(keyword:Token, body:TExpr, catches:Array<TCatch>, fin:TExpr):TExpr {
+		function stmt(e:TExpr):TBlockExpr {
+			return {expr: e, semicolon: addTrailingNewline(mkSemicolon())};
+		}
+		function block(exprs:Array<TExpr>):TExpr {
+			return mk(TEBlock({syntax: {openBrace: addTrailingNewline(mkOpenBrace()), closeBrace: mkCloseBrace()}, exprs: exprs.map(stmt)}), TTVoid, TTVoid);
+		}
+
+		// `loops` and `switches` count the ones entered inside the try: a `break` or `continue` that targets them stays inside
+		function exits(e:TExpr, loops:Int, switches:Int):TExpr {
+			return switch e.kind {
+				case TELocalFunction(_):
+					e;
+				case TEReturn(kwd, null):
+					block([cloneExpr(fin), e]);
+				case TEReturn(kwd, value):
+					var v:TVar = {name: "__finallyReturn" + finallyId++, type: value.expectedType};
+					var decl:TVarDecl = {
+						syntax: {name: mkIdent(v.name), type: null},
+						v: v,
+						init: {equalsToken: mkTokenWithSpaces(TkEquals, "="), expr: exits(value, loops, switches)},
+						comma: null
+					};
+					var local = mk(TELocal(mkIdent(v.name), v), v.type, v.type);
+					block([
+						mk(TEVars(VVar(mkIdent("var", [], [whitespace])), [decl]), TTVoid, TTVoid),
+						cloneExpr(fin),
+						mk(TEReturn(kwd, local), TTVoid, TTVoid)
+					]);
+				case TEBreak(_) if (loops == 0 && switches == 0):
+					block([cloneExpr(fin), e]);
+				case TEContinue(_) if (loops == 0):
+					block([cloneExpr(fin), e]);
+				case TEWhile(_) | TEDoWhile(_) | TEFor(_) | TEForIn(_) | TEForEach(_) | TEHaxeFor(_):
+					mapExpr(exits.bind(_, loops + 1, switches), e);
+				case TESwitch(_):
+					mapExpr(exits.bind(_, loops, switches + 1), e);
+				case _:
+					mapExpr(exits.bind(_, loops, switches), e);
+			}
+		}
+
+		var inner = exits(body, 0, 0);
+		if (catches.length > 0) {
+			var guarded = [for (c in catches) {syntax: c.syntax, v: c.v, expr: exits(c.expr, 0, 0)}];
+			inner = block([mk(TETry({keyword: keyword, expr: inner, catches: guarded}), TTVoid, TTVoid)]);
+		}
+
+		var name = "__finallyError" + finallyId++;
+		var v:TVar = {name: name, type: TTAny};
+		var rethrow = mk(TEThrow(mkIdent("throw", [], [whitespace]), mk(TELocal(mkIdent(name), v), TTAny, TTAny)), TTVoid, TTVoid);
+		var catchAll:TCatch = {
+			syntax: {
+				keyword: mkIdent("catch", [whitespace], [whitespace]),
+				openParen: mkOpenParen(),
+				name: mkIdent(name),
+				type: {colon: new Token(0, TkColon, ":", [], []), type: TPath({first: mkIdent("Dynamic"), rest: []})},
+				closeParen: mkCloseParen([whitespace])
+			},
+			v: v,
+			expr: block([cloneExpr(fin), rethrow])
+		};
+		var guard = mk(TETry({keyword: new Token(0, TkIdent, "try", keyword.leadTrivia, [whitespace]), expr: inner, catches: [catchAll]}), TTVoid, TTVoid);
+		keyword.leadTrivia = [];
+		return block([guard, fin]);
 	}
 
 	function typeSwitch(keyword:Token, openParen:Token, subj:Expr, closeParen:Token, openBrace:Token, cases:Array<SwitchCase>, closeBrace:Token, expectedType:TType):TExpr {

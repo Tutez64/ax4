@@ -804,15 +804,15 @@ class Parser {
 			}
 		});
 
-		if (catches.length == 0)
-			throw "try without catches";
-
 		var finally = switch scanner.advance() {
 			case {kind: TkIdent, text: "finally"}:
 				{keyword: scanner.consume(), block: parseBracedExprBlock(expectKind(TkBraceOpen))};
 			case _:
 				null;
 		}
+
+		if (catches.length == 0 && finally == null)
+			throw "try without catches";
 
 		return ETry(keyword, block, catches, finally);
 	}
