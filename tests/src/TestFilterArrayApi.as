@@ -4,6 +4,8 @@
  * sort uses Reflect.compare for statements and ASCompat.ASArray.sort for value usage.
  * sort options route to ASCompat.ASArray.sortWithOptions.
  * concat/join/push/unshift/length/insertAt/splice are rewritten as needed.
+ * removeAt becomes splice(i, 1)[0] (Haxe's Array has none), and Vector.<Object>, an Array<Dynamic>
+ * in Haxe, gets the Array rewrites (Starling's sHoveringTouchData.length = 0).
  * reverse/map/some route to compat helpers for Array/Vector.
  * untyped concat arguments should report a non-blocking error.
  * Vector sort/splice paths are covered.
@@ -61,6 +63,13 @@ package {
             var len:int = (items.length = 2);
 
             items.insertAt(1, 9);
+            items.removeAt(0);
+            var removedAt:* = items.removeAt(0);
+
+            var objects:Vector.<Object> = new Vector.<Object>();
+            objects.length = 0;
+            objects.insertAt(0, {});
+            var removedObject:Object = objects.removeAt(0);
 
             items.splice(1, 0, 7);
             var removed:Array = items.splice(1, 2);

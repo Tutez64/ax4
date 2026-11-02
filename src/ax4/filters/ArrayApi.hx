@@ -170,8 +170,8 @@ class ArrayApi extends AbstractFilter {
 				processTrailingToken(t -> t.trailTrivia = t.trailTrivia.concat(trail), eLength);
 				eLength;
 
-			// set length
-			case TEBinop({kind: TEField(to = {kind: TOExplicit(dot, eArray), type: TTArray(_)}, "length", _)}, op = OpAssign(_), eNewLength):
+			// set length (`Vector.<Object>` is an Array<Dynamic> in Haxe)
+			case TEBinop({kind: TEField(to = {kind: TOExplicit(dot, eArray), type: arrayType}, "length", _)}, op = OpAssign(_), eNewLength) if (isHaxeArray(arrayType)):
 				if (e.expectedType == TTVoid) {
 					// block-level length assignment - safe to just call Haxe's "resize" method
 					e.with(
@@ -197,8 +197,12 @@ class ArrayApi extends AbstractFilter {
 					}));
 				}
 
+			// removeAt: `a.splice(i, 1)[0]`, Haxe's Array has no removeAt
+			case TECall({kind: TEField(fieldObj, "removeAt", removeAtToken)}, args = {args: [eIndex]}) if (isHaxeArray(fieldObj.type)):
+				rewriteRemoveAt(e, fieldObj, removeAtToken, args, eIndex);
+
 			// insertAt
-			case TECall(eInsertAtMethod = {kind: TEField(fieldObj = {type: TTArray(_)}, "insertAt", insertAtToken)}, args):
+			case TECall(eInsertAtMethod = {kind: TEField(fieldObj, "insertAt", insertAtToken)}, args) if (isHaxeArray(fieldObj.type)):
 				var insertToken = insertAtToken.with(TkIdent, "insert");
 				var eInsertMethod = eInsertAtMethod.with(kind = TEField(fieldObj, "insert", insertToken));
 				e.with(kind = TECall(eInsertMethod, args));
@@ -434,5 +438,24 @@ class ArrayApi extends AbstractFilter {
 			case TTObject(TTAny): true;
 			case _: false;
 		}
+	}
+	/** Arrays in Haxe, `Vector.<Object>` included (printed as Array<Dynamic>). */
+	static function isHaxeArray(t:TType):Bool {
+		return t.match(TTArray(_) | TTVector(TTObject(TTAny)));
+	}
+
+	static function rewriteRemoveAt(e:TExpr, fieldObj:TFieldObject, removeAtToken:Token, args:TCallArgs, eIndex:{expr:TExpr, comma:Null<Token>}):TExpr {
+		var tSplice = TTFun([TTInt, TTInt], TTArray(TTAny));
+		var eSpliceMethod = mk(TEField(fieldObj, "splice", removeAtToken.with(TkIdent, "splice")), tSplice, tSplice);
+		var eOne = mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, "1", [], []))), TTInt, TTInt);
+		var eSplice = mk(TECall(eSpliceMethod, args.with(args = [{expr: eIndex.expr, comma: commaWithSpace}, {expr: eOne, comma: null}])), TTArray(TTAny), TTArray(TTAny));
+		if (e.expectedType == TTVoid) {
+			return eSplice.with(expectedType = TTVoid);
+		}
+		return e.with(kind = TEArrayAccess({
+			syntax: {openBracket: mkOpenBracket(), closeBracket: mkCloseBracket()},
+			eobj: eSplice,
+			eindex: mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, "0", [], []))), TTInt, TTInt)
+		}));
 	}
 }
