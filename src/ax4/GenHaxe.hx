@@ -295,6 +295,11 @@ class GenHaxe extends PrinterBase {
 				printTrivia(ParseTree.getDotPathLeadingTrivia(info.extend.syntax.path));
 				buf.add("ASByteArrayBase");
 				printTrivia(ParseTree.getDotPathTrailingTrivia(info.extend.syntax.path));
+			} else if (isBitmapAssetClass(c, info.extend)) {
+				// an image [Embed] is a Bitmap, but OpenFL embeds @:bitmap on a BitmapData only
+				printTrivia(ParseTree.getDotPathLeadingTrivia(info.extend.syntax.path));
+				buf.add("ASBitmapAsset");
+				printTrivia(ParseTree.getDotPathTrailingTrivia(info.extend.syntax.path));
 			} else {
 				printDotPathNormalized(info.extend.syntax.path, LastType);
 			}
@@ -432,6 +437,15 @@ class GenHaxe extends PrinterBase {
 			if (superClass.name == "Array") return true;
 		}
 		return ParseTree.dotPathToString(extend.syntax.path) == "Array";
+	}
+
+	static function isBitmapAssetClass(c:TClassOrInterfaceDecl, extend:TClassExtend):Bool {
+		var superClass = extend.superClass;
+		if (superClass == null || superClass.name != "Bitmap" || superClass.parentModule.parentPack.name != "flash.display") return false;
+		return Lambda.exists(c.metadata, m -> switch m {
+			case MetaHaxe(t, _): t.text == "@:bitmap";
+			case _: false;
+		});
 	}
 
 	static function isByteArrayBaseClass(extend:TClassExtend):Bool {
