@@ -1,6 +1,25 @@
 import utest.Assert.*;
 
 class TestASCompat extends utest.Test {
+	function methodWithTwoArgs(a:Int, b:Int):Void {}
+
+	function testFunctionLength() {
+		#if (js || cpp)
+		var none:ASFunction = function() {};
+		var two:ASFunction = function(a:Int, b:Int) {};
+		var optional:ASFunction = function(?e:Dynamic) {};
+		var method:ASFunction = methodWithTwoArgs;
+		equals(0, none.length);
+		equals(2, two.length);
+		equals(1, optional.length);
+		#if cpp
+		equals(2, method.length); // a js method closure ($bind) reports 0
+		#end
+		#else
+		pass();
+		#end
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));
