@@ -7,6 +7,8 @@
  * removeAt becomes splice(i, 1)[0] (Haxe's Array has none), and Vector.<Object>, an Array<Dynamic>
  * in Haxe, gets the Array rewrites (Starling's sHoveringTouchData.length = 0).
  * Every item of a multiple push/unshift is coerced to the element type (Number items in a Vector.<uint>).
+ * Vector.filter/every/some/forEach with an (item, index, vector) callback go through ASCompat.ASVectorTools
+ * (Starling's AssetManager.dequeue); a one-argument callback stays a Vector method call.
  * reverse/map/some route to compat helpers for Array/Vector.
  * untyped concat arguments should report a non-blocking error.
  * Vector sort/splice paths are covered.
@@ -75,6 +77,11 @@ package {
             var indices:Vector.<uint> = new Vector.<uint>();
             var a:Number = 1, b:Number = 2;
             indices.push(a, b, 3);
+            var big:Vector.<uint> = indices.filter(function(item:uint, index:int, vector:Vector.<uint>):Boolean {
+                return item > 1;
+            });
+            indices.forEach(function(item:uint, index:int, vector:Vector.<uint>):void {
+            });
 
             items.splice(1, 0, 7);
             var removed:Array = items.splice(1, 2);

@@ -31,6 +31,11 @@ class ArrayApi extends AbstractFilter {
 				var eMethod = mk(TEField(fieldObj, "some", mkIdent("some")), TTFunction, TTFunction);
 				e.with(kind = TECall(eMethod, args.with(args = [{expr: eArray, comma: commaWithSpace}].concat(args.args))));
 
+			// Vector.filter/every/some/forEach with AS3's (item, index, vector) callback: Haxe's pass the item only
+			case TECall({kind: TEField({kind: TOExplicit(_, eVector = {type: TTVector(elemType)})}, methodName = "filter" | "every" | "some" | "forEach", methodToken)}, args = {args: [{expr: {type: TTFun([_, _, _], _, _)}}]})
+				if (!elemType.match(TTObject(TTAny))):
+				rewriteVectorToolsCall(e, eVector, methodName, methodToken, args);
+
 			// Array.map / Vector.map -> compat (preserve AS3 callback signature + thisArg)
 			case TECall({kind: TEField({kind: TOExplicit(dot, eArr = {type: TTArray(_) | TTVector(_)})}, "map", _)}, args):
 				var isVector = eArr.type.match(TTVector(_));
@@ -439,6 +444,13 @@ class ArrayApi extends AbstractFilter {
 			case _: false;
 		}
 	}
+	static function rewriteVectorToolsCall(e:TExpr, eVector:TExpr, methodName:String, methodToken:Token, args:TCallArgs):TExpr {
+		var eTools = mkBuiltin("ASCompat.ASVectorTools", TTBuiltin, removeLeadingTrivia(eVector));
+		var fieldObj = {kind: TOExplicit(mkDot(), eTools), type: eTools.type};
+		var eMethod = mk(TEField(fieldObj, methodName, methodToken), TTFunction, TTFunction);
+		return e.with(kind = TECall(eMethod, args.with(args = [{expr: eVector, comma: commaWithSpace}].concat(args.args))));
+	}
+
 	/** Arrays in Haxe, `Vector.<Object>` included (printed as Array<Dynamic>). */
 	static function isHaxeArray(t:TType):Bool {
 		return t.match(TTArray(_) | TTVector(TTObject(TTAny)));
