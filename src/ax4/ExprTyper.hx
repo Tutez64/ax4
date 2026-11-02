@@ -874,8 +874,39 @@ class ExprTyper {
 		}
 	}
 
+	/** String methods E4X lacks on XML and XMLList (`replace` and `concat` are left out: XML has its own). */
+	static final xmlStringMethods = [
+		"split" => true, "substr" => true, "substring" => true, "slice" => true,
+		"toLowerCase" => true, "toUpperCase" => true, "toLocaleLowerCase" => true, "toLocaleUpperCase" => true,
+		"indexOf" => true, "lastIndexOf" => true, "charAt" => true, "charCodeAt" => true,
+		"search" => true, "match" => true, "localeCompare" => true,
+	];
+
+	/**
+		E4X CallMethod: a method XML/XMLList lacks is called on the string value of simple content,
+		so `xml.@name.split("::")` is `xml.@name.toString().split("::")`, not a call of the `split` children.
+	**/
+	function typeXmlStringMethodCallee(e:Expr):Null<TExpr> {
+		switch e {
+			case EField(obj, dot, name) if (name.kind.equals(TkIdent) && xmlStringMethods.exists(name.text)):
+				var tobj = typeExpr(obj, TTAny);
+				if (!tobj.type.match(TTXML | TTXMLList)) return null;
+				var toStringName = new Token(name.pos, TkIdent, "toString", [], []);
+				var toStringField = mkExplicitFieldAccess(tobj, new Token(dot.pos, TkDot, ".", [], []), toStringName, TTFun([], TTString), TTAny);
+				var toStringCall = mk(TECall(toStringField, {
+					openParen: new Token(name.pos, TkParenOpen, "(", [], []),
+					args: [],
+					closeParen: new Token(name.pos, TkParenClose, ")", [], [])
+				}), TTString, TTString);
+				return mkExplicitFieldAccess(toStringCall, dot, name, getStringInstanceFieldType(name), TTAny);
+			case _:
+				return null;
+		}
+	}
+
 	function typeCall(e:Expr, args:CallArgs, expectedType:TType) {
-		var eobj = typeExpr(e, TTAny);
+		var eobj = typeXmlStringMethodCallee(e);
+		if (eobj == null) eobj = typeExpr(e, TTAny);
 
 		var callableType = switch eobj {
 			case {kind: TELiteral(TLSuper(_)), type: TTInst(cls)}: getConstructorType(cls);
