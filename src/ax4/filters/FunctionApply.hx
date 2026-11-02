@@ -8,12 +8,12 @@ class FunctionApply extends AbstractFilter {
 
 	override function processExpr(e:TExpr):TExpr {
 		return switch e.kind {
-			// `super.f.apply(this, args)` on a rest method: Haxe has no closure of a super method, but spreads into a rest
-			case TECall({kind: TEField({kind: TOExplicit(_, eFun = {kind: TEField({kind: TOExplicit(_, {kind: TELiteral(TLSuper(_))})}, _, _), type: TTFun(_, _, rest)})}, "apply", _)}, args = {args: [_, eArgs]})
-				if (rest != null):
-				var eSpread = processExpr(eArgs.expr);
-				processLeadingToken(t -> t.leadTrivia = [new Trivia(TrWhitespace, "...")].concat(t.leadTrivia), eSpread);
-				e.with(kind = TECall(eFun, args.with(args = [{expr: eSpread, comma: null}])));
+			// `f.apply(thisArg, args)` on a rest method (Starling's Polygon: addVertices.apply(this, vertices)):
+			// hxcpp passes a rest as one array argument, so Reflect.callMethod gave it the first item; and Haxe has no
+			// closure of a super method. A method closure is bound, so call it with ...(args ?? []), as apply(x, null) has none.
+			case TECall({kind: TEField({kind: TOExplicit(_, eFun = {kind: TEField(_, _, _), type: TTFun([], _, TRestAs3)})}, "apply", _)}, args = {args: [thisArg, eArgs]})
+				if (!isNullLikeThisArg(thisArg.expr)): // a null this goes through applyBoundMethod; only a rest-only AS3 method spreads
+				rewriteRestApply(e, processExpr(eFun), args, processExpr(eArgs.expr));
 
 			case TECall({kind: TEField({kind: TOExplicit(_, eFun = {type: TTFunction | TTFun(_) | TTAny | TTObject(TTAny)})}, "apply", _)}, args):
 				eFun = processExpr(eFun);
@@ -160,5 +160,11 @@ class FunctionApply extends AbstractFilter {
 			case _:
 				false;
 		}
+	}
+	static function rewriteRestApply(e:TExpr, eFun:TExpr, args:TCallArgs, eArgs:TExpr):TExpr {
+		var eEmpty = mk(TEArrayDecl({syntax: {openBracket: mkOpenBracket(), closeBracket: mkCloseBracket()}, elements: []}), tUntypedArray, tUntypedArray);
+		var eOrEmpty = mk(TEBinop(eArgs, OpNullCoalesce(new Token(0, TkQuestionQuestion, "??", [whitespace], [whitespace])), eEmpty), tUntypedArray, tUntypedArray);
+		var eSpread = mk(TEParens(new Token(0, TkParenOpen, "(", [new Trivia(TrWhitespace, "...")], []), eOrEmpty, new Token(0, TkParenClose, ")", [], [])), tUntypedArray, tUntypedArray);
+		return e.with(kind = TECall(eFun, args.with(args = [{expr: eSpread, comma: null}])));
 	}
 }

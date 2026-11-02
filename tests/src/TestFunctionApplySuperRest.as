@@ -1,8 +1,9 @@
 /**
- * Test case: `super.f.apply(this, args)` on a method with a rest argument
- * (Starling's Polygon.addVertices in its immutable subclass).
- * Haxe cannot make a closure of a super method.
- * Expected: `super.addVertices(...rest)`.
+ * Test case: `f.apply(this, args)` on a method with a rest argument (Starling's Polygon:
+ * addVertices.apply(this, vertices), and super.addVertices.apply in its immutable subclass).
+ * hxcpp passes a rest as one array argument, so Reflect.callMethod gave it the first item,
+ * and Haxe cannot make a closure of a super method.
+ * Expected: `addVertices(...(vertices ?? []))` and `super.addVertices(...(args ?? []))`.
  */
 package {
     public class TestFunctionApplySuperRest extends FunctionApplySuperRestBase {
@@ -13,6 +14,10 @@ package {
 }
 
 class FunctionApplySuperRestBase {
+    public function FunctionApplySuperRestBase(vertices:Array = null) {
+        addVertices.apply(this, vertices);
+    }
+
     public function addVertices(...args):void {
     }
 }
