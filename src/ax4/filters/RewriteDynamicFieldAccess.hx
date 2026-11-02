@@ -10,6 +10,14 @@ class RewriteDynamicFieldAccess extends AbstractFilter {
 				if (shouldRewriteDynamicFieldAssign(obj)):
 				rewriteFieldAssign(e, lhs, obj, fieldName, fieldToken, rhs);
 
+			// AS3's o.constructor is the class of an instance (Starling's TextFormat.clone: new (Object(this).constructor as Class)()),
+			// a dynamic field that reads null in Haxe
+			case TEField({kind: TOExplicit(_, eobj), type: objType}, "constructor", _) if (!fieldExistsOnType(objType, "constructor")):
+				var lead = removeLeadingTrivia(e);
+				var trail = removeTrailingTrivia(e);
+				var eMethod = mkBuiltin("ASCompat.constructorOf", TTFun([TTAny], TTAny), lead);
+				mk(TECall(eMethod, {openParen: mkOpenParen(), args: [{expr: stripAnyRetype(eobj), comma: null}], closeParen: mkCloseParen(trail)}), TTAny, e.expectedType);
+
 			case TEField(obj, fieldName, fieldToken):
 				var updatedObj = rewriteFieldObject(obj, fieldName, fieldToken);
 				if (updatedObj == obj) e else e.with(kind = TEField(updatedObj, fieldName, fieldToken));

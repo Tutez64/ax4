@@ -20,6 +20,11 @@ class TestASCompat extends utest.Test {
 		#end
 	}
 
+	function testConstructorOf() {
+		var instance:Dynamic = new TestASCompat();
+		equals(TestASCompat, ASCompat.constructorOf(instance));
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));

@@ -129,6 +129,15 @@ class ASCompat {
 		#end
 	}
 
+	// AS3's o.constructor: the class of an instance
+	public static inline function constructorOf(value:Dynamic):Dynamic {
+		#if flash
+		return value.constructor;
+		#else
+		return Type.getClass(value);
+		#end
+	}
+
 	public static inline function getQualifiedClassName(value:Any):String {
 		#if flash
 		return untyped __global__["flash.utils.getQualifiedClassName"](value);
