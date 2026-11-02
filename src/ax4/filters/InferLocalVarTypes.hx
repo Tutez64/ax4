@@ -627,6 +627,13 @@ class InferLocalVarTypes extends AbstractFilter {
 		syncLocalReads(fun.expr);
 	}
 
+	static function isOptionalArg(a:TFunctionArg):Bool {
+		return switch a.kind {
+			case TArgNormal(_, init): init != null;
+			case TArgRest(_): true;
+		}
+	}
+
 	static function elementTypeFromIterableHint(hint:Null<TType>):Null<TType> {
 		return switch hint {
 			case TTArray(elemType):
@@ -682,6 +689,14 @@ class InferLocalVarTypes extends AbstractFilter {
 		var mapHint = hintFromMapCall(e, mapValueHints, mapIteratorHints);
 		if (mapHint != null) {
 			return mapHint;
+		}
+
+		// a Haxe function type has no optional arguments, so a local function with defaults stays callable
+		// with fewer only as an ASFunction (Starling's onAssetLoaded(name = null, asset = null, type = null))
+		switch e.kind {
+			case TELocalFunction({fun: {sig: {args: args}}}) if (Lambda.exists(args, isOptionalArg)):
+				return TTFunction;
+			case _:
 		}
 
 		if (e.type != TTAny) {
