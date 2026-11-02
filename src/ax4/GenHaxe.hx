@@ -277,7 +277,10 @@ class GenHaxe extends PrinterBase {
 		printCloseBrace(i.syntax.closeBrace);
 	}
 
+	var currentPrintedClass:Null<TClassOrInterfaceDecl>;
+
 	function printClassDecl(c:TClassOrInterfaceDecl, info:TClassDeclInfo, isPrivate:Bool) {
+		currentPrintedClass = c;
 		printMetadata(c.metadata);
 		printDeclModifiers(c.modifiers);
 		printTextWithTrivia(if (isPrivate) "private class" else  "class", c.syntax.keyword);
@@ -907,6 +910,32 @@ class GenHaxe extends PrinterBase {
 		return if (currentModule.isImported(cls)) normalizeTypeName(cls.name) else makeFQN(cls);
 	}
 
+	function isDeclRefPathShadowed(path:ParseTree.DotPath, cls:TClassOrInterfaceDecl):Bool {
+		if (cls.parentModule == null || cls.parentModule.isExtern || isModulePrivateClass(cls)) return false;
+		if (path.rest.length == 0) {
+			return !currentModule.isImported(cls);
+		}
+		return currentPrintedClass != null && classHasField(currentPrintedClass, path.first.text);
+	}
+
+	static function classHasField(c:TClassOrInterfaceDecl, name:String):Bool {
+		var current = c;
+		while (current != null) {
+			for (m in current.members) {
+				switch m {
+					case TMField({kind: TFVar({name: n}) | TFFun({name: n}) | TFGetter({name: n}) | TFSetter({name: n})}) if (n == name):
+						return true;
+					case _:
+				}
+			}
+			current = switch current.kind {
+				case TClass({extend: {superClass: s}}): s;
+				case _: null;
+			}
+		}
+		return false;
+	}
+
 	function isModulePrivateClass(cls:TClassOrInterfaceDecl):Bool {
 		if (cls.parentModule != currentModule) return false;
 		switch currentModule.pack.decl.kind {
@@ -1068,6 +1097,12 @@ class GenHaxe extends PrinterBase {
 				buf.add("ASDictionary.type");
 				printTrivia(TypedTreeTools.removeTrailingTrivia(e));
 
+			case TEDeclRef(dotPath, {kind: TDClassOrInterface(cls)}) if (isDeclRefPathShadowed(dotPath, cls)):
+				// a path that would resolve elsewhere is printed as a type is: `DisplayObject` shadowed by an
+				// import of the private section, or `starling.display.X` by a `starling` field
+				printTrivia(dotPath.first.leadTrivia);
+				buf.add(getClassLocalPath(cls));
+				printTrivia(if (dotPath.rest.length == 0) dotPath.first.trailTrivia else dotPath.rest[dotPath.rest.length - 1].element.trailTrivia);
 			case TEDeclRef(dotPath, c):
 				var lastKind = switch c.kind {
 					case TDClassOrInterface(_): LastType;

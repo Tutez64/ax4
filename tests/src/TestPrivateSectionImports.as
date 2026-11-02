@@ -3,7 +3,8 @@
  * Starling.as imports starling.display.DisplayObject in its package block and
  * flash.display.DisplayObject after it, for its private isNativeDisplayObjectEmpty.
  * Expected: the private function takes flash.display.DisplayObject and the class
- * privateSectionImports.DisplayObject, each printed so that it resolves to its own type.
+ * privateSectionImports.DisplayObject, each printed so that it resolves to its own type,
+ * class references included (`value as DisplayObject`).
  */
 package {
     import flash.display.Sprite;
@@ -15,6 +16,8 @@ package {
         public function TestPrivateSectionImports(nativeRoot:Sprite) {
             root = new DisplayObject();
             isNativeEmpty(nativeRoot);
+            var value:Object = root;
+            root = value as DisplayObject;
         }
     }
 }
