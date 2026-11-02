@@ -8,6 +8,13 @@ class FunctionApply extends AbstractFilter {
 
 	override function processExpr(e:TExpr):TExpr {
 		return switch e.kind {
+			// `super.f.apply(this, args)` on a rest method: Haxe has no closure of a super method, but spreads into a rest
+			case TECall({kind: TEField({kind: TOExplicit(_, eFun = {kind: TEField({kind: TOExplicit(_, {kind: TELiteral(TLSuper(_))})}, _, _), type: TTFun(_, _, rest)})}, "apply", _)}, args = {args: [_, eArgs]})
+				if (rest != null):
+				var eSpread = processExpr(eArgs.expr);
+				processLeadingToken(t -> t.leadTrivia = [new Trivia(TrWhitespace, "...")].concat(t.leadTrivia), eSpread);
+				e.with(kind = TECall(eFun, args.with(args = [{expr: eSpread, comma: null}])));
+
 			case TECall({kind: TEField({kind: TOExplicit(_, eFun = {type: TTFunction | TTFun(_) | TTAny | TTObject(TTAny)})}, "apply", _)}, args):
 				eFun = processExpr(eFun);
 				args = mapCallArgs(processExpr, args);
