@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module type="HAXE_MODULE" version="4">
-  <component name="HaxeModuleSettingsStorage">
-    <option name="buildConfig" value="1" />
-    <option name="haxeTarget" value="Java" />
-    <option name="hxmlPath" value="$MODULE_DIR$/build.hxml" />
-    <option name="outputFolder" value="$MODULE_DIR$/production/ax4" />
-  </component>
+<module type="GENERAL_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
@@ -17,14 +11,47 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library name="Haxelib: format:3.8.0">
+    <orderEntry type="module-library">
+      <library name="haxelib: format 3.8.0">
         <CLASSES>
-          <root url="file://C:/HaxeToolkit/haxe/lib/format/3,8,0" />
+          <root url="file://$USER_HOME$/haxelib/format/3,8,0/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://C:/HaxeToolkit/haxe/lib/format/3,8,0" />
+          <root url="file://$USER_HOME$/haxelib/format/3,8,0/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib: utest 1.13.2">
+        <CLASSES>
+          <root url="file://$USER_HOME$/haxelib/utest/1,13,2/src/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$USER_HOME$/haxelib/utest/1,13,2/src/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib: openfl 9.5.2">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../openfl/src/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../openfl/src/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib: lime 8.4.0">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../lime/src/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../lime/src/" />
         </SOURCES>
       </library>
     </orderEntry>
