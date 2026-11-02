@@ -321,6 +321,7 @@ class GenHaxe extends PrinterBase {
 		if (indentUnit == "") indentUnit = "\t";
 		var innerIndent = memberIndent + indentUnit;
 		var staticInitNameCounts = new Map<String, Int>();
+		var literalStaticInits:Array<{name:String, init:TVarInit}> = [];
 		var pendingStaticInitGroup:Array<{expr:TExpr}> = [];
 		var pendingStaticInitBase = "";
 		var hasPendingStaticInit = false;
@@ -347,7 +348,9 @@ class GenHaxe extends PrinterBase {
 
 				case TMField(f):
 					flushStaticInitGroup();
+					var literalInit = takeLiteralStaticInit(f);
 					printClassField(c.name, f);
+					if (literalInit != null) literalStaticInits.push(literalInit);
 
 				case TMUseNamespace(n, semicolon):
 					flushStaticInitGroup();
@@ -367,8 +370,60 @@ class GenHaxe extends PrinterBase {
 			}
 		}
 		flushStaticInitGroup();
+		printLiteralStaticInits(literalStaticInits, memberIndent, innerIndent);
 
 		printCloseBrace(c.syntax.closeBrace);
+	}
+
+	/**
+		A static initialized with an array or object literal moves to `__init__`, which hxcpp runs before every class's statics:
+		AS3 initializes a class on first use, Haxe in an order that only follows direct references, so
+		Starling's Effect.VERTEX_FORMAT read VertexDataAttribute.FORMAT_SIZES through a constructor before it was set.
+		A literal depends on nothing, so it is safe earlier. Returns the init it took off the field.
+	**/
+	function takeLiteralStaticInit(f:TClassField):Null<{name:String, init:TVarInit}> {
+		if (!Lambda.exists(f.modifiers, m -> m.match(FMStatic(_)))) return null;
+		return switch f.kind {
+			case TFVar(v) if (!v.isInline && v.init != null && isCollectionLiteral(v.init.expr)):
+				var init = v.init;
+				v.init = null;
+				{name: v.name, init: init};
+			case _:
+				null;
+		}
+	}
+
+	// only arrays and objects: they read null before their init, while a scalar static reads 0 or its type's default
+	static function isCollectionLiteral(e:TExpr):Bool {
+		return switch e.kind {
+			case TEParens(_, e2, _) | TEHaxeRetype(e2): isCollectionLiteral(e2);
+			case TEArrayDecl(_) | TEObjectDecl(_): isLiteralInit(e);
+			case _: false;
+		}
+	}
+
+	static function isLiteralInit(e:TExpr):Bool {
+		return switch e.kind {
+			case TELiteral(TLBool(_) | TLNull(_) | TLInt(_) | TLNumber(_) | TLString(_)): true;
+			case TEParens(_, e2, _) | TEHaxeRetype(e2) | TEPreUnop(PreNeg(_), e2): isLiteralInit(e2);
+			case TEArrayDecl(a): Lambda.foreach(a.elements, el -> isLiteralInit(el.expr));
+			case TEObjectDecl(o): Lambda.foreach(o.fields, f -> isLiteralInit(f.expr));
+			case _: false;
+		}
+	}
+
+	function printLiteralStaticInits(inits:Array<{name:String, init:TVarInit}>, memberIndent:String, innerIndent:String) {
+		if (inits.length == 0) return;
+		buf.add("\n" + memberIndent + "static function __init__() {\n");
+		for (i in inits) {
+			buf.add(innerIndent + i.name + " = ");
+			var e = i.init.expr;
+			TypedTreeTools.removeLeadingTrivia(e);
+			var trail = TypedTreeTools.removeTrailingTrivia(e);
+			printExpr(e);
+			buf.add(";\n");
+		}
+		buf.add(memberIndent + "}\n");
 	}
 
 	static function isArrayBaseClass(extend:TClassExtend):Bool {
