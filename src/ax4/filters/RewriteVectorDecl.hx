@@ -44,6 +44,15 @@ class RewriteVectorDecl extends AbstractFilter {
 					}));
 				}
 
+			case TENew(keyword, TNType({type: TTVector(elemType), syntax: TVector(v)}), args)
+				if (args != null && args.args.length > 0 && isUntypedObjectVector(elemType, v.t.type)):
+				// `new Vector.<Object>(length[, fixed])`: an Array<Dynamic> of that length (Haxe's `new Array()` takes none)
+				var tArray = TTArray(TTAny);
+				e.with(kind = TECall(
+					mkBuiltin("ASCompat.allocArray", TTFunction, keyword.leadTrivia),
+					args.with(args = [{expr: args.args[0].expr, comma: null}])
+				), type = tArray);
+
 			case TECall({kind: TEVector(v, elemType)}, args):
 				if (isUntypedObjectVector(elemType, v.t.type)) {
 					switch args.args {

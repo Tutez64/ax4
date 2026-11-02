@@ -3,6 +3,7 @@
  * `new <T>[...]` should become `Vector.ofArray([...])`.
  * `new <T>[]` should become `new Vector<T>()`.
  * `Vector.<Object>` should become `Array<Dynamic>`.
+ * `new Vector.<Object>(n)` should become `ASCompat.allocArray(n)`, Haxe's `new Array()` takes no length.
  * Redundant Vector casts should report a non-blocking error.
  */
 package {
@@ -13,6 +14,8 @@ package {
             var numbers:Vector.<int> = new <int>[1, 2, 3];
             var empty:Vector.<String> = new <String>[];
             var objectEmpty:Vector.<Object> = new Vector.<Object>();
+            var objectSized:Vector.<Object> = new Vector.<Object>(0);
+            var objectFixed:Vector.<Object> = new Vector.<Object>(4, true);
             var objectValues:Vector.<Object> = new <Object>[{type: 16003}];
             objectValues.push({type: 16003});
             var first:Object = objectValues[0];
