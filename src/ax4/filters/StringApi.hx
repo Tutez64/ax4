@@ -48,6 +48,13 @@ class StringApi extends AbstractFilter {
 							{expr: eString, comma: commaWithSpace}, ePattern, {expr: eReplaceBy, comma: eBy.comma}
 						])));
 
+					case [ePattern = {expr: {type: TTAny | TTObject(_)}}, eBy]:
+						// untyped pattern (`regs[j].replace(match[0], "0")`): RegExp or string, known at runtime
+						var eStringReplace = mkBuiltin("ASCompat.stringReplace", TTFun([TTString, TTAny, TTAny], TTString), removeLeadingTrivia(eString));
+						e.with(kind = TECall(eStringReplace, args.with(args = [
+							{expr: eString, comma: commaWithSpace}, ePattern, eBy
+						])));
+
 					case _:
 						throwError(exprPos(e), "Unsupported String.replace arguments");
 				}

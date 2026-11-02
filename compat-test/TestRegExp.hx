@@ -25,6 +25,14 @@ class TestRegExp extends utest.Test {
 		equals("foo", matchResult[0]);
 	}
 
+	function testStringReplaceUntypedPattern() {
+		var re:Dynamic = new compat.RegExp("a+", "g");
+		equals("x-b-x", ASCompat.stringReplace("aa-b-aa", re, "x"));
+		var str:Dynamic = "[1]";
+		equals("va0+[1]", ASCompat.stringReplace("va[1]+[1]", str, "0"));
+		equals("abc", ASCompat.stringReplace("abc", "z", "y"));
+	}
+
 	function testLastIndexFieldExists() {
 		var re = new compat.RegExp("foo", "g");
 		re.lastIndex = 3;

@@ -2,6 +2,8 @@
  * Test case: String.replace should accept non-string replacement values.
  * Expected: replacement is coerced to string when using a string pattern.
  * Also covers regex replace/match/search/split and string API rewrites.
+ * An untyped pattern (`regs[j].replace(relreg[0], "0")` in AGALMiniAssembler) is a RegExp or a string
+ * only known at runtime: it becomes `ASCompat.stringReplace`.
  */
 package {
     public class TestFilterStringApi {
@@ -38,6 +40,8 @@ package {
             regText = regText.replace("x", 42);
             regText = regText.replace("y", false);
             regText = regText.replace("z", null);
+            var matches:Array = regText.match(/\[.*\]/gi);
+            regText = regText.replace(matches[0], "0");
 
             // Calling string methods on ASAny/Object should be coerced to String to ensure Haxe
             // uses String methods instead of reflection/dynamic dispatch (which can return [OBJECT GLOBAL]).

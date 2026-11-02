@@ -594,6 +594,24 @@ class ASCompat {
 		#end
 	}
 
+	/**
+		`s.replace(pattern, by)` with an untyped pattern: a `RegExp` replaces as one,
+		anything else as its string, first occurrence only.
+	**/
+	public static function stringReplace(s:String, pattern:Dynamic, by:Dynamic):String {
+		#if (js || flash)
+		if (Std.isOfType(pattern, compat.RegExp)) return (pattern : compat.RegExp).replace(s, by);
+		return (cast s).replace(toString(pattern), by);
+		#else
+		if (Std.isOfType(pattern, compat.RegExp)) return (pattern : compat.RegExp).replace(s, by);
+		var search = toString(pattern);
+		var index = s.indexOf(search);
+		if (index == -1) return s;
+		var repl = Reflect.isFunction(by) ? Std.string(Reflect.callMethod(null, by, [search, index, s])) : toString(by);
+		return s.substr(0, index) + repl + s.substr(index + search.length);
+		#end
+	}
+
 	public static inline function asString(v:Any):Null<String> {
 		return if (Std.isOfType(v, String)) cast v else null;
 	}
