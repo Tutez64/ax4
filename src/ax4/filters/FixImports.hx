@@ -4,13 +4,16 @@ import ax4.GenHaxe.canSkipTypeHint;
 import ax4.ParseTree;
 
 class FixImports extends AbstractFilter {
+	/** AS3 top-level errors that Haxe gets from `flash.errors` (OpenFL has them all). */
+	static final flashErrorsTopLevel = ["ArgumentError" => true, "RangeError" => true, "TypeError" => true, "SecurityError" => true];
+
 	var usedClasses:Null<Map<TClassOrInterfaceDecl, Bool>>;
 	var neededImportNames:Null<Map<String, Bool>>;
 
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
 		switch e.kind {
-			case TEBuiltin(_, name) if (name == "QName" || name == "ByteArray" || name == "ArgumentError"):
+			case TEBuiltin(_, name) if (name == "QName" || name == "ByteArray" || flashErrorsTopLevel.exists(name)):
 				if (neededImportNames != null) {
 					neededImportNames[name] = true;
 				}
@@ -131,7 +134,7 @@ class FixImports extends AbstractFilter {
 			for (name in neededImportNames.keys()) {
 				var cls = switch name {
 					case "QName" | "ByteArray": resolveFlashUtilsClass(name);
-					case "ArgumentError": resolveFlashErrorsClass(name);
+					case _ if (flashErrorsTopLevel.exists(name)): resolveFlashErrorsClass(name);
 					case _: null;
 				};
 				if (cls != null && !hasImport(mod, cls)) {
@@ -151,7 +154,7 @@ class FixImports extends AbstractFilter {
 		switch syntax {
 			case TPath(path):
 				var name = ParseTree.dotPathToString(path);
-				if (name == "ArgumentError") {
+				if (flashErrorsTopLevel.exists(name)) {
 					neededImportNames[name] = true;
 				}
 			case _:
