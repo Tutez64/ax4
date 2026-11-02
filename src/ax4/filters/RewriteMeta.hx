@@ -253,7 +253,7 @@ class RewriteMeta extends AbstractFilter {
 					{
 						openParen: mkOpenParen(),
 						args: {
-							first: ELiteral(LString(mkString(map['source']))),
+							first: ELiteral(LString(mkString(classpathRelativeSource(map['source'])))),
 							rest: []
 						},
 						closeParen: mkCloseParen(m.closeBracket.trailTrivia)
@@ -265,7 +265,7 @@ class RewriteMeta extends AbstractFilter {
 					{
 						openParen: mkOpenParen(),
 						args: {
-							first: ELiteral(LString(mkString(map['source']))),
+							first: ELiteral(LString(mkString(classpathRelativeSource(map['source'])))),
 							rest: []
 						},
 						closeParen: mkCloseParen(m.closeBracket.trailTrivia)
@@ -277,7 +277,7 @@ class RewriteMeta extends AbstractFilter {
 					{
 						openParen: mkOpenParen(),
 						args: {
-							first: ELiteral(LString(mkString(map['source']))),
+							first: ELiteral(LString(mkString(classpathRelativeSource(map['source'])))),
 							rest: []
 						},
 						closeParen: mkCloseParen(m.closeBracket.trailTrivia)
@@ -287,6 +287,11 @@ class RewriteMeta extends AbstractFilter {
 				reportError(m.name.pos, "Unknown mimeType: " + t);
 				return [MetaFlash(m)];
 		}
+	}
+
+	// AS3's [Embed(source="/_assets/x.png")] is from the source root; Haxe resolves it through the classpath
+	static function classpathRelativeSource(source:String):String {
+		return if (source != null && StringTools.startsWith(source, "/")) source.substr(1) else source;
 	}
 
 	static function makeMetaSeparatorTrivia(leadTrivia:Array<Trivia>):Array<Trivia> {
