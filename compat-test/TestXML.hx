@@ -16,6 +16,12 @@ class TestXML extends utest.Test {
 		equals("<p>Hello</p>", x.toXMLString());
 	}
 
+	function testNewFromByteArray() {
+		var bytes = new flash.utils.ByteArray();
+		bytes.writeUTFBytes("<p>Hi</p>");
+		equals("<p>Hi</p>", new compat.XML(bytes).toXMLString());
+	}
+
 	function testTypeReference() {
 		#if flash
 		isTrue(compat.XML.typeReference() == flash.xml.XML);

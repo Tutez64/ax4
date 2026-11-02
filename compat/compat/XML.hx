@@ -22,11 +22,12 @@ abstract XML(XMLImpl) from XMLImpl to XMLImpl {
 		#end
 	}
 
-	public inline function new(x:String) {
+	// AS3's XML(value) takes any value through its toString, such as an embedded ByteArray
+	public inline function new(x:Dynamic) {
 		#if flash
 		this = new flash.xml.XML(x);
 		#else
-		this = StdXml.parse(x).firstElement();
+		this = StdXml.parse(Std.isOfType(x, String) ? x : Std.string(x)).firstElement();
 		#end
 	}
 
