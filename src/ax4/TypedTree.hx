@@ -265,6 +265,16 @@ class TModule {
 				return true;
 			}
 		}
+		// a type of this module shadows an imported one of the same name (starling.textures.Texture
+		// importing flash.display3D.textures.Texture), so that one needs its full path
+		if (pack.decl.name == c.name) {
+			return false;
+		}
+		for (decl in privateDecls) {
+			if (decl.name == c.name) {
+				return false;
+			}
+		}
 
 		// TODO: optimize this, because this is done A LOT
 		// actually, we might want to store the "local" flag in the TEDeclRef/TTypeHint/etc.

@@ -129,7 +129,7 @@ class Typer {
 			getCurrentClass: () -> cls,
 			reportError: err.bind(mod),
 			throwError: throwErr.bind(mod),
-			resolveDotPath: resolveDotPath.bind(mod),
+			resolveDotPath: (path, ?pos) -> resolveDotPath(mod, path, pos),
 			resolveType: resolveType.bind(mod),
 			haxeTypes: new HaxeTypeResolver(path -> resolveDotPath(mod, path.split(".")), throwErr.bind(mod))
 		};
@@ -161,7 +161,7 @@ class Typer {
 		return {
 			keyword: i.keyword,
 			interfaces: separatedToArray(i.paths, function(path, comma) {
-				var ifaceDecl = switch resolveDotPath(mod, dotPathToArray(path)).kind {
+				var ifaceDecl = switch resolveDotPath(mod, dotPathToArray(path), path.first.pos).kind {
 					case TDClassOrInterface(i) if (i.kind.match(TInterface(_))): i;
 					case _: throw "Not an interface";
 				}
@@ -176,7 +176,7 @@ class Typer {
 
 		if (c.extend != null) {
 			structureSetups.push(function() {
-				var classDecl = switch resolveDotPath(mod, dotPathToArray(c.extend.path)).kind {
+				var classDecl = switch resolveDotPath(mod, dotPathToArray(c.extend.path), c.extend.path.first.pos).kind {
 					case TDClassOrInterface(i) if (i.kind.match(TClass(_))): i;
 					case _: throw "Not a class";
 				}
@@ -508,14 +508,19 @@ class Typer {
 					case ["XMLList"]: TTXMLList;
 					case ["RegExp"]: TTRegExp;
 					case ['Namespace']: TTAny;
-					case path: TypedTree.declToInst(resolveDotPath(mod, path));
+					case parts: TypedTree.declToInst(resolveDotPath(mod, parts, path.first.pos));
 				}
 			case TVector(v):
 				TTVector(resolveType(mod, v.t.type));
 		}
 	}
 
-	function resolveDotPath(mod:TModule, path:Array<String>):TDecl {
+	/**
+		`pos` places the name: after the package block, in the file's private section,
+		the imports of that section come first (Starling.as imports starling.display.DisplayObject
+		in its package and flash.display.DisplayObject for its private isNativeDisplayObjectEmpty).
+	**/
+	function resolveDotPath(mod:TModule, path:Array<String>, ?pos:Int):TDecl {
 		var name = path.pop();
 
 		// fully qualified
@@ -536,7 +541,12 @@ class Typer {
 		}
 
 		// imported decls
-		for (i in mod.pack.imports) {
+		var imports = mod.pack.imports;
+		var packageEnd = mod.pack.syntax.closeBrace.pos;
+		if (pos != null && pos > packageEnd) {
+			imports = [for (i in imports) if (i.syntax.keyword.pos > packageEnd) i].concat([for (i in imports) if (i.syntax.keyword.pos <= packageEnd) i]);
+		}
+		for (i in imports) {
 			switch (i.kind) {
 				case TIAliased(d, as, alias):
 					if (alias.text == name) return d;

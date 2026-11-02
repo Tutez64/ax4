@@ -33,7 +33,7 @@ typedef TyperContext = {
 	function reportError(msg:String, pos:Int):Void;
 	function throwError(msg:String, pos:Int):Dynamic;
 	function getCurrentClass():Null<TClassOrInterfaceDecl>;
-	function resolveDotPath(path:Array<String>):TDecl;
+	function resolveDotPath(path:Array<String>, ?pos:Int):TDecl;
 	function resolveType(t:SyntaxType):TType;
 	final haxeTypes:HaxeTypeResolver;
 }
@@ -520,7 +520,7 @@ class ExprTyper {
 					}
 				}
 
-				var decl = try typerContext.resolveDotPath([i.text]) catch (_:Any) null;
+				var decl = try typerContext.resolveDotPath([i.text], i.pos) catch (_:Any) null;
 				if (decl != null) {
 					return mkDeclRef({first: i, rest: []}, decl, expectedType);
 				}
