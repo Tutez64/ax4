@@ -23,6 +23,10 @@ class TestRegExp extends utest.Test {
 		var matchResult = re.match("xxfooyy");
 		equals(1, matchResult.length);
 		equals("foo", matchResult[0]);
+
+		same([], re.match("xxyy"));
+		isNull(new compat.RegExp("(\\.[xyzw]{1,4})", "").match("vc4"));
+		equals(".xy", new compat.RegExp("(\\.[xyzw]{1,4})", "").match("vt0.xy")[0]);
 	}
 
 	function testStringReplaceUntypedPattern() {

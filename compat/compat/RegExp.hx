@@ -58,16 +58,18 @@ class RegExp {
 		#end
 	}
 
-	public function match(s:String):Array<String> {
-		#if js
-		var match = (cast s).match(impl);
-		return if (match == null) [] else match;
-		#elseif flash
+	// As AS3's String.match when nothing matches: null without the g flag (AGALMiniAssembler applies its
+	// default mask then), [] with it
+	public function match(s:String):Null<Array<String>> {
+		#if flash
 		return (cast s).match(impl);
+		#elseif js
+		var result = (cast s).match(impl);
+		return if (result == null && impl.global) [] else result;
 		#else
 		if (!global) {
 			var result = exec(s);
-			return result == null ? [] : cast result;
+			return result == null ? null : cast result;
 		}
 		var out:Array<String> = [];
 		var index = 0;
