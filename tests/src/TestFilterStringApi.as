@@ -4,6 +4,7 @@
  * Also covers regex replace/match/search/split and string API rewrites.
  * An untyped pattern (`regs[j].replace(relreg[0], "0")` in AGALMiniAssembler) is a RegExp or a string
  * only known at runtime: it becomes `ASCompat.stringReplace`.
+ * `String.fromCharCode` with several codes (Starling's AtfData) concatenates one call per code.
  */
 package {
     public class TestFilterStringApi {
@@ -42,6 +43,9 @@ package {
             regText = regText.replace("z", null);
             var matches:Array = regText.match(/\[.*\]/gi);
             regText = regText.replace(matches[0], "0");
+            var bytes:Array = [65, 84, 70];
+            var signature:String = String.fromCharCode(bytes[0], bytes[1], bytes[2]);
+            var single:String = String.fromCharCode(65);
 
             // Calling string methods on ASAny/Object should be coerced to String to ensure Haxe
             // uses String methods instead of reflection/dynamic dispatch (which can return [OBJECT GLOBAL]).

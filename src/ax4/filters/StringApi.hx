@@ -112,6 +112,9 @@ class StringApi extends AbstractFilter {
 						throwError(exprPos(e), "Unsupported String.localeCompare arguments");
 				}
 
+			case TECall(eMethod = {kind: TEField({kind: TOExplicit(_, {kind: TEBuiltin(_, "String")})}, "fromCharCode", _)}, args) if (args.args.length > 1):
+				rewriteFromCharCodes(eMethod, mapCallArgs(processExpr, args));
+
 			case TECall({kind: TEField({kind: TOExplicit(_, eString = {type: TTString})}, "concat", _)}, args):
 				eString = processExpr(eString);
 				args = mapCallArgs(processExpr, args);
@@ -201,5 +204,18 @@ class StringApi extends AbstractFilter {
 			type = TTString,
 			expectedType = TTString
 		);
+	}
+	/** `String.fromCharCode(a, b, c)`: Haxe's takes one code, so concatenate one call per code. */
+	static function rewriteFromCharCodes(eMethod:TExpr, args:TCallArgs):TExpr {
+		var result:Null<TExpr> = null;
+		for (arg in args.args) {
+			var eCode = if (arg.expr.type == TTInt) arg.expr.with(expectedType = TTInt) else {
+				var eToInt = mkBuiltin("ASCompat.toInt", TTFun([TTAny], TTInt));
+				mk(TECall(eToInt, {openParen: mkOpenParen(), args: [{expr: arg.expr, comma: null}], closeParen: mkCloseParen()}), TTInt, TTInt);
+			}
+			var eCall = mk(TECall(eMethod, {openParen: mkOpenParen(), args: [{expr: eCode, comma: null}], closeParen: mkCloseParen()}), TTString, TTString);
+			result = if (result == null) eCall else mk(TEBinop(result, OpAdd(new Token(0, TkPlus, "+", [whitespace], [whitespace])), eCall), TTString, TTString);
+		}
+		return result;
 	}
 }

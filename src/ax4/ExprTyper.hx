@@ -783,7 +783,7 @@ class ExprTyper {
 
 	function getStringStaticFieldType(field:Token):TType {
 		return switch field.text {
-			case "fromCharCode": TTFun([TTInt], TTString);
+			case "fromCharCode": TTFun([TTInt], TTString, TRestSwc); // AS3: ...charCodes
 			case other: err('Unknown static String field: $other', field.pos); TTAny;
 		}
 	}
