@@ -46,8 +46,10 @@ class AddRequiredParens extends AbstractFilter {
 			case TEAs(e2, kwd, type):
 				maybeWrap(e.with(kind = TEAs(loop(e2, 7), kwd, type)), 7);
 
+			// Haxe's comparisons and equalities share a left-associative level: AS3's `a == b > 0`
+			// is `a == (b > 0)`, so a comparison on the right needs parens (on the left it reads the same)
 			case TEBinop(a, op = OpEquals(_) | OpNotEquals(_) | OpStrictEquals(_) | OpNotStrictEquals(_), b):
-				binop(a, op, b, 8);
+				maybeWrap(e.with(kind = TEBinop(loop(a, 8), op, loop(b, 6))), 8);
 
 			case TEBinop(a, op = OpBitAnd(_), b):
 				binop(a, op, b, 9);
