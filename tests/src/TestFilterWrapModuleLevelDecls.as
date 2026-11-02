@@ -10,12 +10,16 @@
  * - wrapModuleLevelDecls.SharedState.SharedState_ = ...
  * - wrapModuleLevelDecls.HelperFunc.helperFunc(...)
  * - inside helperFunc: SharedState.SharedState_
+ * - `import wrapModuleLevelDecls.helperFunc` imports the wrapper class (`import wrapModuleLevelDecls.HelperFunc`),
+ *   so an unqualified `helperFunc(2)` resolves as HelperFunc.helperFunc(2) (Starling imports starling.utils.execute).
  */
 package {
+	import wrapModuleLevelDecls.helperFunc;
+
 	public class TestFilterWrapModuleLevelDecls {
 		public function run():int {
 			wrapModuleLevelDecls.SharedState = 5;
-			return wrapModuleLevelDecls.SharedState + wrapModuleLevelDecls.helperFunc(1);
+			return wrapModuleLevelDecls.SharedState + wrapModuleLevelDecls.helperFunc(1) + helperFunc(2);
 		}
 	}
 }

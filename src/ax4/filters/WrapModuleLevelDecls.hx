@@ -29,10 +29,24 @@ class WrapModuleLevelDecls extends AbstractFilter {
 	}
 
 	override function processModule(mod:TModule) {
+		processImports(mod);
 		processDecl(mod.pack.decl);
 		for (decl in mod.privateDecls) {
 			processDecl(decl);
 		}
+	}
+
+	override function processImport(i:TImport):Bool {
+		switch i.kind {
+			case TIDecl(decl):
+				// `import starling.utils.execute` now imports the class that wraps it, used as `Execute.execute`
+				var info = wrappedDecls[decl];
+				if (info != null) {
+					i.kind = TIDecl({name: info.cls.name, kind: TDClassOrInterface(info.cls)});
+				}
+			case _:
+		}
+		return true;
 	}
 
 	override function processExpr(e:TExpr):TExpr {
