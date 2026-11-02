@@ -1207,12 +1207,17 @@ class ExprTyper {
 			case TTBuiltin | TTStatic(_):
 				(i,earg) -> TTAny; // TODO: casts should be handled elsewhere
 			case TTFun(args, _, rest):
+				// push/unshift(...items) take the element type for every item (Earcut pushes Numbers to a Vector.<uint>)
+				var restType = switch e {
+					case EField(_, _, {text: "push" | "unshift"}) if (rest == TRestSwc && args.length == 1): args[0];
+					case _: TTAny;
+				}
 				function(i:Int, earg:Expr):TType {
 					if (i >= args.length) {
 						if (rest == null) {
 							err("Invalid number of arguments", exprPos(earg));
 						}
-						return TTAny;
+						return restType;
 					} else {
 						return args[i];
 					}
