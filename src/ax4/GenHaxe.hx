@@ -1178,6 +1178,8 @@ class GenHaxe extends PrinterBase {
 			case "isFinite": "Math.isFinite";
 			case "escape": "ASCompat.escape";
 			case "unescape": "ASCompat.unescape";
+			case "encodeURIComponent": "ASCompat.encodeURIComponent";
+			case "decodeURIComponent": "ASCompat.decodeURIComponent";
 			case "arguments": "/*TODO*/arguments";
 			case "trace": "trace";
 			case "untyped __global__": "untyped __global__";

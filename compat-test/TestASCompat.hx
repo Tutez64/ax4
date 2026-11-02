@@ -1,6 +1,12 @@
 import utest.Assert.*;
 
 class TestASCompat extends utest.Test {
+	function testURIComponent() {
+		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
+		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));
+		equals("atlas.png", ASCompat.decodeURIComponent("atlas.png"));
+	}
+
 	function testProcessNull() {
 		equals(0, ASCompat.processNull((null : Null<Int>)));
 		equals(0, ASCompat.processNull((null : Null<UInt>)));

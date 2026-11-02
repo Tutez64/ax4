@@ -100,6 +100,27 @@ class ASCompat {
 		#end
 	}
 
+	public static inline function encodeURIComponent(s:String):String {
+		#if flash
+		return untyped __global__["encodeURIComponent"](s);
+		#elseif js
+		return js.Lib.global.encodeURIComponent(s);
+		#else
+		return StringTools.urlEncode(s);
+		#end
+	}
+
+	// decodeURIComponent leaves `+` as is, unlike a form decode
+	public static inline function decodeURIComponent(s:String):String {
+		#if flash
+		return untyped __global__["decodeURIComponent"](s);
+		#elseif js
+		return js.Lib.global.decodeURIComponent(s);
+		#else
+		return StringTools.urlDecode(StringTools.replace(s, "+", "%2B"));
+		#end
+	}
+
 	public static inline function describeType(value:Any):compat.XML {
 		#if flash
 		return flash.Lib.describeType(value);

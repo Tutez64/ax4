@@ -450,6 +450,8 @@ class ExprTyper {
 			case "isFinite": mk(TEBuiltin(i, "isFinite"), TTFun([TTNumber], TTBoolean), expectedType);
 			case "escape": mk(TEBuiltin(i, "escape"), TTFun([TTString], TTString), expectedType);
 			case "unescape": mk(TEBuiltin(i, "unescape"), TTFun([TTString], TTString), expectedType);
+			case "encodeURIComponent": mk(TEBuiltin(i, "encodeURIComponent"), TTFun([TTString], TTString), expectedType);
+			case "decodeURIComponent": mk(TEBuiltin(i, "decodeURIComponent"), TTFun([TTString], TTString), expectedType);
 			case ident:
 				var v = locals[ident];
 
