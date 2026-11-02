@@ -2,6 +2,8 @@
  * Test case for ApiSignatureOverrides filter.
  * Covers:
  * - TextFormat color argument coercions.
+ * - A Number assigned to a TextFormat field OpenFL types Null<Int> (size, leading...) becomes an int
+ *   (Starling's TextFormat.toNativeFormat: out.size = _size); an int or an untyped value stays as is.
  * - Error id argument coercions.
  * - DisplayObjectContainer.setChildIndex coercions.
  */
@@ -20,6 +22,10 @@ package {
             var nullColor:* = null;
 
             var tf1:TextFormat = new TextFormat("Arial", 12, n);
+            var scaledSize:Number = 12.5;
+            tf1.size = scaledSize;
+            tf1.leading = scaledSize * 0.5;
+            tf1.size = 14;
             var tf2:TextFormat = new TextFormat("Arial", 12, u);
             var tf3:TextFormat = new TextFormat("Arial", 12, i);
             var tf4:TextFormat = new TextFormat("Arial", 12, any);

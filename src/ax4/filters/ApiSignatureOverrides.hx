@@ -50,6 +50,12 @@ class ApiSignatureOverrides extends AbstractFilter {
 			{index: 1, target: TTInt, coerce: ToInt, allowNull: false}
 		]}
 	];
+	// TextFormat's Object fields that OpenFL types Null<Int>: a Number assigned to them needs an int
+	// (Starling's out.size = _size). ints and untyped values pass as they are.
+	static final intAssignFields:Array<{owner:String, names:Array<String>}> = [
+		{owner: "flash.text.TextFormat", names: ["size", "color", "leading", "indent", "blockIndent", "leftMargin", "rightMargin"]},
+		{owner: "openfl.text.TextFormat", names: ["size", "color", "leading", "indent", "blockIndent", "leftMargin", "rightMargin"]}
+	];
 	static final fieldOverrides:Array<FieldOverride> = [
 		// Some externs expose `responseHeaders` as Array<Dynamic>, but runtime values are URLRequestHeader items.
 		{owner: "flash.events.HTTPStatusEvent", name: "responseHeaders", target: "Array<flash.net.URLRequestHeader>"},
@@ -70,9 +76,21 @@ class ApiSignatureOverrides extends AbstractFilter {
 				if (nextArgs == args) e else e.with(kind = TECall(eobj, nextArgs));
 			case TEField(obj, name, _):
 				applyFieldOverride(e, obj, name);
+			case TEBinop(eField = {kind: TEField(obj, name, _)}, op = OpAssign(_), value = {type: TTNumber}) if (isIntAssignField(obj, name)):
+				e.with(kind = TEBinop(eField, op, wrapToInt(value)));
 			case _:
 				e;
 		}
+	}
+
+	function isIntAssignField(obj:TFieldObject, name:String):Bool {
+		var cls = typeToClass(obj.type);
+		if (cls == null) return false;
+		var fqn = classFqn(cls);
+		for (rule in intAssignFields) {
+			if (rule.names.contains(name) && ownerMatches(cls, fqn, rule.owner)) return true;
+		}
+		return false;
 	}
 
 	function applyCtorOverrides(obj:TNewObject, args:Null<TCallArgs>):Null<TCallArgs> {
