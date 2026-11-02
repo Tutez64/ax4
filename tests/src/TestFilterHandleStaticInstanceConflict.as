@@ -7,6 +7,8 @@
  * Case 2: Inheritance conflict (Subclass static vs Superclass instance).
  * Case 3: Conflict with extern (Object.toString).
  * Case 4: Singleton pattern (Static wrapper around instance method).
+ * Case 5: The `_name` rename is taken (Starling: static and instance `get juggler()`, and a `_juggler` var),
+ *         so the instance field becomes `name_instance` instead of a duplicate.
  */
 package {
 	public class TestFilterHandleStaticInstanceConflict extends Base {
@@ -66,5 +68,18 @@ class Singleton extends SingletonBase {
     // Conflict: static api vs inherited instance api
     public static function api():void {
         instance.api(); // Should be renamed to instance._api()
+    }
+}
+
+// Case 5: `_juggler` is already a field (Starling.juggler / Starling.current.juggler)
+class TakenRename {
+    private static var sCurrent:TakenRename;
+    private var _juggler:Object = {};
+
+    public static function get juggler():Object { return sCurrent ? sCurrent._juggler : null; }
+    public function get juggler():Object { return _juggler; }
+
+    public function test():Object {
+        return this.juggler;
     }
 }

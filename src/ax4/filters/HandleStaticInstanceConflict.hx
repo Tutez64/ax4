@@ -66,8 +66,37 @@ class DetectStaticInstanceConflicts extends AbstractFilter {
 			markRedefinition(staticRedefinitions, staticClass, name, name + "_static");
 		} else {
 			// Can rename instance field -> Rename INSTANCE field in instanceClass
-			markRedefinition(instanceRedefinitions, instanceClass, name, "_" + name);
+			markRedefinition(instanceRedefinitions, instanceClass, name, freeInstanceName(instanceClass, name));
 		}
+	}
+
+	/** `_name`, unless the class already has it (Starling: `get juggler()` both ways, and a `_juggler` var). */
+	function freeInstanceName(c:TClassOrInterfaceDecl, name:String):String {
+		var candidate = "_" + name;
+		if (!hasFieldNamed(c, candidate)) return candidate;
+		candidate = name + "_instance";
+		var n = 2;
+		while (hasFieldNamed(c, candidate)) candidate = name + "_instance" + n++;
+		return candidate;
+	}
+
+	function hasFieldNamed(c:TClassOrInterfaceDecl, name:String):Bool {
+		var current = c;
+		while (current != null) {
+			for (m in current.members) {
+				switch m {
+					case TMField(f) if (getFieldName(f) == name): return true;
+					case _:
+				}
+			}
+			switch current.kind {
+				case TClass(info) if (info.extend != null):
+					current = info.extend.superClass;
+				case _:
+					current = null;
+			}
+		}
+		return false;
 	}
 
 	function isExtern(c:TClassOrInterfaceDecl):Bool {
