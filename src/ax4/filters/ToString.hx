@@ -47,7 +47,8 @@ class ToString extends AbstractFilter {
 						var eToString = mk(TEField({kind: TOExplicit(mkDot(), e), type: e.type}, "toString", mkIdent("toString")), tToString, tToString);
 						mkCall(eToString, [], TTString, removeTrailingTrivia(e));
 
-					case [TTArray(_) | TTVector(_), TTString]:
+					// a class instance takes its toString, as AS3's String(x) does (Starling's new XML(byteArray))
+					case [TTArray(_) | TTVector(_) | TTInst(_), TTString]:
 						var eToString = mkBuiltin("ASCompat.toString", tStdString, removeLeadingTrivia(e));
 						e.with(
 							kind = TECall(eToString, {

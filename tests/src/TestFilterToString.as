@@ -6,10 +6,14 @@
  * - Primitive toString() and radix toString() stay mapped correctly.
  * - String concatenation with dynamic values should stringify dynamic operands to avoid hxcpp invalid numeric branch.
  * - Array values passed where String is expected should be coerced through ASCompat.toString.
+ * - So should class instances: `new XML(bytes)` with a ByteArray (Starling's XmlFactory).
  */
 package {
     public class TestFilterToString {
         public function TestFilterToString() {
+            var bytes:flash.utils.ByteArray = new flash.utils.ByteArray();
+            bytes.writeUTFBytes("<a/>");
+            var fromBytes:XML = new XML(bytes);
             var err:Error = new Error("boom");
             var msg:String = err.toString();
             trace(msg);
