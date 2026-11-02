@@ -598,7 +598,8 @@ class Scanner {
 	}
 
 	inline function isIdentStart(ch) {
-		return ch == "_".code || (ch >= "a".code && ch <= "z".code) || (ch >= "A".code && ch <= "Z".code);
+		// AS3 allows `$`, which ASC uses in [Embed] class names (`atlas_xml$<sha1>`)
+		return ch == "_".code || ch == "$".code || (ch >= "a".code && ch <= "z".code) || (ch >= "A".code && ch <= "Z".code);
 	}
 
 	inline function isIdentPart(ch) {

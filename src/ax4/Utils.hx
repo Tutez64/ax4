@@ -50,8 +50,10 @@ class Utils {
 		return normalized;
 	}
 
-	public static inline function normalizeTypeName(name:String):String {
+	public static function normalizeTypeName(name:String):String {
 		if (name.length == 0) return name;
+		// Haxe type names cannot hold `$` (ASC [Embed] classes: `atlas_xml$<sha1>`)
+		if (name.indexOf("$") != -1) name = StringTools.replace(name, "$", "_");
 		var first = name.charAt(0);
 		return if (first >= "a" && first <= "z") first.toUpperCase() + name.substring(1) else name;
 	}
