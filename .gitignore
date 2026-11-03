@@ -7,3 +7,5 @@ test.js
 test.swf
 /tests/out
 /test-cpp
+/tests-haxe/out
+/test-haxe.js

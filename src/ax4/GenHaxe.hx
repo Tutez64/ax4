@@ -160,6 +160,9 @@ class GenHaxe extends PrinterBase {
 			switch i.kind {
 				case TIDecl(d):
 					switch d.kind {
+						case TDClassOrInterface(c) if (HaxeStd.getModulePath(c, "") != ""):
+							printTrivia(dotPath.first.leadTrivia);
+							buf.add(HaxeStd.getModulePath(c, ""));
 						case TDClassOrInterface(c):
 							printPackagePath(c.parentModule.parentPack);
 							buf.add(normalizeTypeName(c.name));
@@ -965,7 +968,7 @@ class GenHaxe extends PrinterBase {
 				printTType(ret);
 
 			case TTInst(cls):
-				buf.add(getClassLocalPath(cls));
+				buf.add(getClassLocalPath(cls) + HaxeStd.getTypeParams(cls));
 
 			case TTStatic(cls):
 				buf.add("Class<" + getClassLocalPath(cls) + ">");
@@ -1023,6 +1026,10 @@ class GenHaxe extends PrinterBase {
 	}
 
 	function makeFQN(cls:TClassOrInterfaceDecl) {
+		var stdPath = HaxeStd.getModulePath(cls, "");
+		if (stdPath != "") {
+			return stdPath;
+		}
 		var packName = cls.parentModule == null ? "" : Utils.normalizePackageName(cls.parentModule.parentPack.name, context.config.packagePartRenames);
 		var typeName = Utils.normalizeTypeName(cls.name);
 		return if (packName == "") typeName else packName + "." + typeName;
