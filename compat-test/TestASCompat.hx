@@ -25,6 +25,13 @@ class TestASCompat extends utest.Test {
 		equals(TestASCompat, ASCompat.constructorOf(instance));
 	}
 
+	function testDynSliceString() {
+		var reg:Dynamic = "vc4.xyzw";
+		equals("4.xyzw", ASCompat.dynSlice(reg, 2));
+		equals("xyz", ASCompat.dynSlice(reg, -4, -1));
+		equals("", ASCompat.dynSlice(reg, 5, 2));
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));

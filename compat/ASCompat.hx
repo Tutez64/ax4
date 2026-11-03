@@ -1704,6 +1704,16 @@ class ASCompat {
 	/**
 	 * Calls slice() on a dynamically-typed object.
 	 */
+	// AS3's String.slice: negative indices count from the end (AGALMiniAssembler slices untyped register strings)
+	public static function stringSlice(s:String, ?startIndex:Int, ?endIndex:Int):String {
+		var length = s.length;
+		var start = startIndex == null ? 0 : (startIndex < 0 ? length + startIndex : startIndex);
+		var end = endIndex == null ? length : (endIndex < 0 ? length + endIndex : endIndex);
+		if (start < 0) start = 0;
+		if (end > length) end = length;
+		return end > start ? s.substring(start, end) : "";
+	}
+
 	public static function dynSlice(obj:Dynamic, ?startIndex:Int, ?endIndex:Int):Dynamic {
 		if (obj == null) {
 			return null;
@@ -1713,6 +1723,9 @@ class ASCompat {
 		}
 		if (Std.isOfType(obj, Array)) {
 			return (cast obj : Array<Dynamic>).slice(startIndex, endIndex);
+		}
+		if (Std.isOfType(obj, String)) {
+			return stringSlice(obj, startIndex, endIndex);
 		}
 		// Fallback: try to call slice via Reflect
 		var sliceMethod = Reflect.field(obj, "slice");
