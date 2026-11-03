@@ -46,6 +46,7 @@ class Main {
 		var swcStructureSetups = SWCLoader.load(tree, config.haxeTypes, config.swc);
 		Timers.swcs = stamp() - t;
 
+		haxeCompiled = detectHaxeCompiled(tree, srcs);
 		var files = [];
 		for (src in srcs) {
 			walk(src, src, files);
@@ -222,6 +223,9 @@ class Main {
 				final extIndex = name.lastIndexOf('.') + 1;
 				if (extIndex <= 1) continue;
 				final ext = name.substr(extIndex);
+				if (ext == "as" && haxeCompiled && isHaxeStdModule(makeRelativePath(root, absPath))) {
+					continue;
+				}
 				if (ext == "as") {
 					var file = parseFile(absPath);
 					if (file != null) {
@@ -235,6 +239,38 @@ class Main {
 				}
 			}
 		}
+	}
+
+	/**
+		Whether the program is compiled with Haxe, which makes it embed the Haxe standard library
+		(with flash.Boot, in a SWC or among the sources). The Haxe output gets that library from
+		Haxe itself, so it is not converted, its types coming from the SWC.
+	**/
+	static var haxeCompiled = false;
+
+	static final haxeStdTopLevel = [
+		"Std", "Type", "Reflect", "StringTools", "StringBuf", "EReg", "Lambda", "Xml", "ValueType",
+		"Dynamic", "Enum", "EnumValue", "DateTools", "IntIterator", "List"
+	];
+
+	static function detectHaxeCompiled(tree:TypedTree, srcs:Array<String>):Bool {
+		for (src in srcs) {
+			if (FileSystem.exists(src + "/flash/Boot.as")) return true;
+		}
+		var flash = tree.packages["flash"];
+		return flash != null && flash.getModule("Boot") != null;
+	}
+
+	static function isHaxeStdModule(relPath:String):Bool {
+		var path = normalizePath(relPath);
+		if (!path.endsWith(".as")) return false;
+		var parts = path.substr(0, path.length - 3).split("/");
+		var name = parts.pop();
+		if (parts.length == 0) return haxeStdTopLevel.contains(name);
+		if (parts[0] == "haxe") return true;
+		// private types of a top-level module, such as _Xml.XmlType_Impl_
+		if (parts.length == 1 && parts[0].startsWith("_") && haxeStdTopLevel.contains(parts[0].substr(1))) return true;
+		return parts.length == 1 && parts[0] == "flash" && (name == "Boot" || name == "Lib");
 	}
 
 	static function parseFile(path:String):ParseTree.File {
