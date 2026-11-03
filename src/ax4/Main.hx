@@ -43,7 +43,7 @@ class Main {
 		var tree = new TypedTree();
 
 		var t = stamp();
-		SWCLoader.load(tree, config.haxeTypes, config.swc);
+		var swcStructureSetups = SWCLoader.load(tree, config.haxeTypes, config.swc);
 		Timers.swcs = stamp() - t;
 
 		var files = [];
@@ -53,7 +53,7 @@ class Main {
 		copydatafiles();
 
 		t = stamp();
-		Typer.process(ctx, tree, files);
+		Typer.process(ctx, tree, files, swcStructureSetups);
 		Timers.typing = stamp() - t;
 
 		// File.saveContent("structure.txt", tree.dump());

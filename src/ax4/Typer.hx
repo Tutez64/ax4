@@ -11,11 +11,13 @@ import ax4.TypedTreeTools.mk;
 import ax4.HaxeTypeAnnotation;
 
 class Typer {
-	public static function process(context:Context, tree:TypedTree, files:Array<File>) {
+	public static function process(context:Context, tree:TypedTree, files:Array<File>, swcStructureSetups:Array<()->Void>) {
 		var typer = new Typer(context, tree);
 		for (file in files) {
 			typer.processFile(file);
 		}
+		// SWC signatures can reference the source declarations, which now exist
+		for (f in swcStructureSetups) f();
 		for (f in typer.importSetups) f();
 		for (f in typer.structureSetups) f();
 		for (f in typer.exprTypings) f();

@@ -31,18 +31,23 @@ class SWCLoader {
 		);
 	}
 
-	public static function load(tree:TypedTree, haxeTypes:DynamicAccess<HaxeTypeAnnotation>, files:Array<String>) {
-		// loading is done in two steps:
-		// 1. create modules and empty/untyped declarations
-		// 2. resolve type references
-		//   - setup heritage: link classes/interfaces to their parents)
-		//   - setup signatures: add fields with proper types linking to declarations
+	/**
+		Loading is done in two steps:
+		1. create modules and empty/untyped declarations
+		2. resolve type references
+		  - setup heritage: link classes/interfaces to their parents)
+		  - setup signatures: add fields with proper types linking to declarations
+
+		This does step 1 and returns step 2, to run once the source modules are declared
+		too, as a SWC can reference classes compiled from the sources.
+	**/
+	public static function load(tree:TypedTree, haxeTypes:DynamicAccess<HaxeTypeAnnotation>, files:Array<String>):Array<()->Void> {
 		var loader = new SWCLoader(tree, haxeTypes);
 		for (file in files) {
 			var swf = getLibrary(file);
 			loader.processLibrary(file, swf);
 		}
-		for (f in loader.structureSetups) f();
+		return loader.structureSetups;
 	}
 
 	static function shouldSkipClass(ns:String, name:String):Bool {
