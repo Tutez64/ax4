@@ -8,4 +8,5 @@ test.swf
 /tests/out
 /test-cpp
 /tests-haxe/out
+/tests-haxe/cpp
 /test-haxe.js

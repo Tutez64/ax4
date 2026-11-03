@@ -1,0 +1,10 @@
+{
+  "src": ["tests-haxe/src", "tests-haxe/src-bytecode"],
+  "hxout": "tests-haxe/out",
+  "swc": [
+    "tests/lib/airglobal.swc",
+    "tests-haxe/lib/bytecode.swc"
+  ],
+  "skipXmlLiterals": true,
+  "hxoutClean": true
+}

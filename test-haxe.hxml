@@ -1,0 +1,35 @@
+# Converts tests-haxe (code compiled with Haxe, decompiled) and runs it against expected.txt.
+-cmd java -jar converter.jar tests-haxe/config.json
+
+--next
+
+-D no-deprecation-warnings
+-cp compat
+-cp tests-haxe/out
+-cp tests-haxe/harness
+-lib openfl
+-lib lime
+-D nocffi
+-D disable-cffi
+-lib hxnodejs
+-resource tests-haxe/expected.txt@expected
+-main Main
+-js test-haxe.js
+--remap flash:openfl
+-cmd node -r ./compat-test/shim.js test-haxe.js
+
+--next
+
+-D no-deprecation-warnings
+-cp compat
+-cp tests-haxe/out
+-cp tests-haxe/harness
+-lib openfl
+-lib lime
+-D nocffi
+-D disable-cffi
+-resource tests-haxe/expected.txt@expected
+-main Main
+-cpp tests-haxe/cpp
+--remap flash:openfl
+-cmd npx haxe -cp compat-test --run RunCompiledMain tests-haxe/cpp/Main

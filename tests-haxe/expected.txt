@@ -1,0 +1,14 @@
+empty=unset
+area=1257
+kinds=small,big3,Big(4)
+names=a,?
+imap=6
+scale=6,15
+radius=7
+parse=ok x,caught empty
+count=4
+emoji=yes
+nan=true,true
+smap=2,-1,only
+omap=unit,none
+reset=-1,?

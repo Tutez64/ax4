@@ -40,6 +40,10 @@ The conversion pipeline is sequential and defined in `src/ax4/Main.hx`:
     *   **`reportError` that throws**: If triggering a `reportError` effectively causes a `throw` (as observed in practice), treat it as a `throwError` case — do not trigger it in tests unless explicitly requested.
     *   **Compat changes**: You may update `compat/` when needed, but you must update `compat-test/` accordingly and verify with `npx haxe test-compat.hxml`.
     *   Run: `java -jar converter.jar tests/config.json`.
+*   **Code compiled with Haxe**: `tests-haxe/` (the `Main.haxeCompiled` mode and its filters, such as `HaxeCompiledCode`).
+    *   `hx/` holds Haxe sources; `tests-haxe/build.sh <ffdec.jar>` compiles them to a SWC, decompiles it with JPEXS FFDec and splits it into `src/`, `src-bytecode/` and `lib/bytecode.swc` as a decompiled game would be, and writes `expected.txt` from the Haxe sources (`--interp`). Rerun it after changing `hx/`.
+    *   `npx haxe test-haxe.hxml` converts them, then runs the converted checks against `expected.txt` on JS and C++.
+    *   Their inputs are real Haxe output, so the filters' reports of unhandled forms are not triggered there.
 
 ### Debugging
 *   **Debugging**: `src/ax4/ParseTreeDump.hx` can dump ASTs. `TypedTree.dump()` can visualize the semantic tree.
