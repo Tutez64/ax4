@@ -658,12 +658,20 @@ class Scanner {
 	}
 
 	function scanRegExp() {
+		// a / inside a character class, as in /[\\/]$/, does not end the regexp
+		var inClass = false;
 		while (true) {
 			if (pos >= end) {
 				throw "Unterminated regexp at " + tokenStartPos;
 			}
 			var ch = text.fastCodeAt(pos);
-			if (ch == "/".code) {
+			if (ch == "[".code) {
+				inClass = true;
+				pos++;
+			} else if (ch == "]".code) {
+				inClass = false;
+				pos++;
+			} else if (ch == "/".code && !inClass) {
 				pos++;
 				while (pos < end) {
 					ch = text.fastCodeAt(pos);
