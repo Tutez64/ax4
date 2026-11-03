@@ -37,7 +37,10 @@ class Utils {
 
 	public static function normalizePackagePart(part:String, ?renames:DynamicAccess<String>):String {
 		if (part.length == 0) return part;
-		var normalized = part.charAt(0).toLowerCase() + part.substring(1);
+		// Haxe reads a name whose first letter after its leading underscores is uppercase as a type
+		var first = 0;
+		while (first < part.length - 1 && part.charAt(first) == "_") first++;
+		var normalized = part.substring(0, first) + part.charAt(first).toLowerCase() + part.substring(first + 1);
 		if (renames != null) {
 			var renamed = renames[part];
 			if (renamed == null || renamed == "") {
