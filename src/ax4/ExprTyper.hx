@@ -1289,6 +1289,8 @@ class ExprTyper {
 			case OpUshr(_):
 				var a = typeExpr(a, TTInt);
 				var b = typeExpr(b, TTInt);
+				// stored into an int or uint (or a bitwise operand) the bits are the same, only a Number use needs the uint
+				if (expectedType == TTInt || expectedType == TTUint) return mk(TEBinop(a, op, b), TTInt, expectedType);
 				return mk(TEHaxeRetype(mk(TEBinop(a, op, b), TTInt, TTInt)), TTUint, expectedType);
 
 			case OpShl(_) | OpShr(_) | OpBitAnd(_) | OpBitOr(_) | OpBitXor(_):
