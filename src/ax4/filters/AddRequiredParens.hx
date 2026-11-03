@@ -5,6 +5,19 @@ class AddRequiredParens extends AbstractFilter {
 		return loop(e, 100);
 	}
 
+	/**
+		Haxe puts & ^ | on one left-associative level, above the comparisons; AS3 binds & over ^ over |,
+		below them. So `a << 8 & m | alpha & 0xFF` (Starling's VertexData.colorize) read `(... | alpha) & 0xFF`:
+		a bitwise operation on the right, or a comparison on either side, needs parens.
+	**/
+	static function haxeBitwiseOperand(e:TExpr, isRight:Bool):TExpr {
+		return switch e.kind {
+			case TEBinop(_, OpBitAnd(_) | OpBitXor(_) | OpBitOr(_), _) if (isRight): addParens(e);
+			case TEBinop(_, OpEquals(_) | OpNotEquals(_) | OpStrictEquals(_) | OpNotStrictEquals(_) | OpGt(_) | OpGte(_) | OpLt(_) | OpLte(_), _): addParens(e);
+			case _: e;
+		}
+	}
+
 	static function loop(e:TExpr, p:Int):TExpr {
 		inline function maybeWrap(e:TExpr, p2:Int) {
 			return if (p < p2) addParens(e) else e;
@@ -52,13 +65,13 @@ class AddRequiredParens extends AbstractFilter {
 				maybeWrap(e.with(kind = TEBinop(loop(a, 8), op, loop(b, 6))), 8);
 
 			case TEBinop(a, op = OpBitAnd(_), b):
-				binop(a, op, b, 9);
+				maybeWrap(e.with(kind = TEBinop(haxeBitwiseOperand(loop(a, 9), false), op, haxeBitwiseOperand(loop(b, 9), true))), 9);
 
 			case TEBinop(a, op = OpBitXor(_), b):
-				binop(a, op, b, 10);
+				maybeWrap(e.with(kind = TEBinop(haxeBitwiseOperand(loop(a, 10), false), op, haxeBitwiseOperand(loop(b, 10), true))), 10);
 
 			case TEBinop(a, op = OpBitOr(_), b):
-				binop(a, op, b, 11);
+				maybeWrap(e.with(kind = TEBinop(haxeBitwiseOperand(loop(a, 11), false), op, haxeBitwiseOperand(loop(b, 11), true))), 11);
 
 			case TEBinop(a, op = OpAnd(_), b):
 				binop(a, op, b, 12);
