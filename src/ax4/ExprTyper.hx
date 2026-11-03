@@ -667,7 +667,14 @@ class ExprTyper {
 		if (field != null) {
 			return getFieldType(field);
 		}
-		if (field != null) trace(field);
+		// code compiled with Haxe uses the Math statics flash.Boot adds, which are Haxe's own
+		if (cls.name == "Math" && cls.parentModule != null && cls.parentModule.parentPack.name == "") {
+			switch fieldName {
+				case "isNaN" | "isFinite": return TTFun([TTNumber], TTBoolean);
+				case "NaN" | "POSITIVE_INFINITY" | "NEGATIVE_INFINITY": return TTNumber;
+				case _:
+			}
+		}
 		throw 'Unknown static field $fieldName on class ${cls.name}';
 	}
 
