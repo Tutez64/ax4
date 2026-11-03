@@ -1710,6 +1710,23 @@ class ASCompat {
 	 * Calls slice() on a dynamically-typed object.
 	 */
 	// AS3's String.slice: negative indices count from the end (AGALMiniAssembler slices untyped register strings)
+	/**
+		The toString of a Haxe enum compiled to a class (flash.Boot.enum_to_string): its tag, then its
+		parameters in parentheses when it has some.
+	**/
+	public static function haxeEnumToString(e:Dynamic):String {
+		var params:Array<Dynamic> = e.params;
+		if (params == null || params.length == 0) {
+			return e.tag;
+		}
+		return e.tag + "(" + [for (p in params) Std.string(p)].join(",") + ")";
+	}
+
+	/** flash.Boot.fromCodePoint: String.fromCharCode takes any code point in Haxe. **/
+	public static inline function fromCodePoint(code:Int):String {
+		return String.fromCharCode(code);
+	}
+
 	public static function stringSlice(s:String, ?startIndex:Int, ?endIndex:Int):String {
 		var length = s.length;
 		var start = startIndex == null ? 0 : (startIndex < 0 ? length + startIndex : startIndex);

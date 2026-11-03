@@ -246,7 +246,7 @@ class Main {
 		(with flash.Boot, in a SWC or among the sources). The Haxe output gets that library from
 		Haxe itself, so it is not converted, its types coming from the SWC.
 	**/
-	static var haxeCompiled = false;
+	public static var haxeCompiled(default, null) = false;
 
 	static final haxeStdTopLevel = [
 		"Std", "Type", "Reflect", "StringTools", "StringBuf", "EReg", "Lambda", "Xml", "ValueType",

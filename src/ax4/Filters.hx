@@ -30,6 +30,7 @@ class Filters {
 			new RewriteMeta(context),
 			new NormalizeContentTypeHeader(context),
 			new URLStreamHttpToURLLoader(context),
+			new HaxeCompiledCode(context),
 			new MathApi(context),
 			new RewriteJSON(context),
 			new UtilFunctions(context),
