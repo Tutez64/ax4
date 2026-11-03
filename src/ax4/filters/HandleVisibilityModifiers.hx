@@ -58,7 +58,8 @@ class HandleVisibilityModifiers extends AbstractFilter {
 			}
 		}
 
-		var packagePath = cls.parentModule.parentPack.name;
+		// the Haxe package, which @:allow compares with the accessing type's path
+		var packagePath = Utils.normalizePackageName(cls.parentModule.parentPack.name, context.config.packagePartRenames);
 
 		function changeInternal(leadTrivia, trailTrivia) {
 			if (packagePath == "") {
