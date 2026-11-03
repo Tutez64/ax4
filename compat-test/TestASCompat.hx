@@ -57,6 +57,24 @@ class TestASCompat extends utest.Test {
 		equals("0", ASCompat.toRadix(0, 16));
 	}
 
+	function testPushAll() {
+		var v = new flash.Vector<Float>();
+		v.push(0);
+		equals(4, ASCompat.ASVector.pushAll(v, [1, 2, 3]));
+		equals(3.0, v[3]);
+		equals(6, ASCompat.ASVector.unshiftAll(v, [-2, -1]));
+		equals(-2.0, v[0]);
+		equals(-1.0, v[1]);
+		var a:Array<Dynamic> = ["c"];
+		equals(3, ASCompat.ASArray.unshiftAll(a, ["a", "b"]));
+		equals("a b c", a.join(" "));
+		equals(3, ASCompat.ASArray.pushAll(a, null));
+		var indices = new flash.Vector<UInt>();
+		ASCompat.ASVector.pushAll(indices, [1, 2, 3]);
+		var big = ASCompat.ASVectorTools.filter(indices, function(item:UInt, index:Int, vector:flash.Vector<UInt>):Bool return item > 1);
+		equals(2, big.length);
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));

@@ -8,6 +8,11 @@ class FunctionApply extends AbstractFilter {
 
 	override function processExpr(e:TExpr):TExpr {
 		return switch e.kind {
+			// `a.push.apply(a, items)`: Array/Vector push takes a rest, which Reflect.callMethod fills with the first item
+			// on native targets (Starling's ColorMatrixFilter got a one-value identity matrix)
+			case TECall({kind: TEField({kind: TOExplicit(_, eFun)}, "apply", _)}, args = {args: [_, eItems]}) if (arrayAppendMethod(eFun) != null):
+				rewriteApplyAll(e, eFun, args, processExpr(eItems.expr));
+
 			// `f.apply(thisArg, args)` on a rest method (Starling's Polygon: addVertices.apply(this, vertices)):
 			// hxcpp passes a rest as one array argument, so Reflect.callMethod gave it the first item; and Haxe has no
 			// closure of a super method. A method closure is bound, so call it with ...(args ?? []), as apply(x, null) has none.
@@ -166,5 +171,22 @@ class FunctionApply extends AbstractFilter {
 		var eOrEmpty = mk(TEBinop(eArgs, OpNullCoalesce(new Token(0, TkQuestionQuestion, "??", [whitespace], [whitespace])), eEmpty), tUntypedArray, tUntypedArray);
 		var eSpread = mk(TEParens(new Token(0, TkParenOpen, "(", [new Trivia(TrWhitespace, "...")], []), eOrEmpty, new Token(0, TkParenClose, ")", [], [])), tUntypedArray, tUntypedArray);
 		return e.with(kind = TECall(eFun, args.with(args = [{expr: eSpread, comma: null}])));
+	}
+	static function arrayAppendMethod(eFun:TExpr):Null<String> {
+		return switch eFun.kind {
+			case TEField({kind: TOExplicit(_, {type: TTArray(_) | TTVector(_)})}, name = "push" | "unshift", _): name;
+			case _: null;
+		}
+	}
+
+	function rewriteApplyAll(e:TExpr, eFun:TExpr, args:TCallArgs, eItems:TExpr):TExpr {
+		var methodName = arrayAppendMethod(eFun);
+		var eArr = switch eFun.kind {
+			case TEField({kind: TOExplicit(_, eArr)}, _, _): processExpr(eArr);
+			case _: throw "assert";
+		}
+		var compatName = if (eArr.type.match(TTVector(_)) && !eArr.type.match(TTVector(TTObject(TTAny)))) "ASCompat.ASVector" else "ASCompat.ASArray";
+		var eMethod = mkBuiltin(compatName + "." + methodName + "All", TTFunction, removeLeadingTrivia(eArr));
+		return e.with(kind = TECall(eMethod, args.with(args = [{expr: eArr, comma: commaWithSpace}, {expr: eItems, comma: null}])));
 	}
 }

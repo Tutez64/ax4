@@ -1979,10 +1979,33 @@ class ASArray {
 
 	public static macro function pushMultiple<T>(a:ExprOf<Array<T>>, first:ExprOf<T>, rest:Array<ExprOf<T>>):ExprOf<Int>;
 	public static macro function unshiftMultiple<T>(a:ExprOf<Array<T>>, first:ExprOf<T>, rest:Array<ExprOf<T>>):ExprOf<Int>;
+
+	// a.push.apply(a, items): a rest call through reflection gets the first item only on native targets
+	public static function pushAll<T>(a:Array<T>, items:Array<Dynamic>):Int {
+		if (items != null) for (item in items) a.push(item);
+		return a.length;
+	}
+
+	public static function unshiftAll<T>(a:Array<T>, items:Array<Dynamic>):Int {
+		if (items != null) for (i in 0...items.length) a.insert(i, items[i]);
+		return a.length;
+	}
 }
 
 
 class ASVector {
+	// v.push.apply(v, items): a rest call through reflection gets the first item only on native targets
+	// inline, as a generic function would run the Object implementation of a Float/Int/Bool Vector
+	public static inline function pushAll<T>(v:flash.Vector<T>, items:Array<Dynamic>):Int {
+		if (items != null) for (item in items) v.push(item);
+		return v.length;
+	}
+
+	public static inline function unshiftAll<T>(v:flash.Vector<T>, items:Array<Dynamic>):Int {
+		if (items != null) for (i in 0...items.length) v.insertAt(i, items[i]);
+		return v.length;
+	}
+
 	static inline function coerceSortResult(value:Dynamic):Int {
 		if (Std.isOfType(value, Int)) return value;
 		if (Std.isOfType(value, Float)) return Std.int(value);
