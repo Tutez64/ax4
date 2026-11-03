@@ -1323,8 +1323,9 @@ class ExprTyper {
 				var a = typeExpr(a, TTNumber);
 				var b = typeExpr(b, TTNumber);
 
-				// AS3 subtracts uints as Numbers (Starling's Color.interpolate: endRed - startRed is -255), Haxe's UInt wraps
-				if (op.match(OpSub(_)) && isUintSubtraction(a.type, b.type)) {
+				// AS3 subtracts uints as Numbers (Starling's Color.interpolate: endRed - startRed is -255), Haxe's UInt wraps.
+				// Stored back into an int or uint, the wrapped result has the same bits, so only a Number use needs Floats.
+				if (op.match(OpSub(_)) && isUintSubtraction(a.type, b.type) && !expectedType.match(TTInt | TTUint)) {
 					return mk(TEBinop(uintAsFloat(a), op, uintAsFloat(b)), TTNumber, expectedType);
 				}
 
