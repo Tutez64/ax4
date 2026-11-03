@@ -906,6 +906,14 @@ class ExprTyper {
 		}
 	}
 
+	static function isUintSubtraction(ta:TType, tb:TType):Bool {
+		return (ta == TTUint && (tb == TTUint || tb == TTInt)) || (tb == TTUint && ta == TTInt);
+	}
+
+	static function uintAsFloat(e:TExpr):TExpr {
+		return if (e.type == TTUint) mk(TEHaxeRetype(e), TTNumber, TTNumber) else e;
+	}
+
 	function typeCall(e:Expr, args:CallArgs, expectedType:TType) {
 		var eobj = typeXmlStringMethodCallee(e);
 		if (eobj == null) eobj = typeExpr(e, TTAny);
@@ -1314,6 +1322,11 @@ class ExprTyper {
 			case OpMul(token) | OpSub(token) | OpMod(token):
 				var a = typeExpr(a, TTNumber);
 				var b = typeExpr(b, TTNumber);
+
+				// AS3 subtracts uints as Numbers (Starling's Color.interpolate: endRed - startRed is -255), Haxe's UInt wraps
+				if (op.match(OpSub(_)) && isUintSubtraction(a.type, b.type)) {
+					return mk(TEBinop(uintAsFloat(a), op, uintAsFloat(b)), TTNumber, expectedType);
+				}
 
 				var type = switch [a.type, b.type] {
 					// Same AVM2 ToNumber coercion as OpAdd
