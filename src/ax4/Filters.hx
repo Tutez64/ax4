@@ -50,6 +50,7 @@ class Filters {
 			new RewriteTypesWithComment(context),
 			new RewriteDelete(context),
 			new InferLocalVarTypes(context),
+			new HaxeInlinedMaps(context),
 			new RewriteArrayAccess(context),
 			new RewriteDynamicFieldAccess(context),
 			new RewriteAs(context),
