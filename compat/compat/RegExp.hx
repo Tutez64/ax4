@@ -11,6 +11,7 @@ class RegExp {
 	#if (!js && !flash)
 	var regex:EReg;
 	var global:Bool;
+	var groupCount:Int;
 	#end
 
 	#if (js || flash)
@@ -28,6 +29,7 @@ class RegExp {
 		#else
 		global = options.indexOf("g") >= 0;
 		regex = new EReg(pattern, options);
+		groupCount = countCaptureGroups(pattern);
 		#end
 	}
 
@@ -46,21 +48,44 @@ class RegExp {
 		if (global) {
 			lastIndex = pos.pos + (pos.len > 0 ? pos.len : 1);
 		}
-		// with the captured groups, as AS3 (Starling's AssetManager reads its name from group 2);
-		// EReg has no group count, and throws past the last group
+		// with the captured groups, as AS3 (Starling's AssetManager reads its name from group 2)
 		var result = [regex.matched(0)];
-		var group = 1;
-		while (true) {
-			try {
-				result.push(regex.matched(group));
-			} catch (_:Dynamic) {
-				break;
-			}
-			group++;
+		for (group in 1...groupCount + 1) {
+			result.push(regex.matched(group));
 		}
 		return result;
 		#end
 	}
+
+	#if (!js && !flash)
+	// EReg has no group count: count the capturing ( outside escapes and classes, (?<name> included
+	static function countCaptureGroups(pattern:String):Int {
+		var count = 0;
+		var inClass = false;
+		var i = 0;
+		while (i < pattern.length) {
+			var c = pattern.charAt(i);
+			if (c == "\\") {
+				i += 2;
+				continue;
+			}
+			if (inClass) {
+				if (c == "]") inClass = false;
+			} else if (c == "[") {
+				inClass = true;
+			} else if (c == "(") {
+				if (pattern.charAt(i + 1) != "?") {
+					count++;
+				} else if ((pattern.charAt(i + 2) == "<" && pattern.charAt(i + 3) != "=" && pattern.charAt(i + 3) != "!")
+					|| (pattern.charAt(i + 2) == "P" && pattern.charAt(i + 3) == "<")) {
+					count++;
+				}
+			}
+			i++;
+		}
+		return count;
+	}
+	#end
 
 	public function test(s:String):Bool {
 		#if (js || flash)

@@ -44,6 +44,9 @@ class TestRegExp extends utest.Test {
 		equals("atlas.png", cast result[1]);
 		equals("atlas", cast result[2]);
 		equals("png", cast result[3]);
+		var escaped = new compat.RegExp("\\((\\d+)\\)[(]x[)](?:y)(?=z)").exec("(12)(x)yz");
+		isTrue(escaped[2] == null);
+		equals("12", cast escaped[1]);
 		var optional = nameRegex.exec("atlas");
 		equals("atlas", cast optional[2]);
 		isTrue(optional[3] == null);
