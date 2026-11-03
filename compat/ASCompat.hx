@@ -283,12 +283,18 @@ class ASCompat {
 			}
 
 			var shouldBeVariable = false;
-			if (value != null && Reflect.hasField(value, name)) {
-				shouldBeVariable = !Reflect.isFunction(Reflect.field(value, name));
+			var fieldValue:Dynamic = null;
+			if (value != null) {
+				// a static is not always a field that hasField sees (hxcpp class statics)
+				fieldValue = Reflect.field(value, name);
+				shouldBeVariable = (fieldValue != null || Reflect.hasField(value, name)) && !Reflect.isFunction(fieldValue);
 			}
 
 			if (shouldBeVariable) {
-				root.addChild(createVariableNode(name, declaredBy));
+				var node = createVariableNode(name, declaredBy);
+				// a class reference is typed Class, as Starling's AssetManager.enqueue looks for embedded assets
+				if (Std.isOfType(fieldValue, Class)) node.set("type", "Class");
+				root.addChild(node);
 			} else {
 				root.addChild(createMethodNode(name, declaredBy));
 			}

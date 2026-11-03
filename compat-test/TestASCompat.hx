@@ -32,6 +32,24 @@ class TestASCompat extends utest.Test {
 		equals("", ASCompat.dynSlice(reg, 5, 2));
 	}
 
+	public static var embeddedClass:Dynamic = TestASCompat;
+
+	function testDescribeTypeClassStatic() {
+		#if flash
+		pass(); // flash.Lib.describeType gives the declared type
+		#else
+		var typeXml = ASCompat.describeType(TestASCompat);
+		var found = false;
+		for (node in (typeXml : Xml).elements()) {
+			if (node.nodeName == "variable" && node.get("name") == "embeddedClass") {
+				equals("Class", node.get("type"));
+				found = true;
+			}
+		}
+		isTrue(found);
+		#end
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));
