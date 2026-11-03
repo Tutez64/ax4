@@ -512,10 +512,51 @@ class SWCLoader {
 		for (tag in swf.tags) {
 			switch (tag) {
 				case TActionScript3(data, context):
-					result.push(new format.abc.Reader(new haxe.io.BytesInput(data)).read());
+					result.push(new format.abc.Reader(new haxe.io.BytesInput(asAbc46(data))).read());
 				case _:
 			}
 		}
+		return result;
+	}
+
+	// format only reads ABC 46.16. ASC 2 (AIR) writes 47.16, which adds a float constant pool
+	// after the doubles. Without float constants, drop that pool and read it as 46.16.
+	static function asAbc46(data:haxe.io.Bytes):haxe.io.Bytes {
+		if (data.length < 4 || data.getUInt16(0) != 16 || data.getUInt16(2) != 47) {
+			return data;
+		}
+		var pos = 4;
+		function readU30():Int {
+			var result = 0, shift = 0;
+			while (true) {
+				var b = data.get(pos++);
+				result |= (b & 0x7F) << shift;
+				if (b & 0x80 == 0) {
+					return result;
+				}
+				shift += 7;
+			}
+		}
+		for (_ in 0...2) { // ints, uints
+			var count = readU30();
+			for (_ in 1...count) {
+				readU30();
+			}
+		}
+		var doubles = readU30();
+		if (doubles > 1) {
+			pos += (doubles - 1) * 8;
+		}
+		var floatPoolStart = pos;
+		var floats = readU30();
+		if (floats > 1) {
+			throw "ABC 47.16 with float constants is not supported";
+		}
+		var out = new haxe.io.BytesBuffer();
+		out.addBytes(data, 0, floatPoolStart);
+		out.addBytes(data, pos, data.length - pos);
+		var result = out.getBytes();
+		result.setUInt16(2, 46);
 		return result;
 	}
 
