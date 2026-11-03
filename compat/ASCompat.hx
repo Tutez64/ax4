@@ -2129,9 +2129,9 @@ class ASVector {
 	#end
 }
 
+// inline, as a generic function would run the Object implementation of a Float/Int/Bool Vector
 class ASVectorTools {
-	#if flash inline #end
-	public static function forEach<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Void):Void {
+	public static inline function forEach<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Void):Void {
 		#if flash
 		(cast v).forEach(callback);
 		#else
@@ -2141,8 +2141,7 @@ class ASVectorTools {
 		#end
 	}
 
-	#if flash inline #end
-	public static function filter<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):flash.Vector<T> {
+	public static inline function filter<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):flash.Vector<T> {
 		#if flash
 		return (cast v).filter(callback);
 		#else
@@ -2157,8 +2156,7 @@ class ASVectorTools {
 		#end
 	}
 
-	#if flash inline #end
-	public static function map<T,T2>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->T2):flash.Vector<T2> {
+	public static inline function map<T,T2>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->T2):flash.Vector<T2> {
 		#if flash
 		return (cast v).map(callback);
 		#else
@@ -2170,8 +2168,7 @@ class ASVectorTools {
 		#end
 	}
 
-	#if flash inline #end
-	public static function every<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):Bool {
+	public static inline function every<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):Bool {
 		#if flash
 		return (cast v).every(callback);
 		#else
@@ -2184,8 +2181,7 @@ class ASVectorTools {
 		#end
 	}
 
-	#if flash inline #end
-	public static function some<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):Bool {
+	public static inline function some<T>(v:flash.Vector<T>, callback:(item:T, index:Int, vector:flash.Vector<T>)->Bool):Bool {
 		#if flash
 		return (cast v).some(callback);
 		#else
