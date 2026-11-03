@@ -50,6 +50,13 @@ class TestASCompat extends utest.Test {
 		#end
 	}
 
+	function testToRadixUint() {
+		var pixel:UInt = 0xFFFF8800;
+		equals("ffff8800", ASCompat.toRadix(pixel, 16));
+		equals("-7800", ASCompat.toRadix(-0x7800, 16));
+		equals("0", ASCompat.toRadix(0, 16));
+	}
+
 	function testURIComponent() {
 		equals("a%20b%2Bc", ASCompat.encodeURIComponent("a b+c"));
 		equals("a b+c", ASCompat.decodeURIComponent("a%20b+c"));

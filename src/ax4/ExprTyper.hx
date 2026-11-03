@@ -1277,7 +1277,13 @@ class ExprTyper {
 
 				return mk(TEBinop(a, op, b), a.type, expectedType);
 
-			case OpShl(_) | OpShr(_) | OpUshr(_) | OpBitAnd(_) | OpBitOr(_) | OpBitXor(_):
+			// AS3's >>> gives a uint, Haxe's an Int: `(bd.getPixel32(x, y) >>> 0).toString(16)` is ffff8800, not -7800
+			case OpUshr(_):
+				var a = typeExpr(a, TTInt);
+				var b = typeExpr(b, TTInt);
+				return mk(TEHaxeRetype(mk(TEBinop(a, op, b), TTInt, TTInt)), TTUint, expectedType);
+
+			case OpShl(_) | OpShr(_) | OpBitAnd(_) | OpBitOr(_) | OpBitXor(_):
 				var a = typeExpr(a, TTInt);
 				var b = typeExpr(b, TTInt);
 				return mk(TEBinop(a, op, b), TTInt, expectedType);

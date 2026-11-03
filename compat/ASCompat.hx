@@ -933,18 +933,17 @@ class ASCompat {
 		return (cast n).toString(radix);
 		#else
 		if (radix == 10) return Std.string(n);
-		var iv = Std.int(n);
-		if (iv == 0) return "0";
-		var neg = iv < 0;
-		var value = if (neg) -iv else iv;
+		// a Float, as a uint above 2^31 (or a Number) does not fit an Int
+		var value = n < 0 ? Math.ffloor(-n) : Math.ffloor(n);
+		if (value == 0) return "0";
 		var baseChars = "0123456789abcdefghijklmnopqrstuvwxyz";
 		var out = "";
 		while (value > 0) {
-			var d = value % radix;
+			var d = Std.int(value % radix);
 			out = baseChars.charAt(d) + out;
-			value = Std.int(value / radix);
+			value = Math.ffloor(value / radix);
 		}
-		return if (neg) "-" + out else out;
+		return if (n < 0) "-" + out else out;
 		#end
 	}
 
