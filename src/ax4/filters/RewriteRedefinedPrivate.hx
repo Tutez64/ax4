@@ -15,7 +15,7 @@ class DetectFieldRedefinitions extends AbstractFilter {
 						case TMField(field):
 							switch (field.kind) {
 								case TFVar({name: name}) | TFFun({name: name}) | TFGetter({name: name}) | TFSetter({name: name}):
-									markRedefinition(info.extend.superClass, name);
+									markRedefinition(c, info.extend.superClass, name);
 							}
 						case _:
 					}
@@ -23,7 +23,7 @@ class DetectFieldRedefinitions extends AbstractFilter {
 		}
 	}
 
-	function markRedefinition(superClass:TClassOrInterfaceDecl, name:String) {
+	function markRedefinition(subClass:TClassOrInterfaceDecl, superClass:TClassOrInterfaceDecl, name:String) {
 		var parentDefinition = superClass.findFieldInHierarchy(name, false);
 		if (parentDefinition == null) {
 			// no redefinition
@@ -34,8 +34,11 @@ class DetectFieldRedefinitions extends AbstractFilter {
 
 		var field = parentDefinition.field;
 		var isPrivate = Lambda.exists(field.modifiers, m -> m.match(FMPrivate(_)));
+		// AS3 keeps the internal fields of each package apart too (a SWC's fields have no modifiers)
+		var isInternal = !c.parentModule.isExtern && !Lambda.exists(field.modifiers, m -> m.match(FMPublic(_) | FMPrivate(_) | FMProtected(_)));
+		var otherPackage = c.parentModule == null || subClass.parentModule == null || c.parentModule.parentPack.name != subClass.parentModule.parentPack.name;
 
-		if (!isPrivate) {
+		if (!isPrivate && !(isInternal && otherPackage)) {
 			// not a problem
 			return;
 		}
@@ -66,9 +69,9 @@ class RenameRedefinedFields extends AbstractFilter {
 	}
 
 	override function processClass(c:TClassOrInterfaceDecl) {
-		redefinedFields = redefinitions[c];
-		if (redefinedFields != null) {
-			// only process classes that have redefinitions
+		// every class is processed, as the classes of an internal field's package read it too
+		if (redefinitions.iterator().hasNext()) {
+			redefinedFields = redefinitions[c];
 			thisClass = c;
 			super.processClass(c);
 			redefinedFields = null;
@@ -77,8 +80,26 @@ class RenameRedefinedFields extends AbstractFilter {
 	}
 
 	inline function maybeMangle(name:String, f:(mangledName:String)->Void) {
-		var mangledName = redefinedFields[name];
+		var mangledName = if (redefinedFields == null) null else redefinedFields[name];
 		if (mangledName != null) f(mangledName);
+	}
+
+	/** The new name of the renamed field that `name` reads on an instance of `cls`, or null. **/
+	function findMangledName(cls:TClassOrInterfaceDecl, name:String):Null<String> {
+		while (cls != null) {
+			var fields = redefinitions[cls];
+			if (fields != null && fields.exists(name)) {
+				return fields[name];
+			}
+			if (cls.findField(name, false) != null) {
+				return null;
+			}
+			cls = switch cls.kind {
+				case TClass({extend: extend}) if (extend != null): extend.superClass;
+				case _: null;
+			}
+		}
+		return null;
 	}
 
 	static inline function changeToken(t:Token, name:String):Token {
@@ -111,8 +132,8 @@ class RenameRedefinedFields extends AbstractFilter {
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
 		return switch e.kind {
-			case TEField(obj = {type: TTInst(c)}, fieldName, fieldToken) if (c == thisClass && redefinedFields.exists(fieldName)):
-				var mangledName = redefinedFields[fieldName];
+			case TEField(obj = {type: TTInst(c)}, fieldName, fieldToken) if (findMangledName(c, fieldName) != null):
+				var mangledName = findMangledName(c, fieldName);
 				e.with(kind = TEField(obj, mangledName, fieldToken.with(TkIdent, mangledName)));
 			case _:
 				e;
