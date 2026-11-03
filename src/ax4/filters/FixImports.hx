@@ -13,7 +13,7 @@ class FixImports extends AbstractFilter {
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
 		switch e.kind {
-			case TEBuiltin(_, name) if (name == "QName" || name == "ByteArray" || flashErrorsTopLevel.exists(name)):
+			case TEBuiltin(_, name) if (name == "QName" || name == "Namespace" || name == "ByteArray" || flashErrorsTopLevel.exists(name)):
 				if (neededImportNames != null) {
 					neededImportNames[name] = true;
 				}
@@ -123,7 +123,7 @@ class FixImports extends AbstractFilter {
 	function addMissingImports(mod:TModule) {
 		var needed:Array<TClassOrInterfaceDecl> = [];
 		for (cls in usedClasses.keys()) {
-			if (cls.name == "QName" || cls.name == "ByteArray") {
+			if (cls.name == "QName" || cls.name == "Namespace" || cls.name == "ByteArray") {
 				var resolved = resolveFlashUtilsClass(cls.name);
 				if (resolved != null && !hasImport(mod, resolved)) {
 					needed.push(resolved);
@@ -133,7 +133,7 @@ class FixImports extends AbstractFilter {
 		if (neededImportNames != null) {
 			for (name in neededImportNames.keys()) {
 				var cls = switch name {
-					case "QName" | "ByteArray": resolveFlashUtilsClass(name);
+					case "QName" | "Namespace" | "ByteArray": resolveFlashUtilsClass(name);
 					case _ if (flashErrorsTopLevel.exists(name)): resolveFlashErrorsClass(name);
 					case _: null;
 				};

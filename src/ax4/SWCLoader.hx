@@ -56,7 +56,7 @@ class SWCLoader {
 				  ["", "Object"]
 				| ["", "Class"]
 				| ["", "Function"]
-				| ["", "Namespace"]
+				// | ["", "Namespace"] (as QName, imported from flash.utils by FixImports)
 				// | ["", "QName"]
 				| ["", "Boolean"]
 				| ["", "Number"]
