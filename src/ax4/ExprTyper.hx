@@ -44,6 +44,8 @@ class ExprTyper {
 	final localsStack:Array<Locals>;
 	final tree:TypedTree;
 	var locals:Locals;
+	// the locals declared by the function being typed, which shadow those of the enclosing functions
+	var functionLocals:Map<String, TVar>;
 	var currentReturnType:TType;
 	var xmlFilterVar:Null<TVar>;
 	var xmlFilterToken:Null<Token>;
@@ -54,6 +56,7 @@ class ExprTyper {
 		this.typerContext = typerContext;
 		locals = new Map();
 		localsStack = [locals];
+		functionLocals = new Map();
 		xmlFilterVar = null;
 		xmlFilterToken = null;
 	}
@@ -71,12 +74,18 @@ class ExprTyper {
 		locals = localsStack[localsStack.length - 1];
 	}
 
-	function addLocal(name:String, type:TType):TVar {
-		return locals[name] = {name: name, type: type};
+	function addLocal(name:String, type:TType, functionScoped = true):TVar {
+		var v:TVar = {name: name, type: type};
+		if (functionScoped) {
+			functionLocals[name] = v;
+		}
+		return locals[name] = v;
 	}
 
 	public function typeFunctionExpr(sig:TFunctionSignature, block:BracedExprBlock):TExpr {
 		pushLocals();
+		var oldFunctionLocals = functionLocals;
+		functionLocals = new Map();
 		for (arg in sig.args) {
 			if (arg.v != null) throw "double function typing";
 			arg.v = addLocal(arg.name, arg.type);
@@ -85,6 +94,7 @@ class ExprTyper {
 		currentReturnType = sig.ret.type;
 		var block = typeBlock(block);
 		currentReturnType = oldReturnType;
+		functionLocals = oldFunctionLocals;
 		popLocals();
 		return mk(TEBlock(block), TTVoid, TTVoid);
 	}
@@ -115,7 +125,7 @@ class ExprTyper {
 			case EVars(kind, vars):
 				predeclareVars(kind, vars);
 			case EFunction(_, name, _) if (name != null):
-				if (locals[name.text] == null) {
+				if (functionLocals[name.text] == null) {
 					addLocal(name.text, TTFunction);
 				}
 			case EBlock(b):
@@ -202,7 +212,7 @@ class ExprTyper {
 		var overrideType = typerContext.haxeTypes.resolveTypeHint(HaxeTypeAnnotation.extract(varToken.leadTrivia), varToken.pos);
 		var decls = separatedToArray(vars, function(v, comma) return v);
 		for (v in decls) {
-			if (locals[v.name.text] != null) {
+			if (functionLocals[v.name.text] != null) {
 				continue;
 			}
 			var type = if (overrideType != null) overrideType else if (v.type == null) TTAny else typerContext.resolveType(v.type.type);
@@ -367,7 +377,7 @@ class ExprTyper {
 		var vars = separatedToArray(vars, function(v, comma) {
 			var type = if (overrideType != null) overrideType else if (v.type == null) TTAny else typerContext.resolveType(v.type.type);
 			var init = if (v.init != null) {equalsToken: v.init.equalsToken, expr: typeExpr(v.init.expr, type)} else null;
-			var tvar = locals[v.name.text];
+			var tvar = functionLocals[v.name.text];
 			if (tvar == null) {
 				tvar = addLocal(v.name.text, type);
 			}
@@ -1368,7 +1378,7 @@ class ExprTyper {
 		var tCatches = new Array<TCatch>();
 		for (c in catches) {
 			pushLocals();
-			var v = addLocal(c.name.text, typerContext.resolveType(c.type.type));
+			var v = addLocal(c.name.text, typerContext.resolveType(c.type.type), false);
 			var e = typeExpr(EBlock(c.block), TTVoid);
 			popLocals();
 			tCatches.push({
@@ -1803,7 +1813,7 @@ class ExprTyper {
 		var prevFilterToken = xmlFilterToken;
 		pushLocals();
 		var xmlToken = TokenTools.mkIdent("__xml");
-		var xmlVar = addLocal("__xml", TTXML);
+		var xmlVar = addLocal("__xml", TTXML, false);
 		xmlFilterVar = xmlVar;
 		xmlFilterToken = xmlToken;
 		var condExpr = typeExpr(cond, TTBoolean);
