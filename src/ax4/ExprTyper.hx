@@ -1360,6 +1360,9 @@ class ExprTyper {
 					case [TTAny, _] | [_, TTAny]:
 						err("Dynamic arithmetic operation!", token.pos);
 						TTAny;
+					// AS3 ToNumber-coerces an Object operand (Haxe compiles an optional Null<Float> argument as Object)
+					case [TTObject(_), (TTNumber | TTInt | TTUint | TTObject(_))] | [(TTNumber | TTInt | TTUint), TTObject(_)]:
+						TTNumber;
 					case _:
 						throwErr("Unsupported arithmetic operation", token.pos);
 				};
