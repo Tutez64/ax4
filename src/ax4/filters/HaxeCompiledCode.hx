@@ -12,6 +12,9 @@ package ax4.filters;
 	  ASCompat.haxeEnumToString.
 	- `Boot.fromCodePoint(c)` calls ASCompat.fromCodePoint (String.fromCharCode, which takes any code point in Haxe).
 
+	It also calls the private haxe.Exception members that Haxe's throw and catch compile to
+	through ASCompat: `Exception.thrown(v)`, `Exception.caught(v)` and `e.unwrap()`.
+
 	The flash.Boot import is dropped.
 **/
 class HaxeCompiledCode extends AbstractFilter {
@@ -22,6 +25,24 @@ class HaxeCompiledCode extends AbstractFilter {
 	static function isBootObject(obj:TFieldObject):Bool {
 		return switch obj.kind {
 			case TOExplicit(_, {kind: TEDeclRef(_, {kind: TDClassOrInterface(c)})}): isBoot(c);
+			case _: false;
+		}
+	}
+
+	static function isException(c:TClassOrInterfaceDecl):Bool {
+		return c.name == "Exception" && c.parentModule != null && c.parentModule.parentPack.name == "haxe";
+	}
+
+	static function isExceptionObject(obj:TFieldObject):Bool {
+		return switch obj.kind {
+			case TOExplicit(_, {kind: TEDeclRef(_, {kind: TDClassOrInterface(c)})}): isException(c);
+			case _: false;
+		}
+	}
+
+	static function isExceptionInstance(obj:TFieldObject):Bool {
+		return switch obj {
+			case {kind: TOExplicit(_, _), type: TTInst(c)}: isException(c) || (c.parentModule != null && c.parentModule.parentPack.name == "haxe" && c.name == "ValueException");
 			case _: false;
 		}
 	}
@@ -87,6 +108,16 @@ class HaxeCompiledCode extends AbstractFilter {
 			case TECall({kind: TEField(obj, "fromCodePoint", _)}, args) if (isBootObject(obj)):
 				var eMethod = mkBuiltin("ASCompat.fromCodePoint", TTFun([TTInt], TTString), removeLeadingTrivia(e));
 				return e.with(kind = TECall(eMethod, mapCallArgs(processExpr, args)));
+
+			case TECall({kind: TEField(obj, name = "thrown" | "caught", _)}, args) if (isExceptionObject(obj)):
+				var method = if (name == "thrown") "ASCompat.haxeThrown" else "ASCompat.haxeCaught";
+				var eMethod = mkBuiltin(method, TTFun([TTAny], e.type), removeLeadingTrivia(e));
+				return e.with(kind = TECall(eMethod, mapCallArgs(processExpr, args)));
+
+			case TECall({kind: TEField(obj = {kind: TOExplicit(_, eException)}, "unwrap", _)}, {args: []}) if (isExceptionInstance(obj)):
+				var lead = removeLeadingTrivia(eException);
+				var eMethod = mkBuiltin("ASCompat.haxeUnwrap", TTFun([obj.type], TTAny), lead);
+				return mkCall(eMethod, [processExpr(eException)], TTAny, removeTrailingTrivia(e)).with(expectedType = e.expectedType);
 
 			case _:
 		}

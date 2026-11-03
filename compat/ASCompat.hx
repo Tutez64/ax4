@@ -1727,6 +1727,21 @@ class ASCompat {
 		return String.fromCharCode(code);
 	}
 
+	/** haxe.Exception.thrown, which code compiled with Haxe calls on the values it throws. **/
+	public static inline function haxeThrown(value:Any):Any {
+		return @:privateAccess haxe.Exception.thrown(value);
+	}
+
+	/** haxe.Exception.caught, which code compiled with Haxe calls on the values it catches. **/
+	public static inline function haxeCaught(value:Any):haxe.Exception {
+		return @:privateAccess haxe.Exception.caught(value);
+	}
+
+	/** haxe.Exception.unwrap: the value that was thrown. **/
+	public static inline function haxeUnwrap(e:haxe.Exception):Any {
+		return @:privateAccess e.unwrap();
+	}
+
 	public static function stringSlice(s:String, ?startIndex:Int, ?endIndex:Int):String {
 		var length = s.length;
 		var start = startIndex == null ? 0 : (startIndex < 0 ? length + startIndex : startIndex);
