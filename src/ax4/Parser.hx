@@ -985,7 +985,8 @@ class Parser {
 			case TkLt:
 				var t = parseTypeParam(scanner.consume());
 				var decl = parseArrayDecl(expectKind(TkBracketOpen));
-				EVectorDecl(keyword, t, decl);
+				// a member access or call can follow, as in new <T>[a].concat(b)
+				parseExprNext(EVectorDecl(keyword, t, decl), allowComma);
 			case _:
 				var newObject = parseNewObject();
 				var args = parseOptionalCallArgs();
