@@ -250,7 +250,9 @@ class Main {
 
 	static final haxeStdTopLevel = [
 		"Std", "Type", "Reflect", "StringTools", "StringBuf", "EReg", "Lambda", "Xml", "ValueType",
-		"Dynamic", "Enum", "EnumValue", "DateTools", "IntIterator", "List"
+		"Dynamic", "Enum", "EnumValue", "DateTools", "IntIterator", "List",
+		// the root class of a SWC that Haxe compiles
+		"haxe"
 	];
 
 	static function detectHaxeCompiled(tree:TypedTree, srcs:Array<String>):Bool {
