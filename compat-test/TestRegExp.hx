@@ -37,6 +37,18 @@ class TestRegExp extends utest.Test {
 		equals("abc", ASCompat.stringReplace("abc", "z", "y"));
 	}
 
+	function testExecGroups() {
+		var nameRegex = new compat.RegExp("(([^?\\/\\\\]+?)(?:\\.([\\w\\-]+))?)(?:\\?.*)?$");
+		var result = nameRegex.exec("textures/atlas.png");
+		equals("atlas.png", cast result[0]);
+		equals("atlas.png", cast result[1]);
+		equals("atlas", cast result[2]);
+		equals("png", cast result[3]);
+		var optional = nameRegex.exec("atlas");
+		equals("atlas", cast optional[2]);
+		isTrue(optional[3] == null);
+	}
+
 	function testLastIndexFieldExists() {
 		var re = new compat.RegExp("foo", "g");
 		re.lastIndex = 3;

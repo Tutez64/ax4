@@ -46,7 +46,19 @@ class RegExp {
 		if (global) {
 			lastIndex = pos.pos + (pos.len > 0 ? pos.len : 1);
 		}
-		return [regex.matched(0)];
+		// with the captured groups, as AS3 (Starling's AssetManager reads its name from group 2);
+		// EReg has no group count, and throws past the last group
+		var result = [regex.matched(0)];
+		var group = 1;
+		while (true) {
+			try {
+				result.push(regex.matched(group));
+			} catch (_:Dynamic) {
+				break;
+			}
+			group++;
+		}
+		return result;
 		#end
 	}
 
