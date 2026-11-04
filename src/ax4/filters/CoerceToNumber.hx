@@ -66,8 +66,12 @@ class CoerceToNumber extends AbstractFilter {
 
 			case TEPreUnop(op = PreIncr(_) | PreDecr(_), inner):
 				var mappedInner = mapExpr(processExpr, inner);
-				if (e.expectedType == TTVoid && isAnyLike(mappedInner.type) && mappedInner.kind.match(TELocal(_))) {
-					return rewriteAnyIncDec(mappedInner, op.match(PreIncr(_)));
+				if (isAnyLike(mappedInner.type) && (canBeRepeated(mappedInner) || (e.expectedType == TTVoid && mappedInner.kind.match(TELocal(_))))) {
+					// the operator's leading trivia (the statement's indentation) goes to the rewritten expression
+					var opLead = removeLeadingTrivia(e);
+					var rewritten = if (e.expectedType == TTVoid) rewriteAnyIncDec(mappedInner, op.match(PreIncr(_))) else applyExpectedCoercion(rewriteAnyIncDecValue(mappedInner, op.match(PreIncr(_)), false));
+					processLeadingToken(t -> t.leadTrivia = opLead.concat(t.leadTrivia), rewritten);
+					return rewritten;
 				} else if (e.expectedType == TTVoid && !canBeRepeated(mappedInner)) {
 					var rewritten = rewriteIncDecUnsafe(mappedInner, op.match(PreIncr(_)), e);
 					if (rewritten != null) return rewritten;
@@ -77,8 +81,10 @@ class CoerceToNumber extends AbstractFilter {
 				return applyExpectedCoercion(refreshNumericType(e.with(kind = TEPreUnop(getPreUnopToken(e), mappedInner))));
 			case TEPostUnop(inner, op = PostIncr(_) | PostDecr(_)):
 				var mappedInner = mapExpr(processExpr, inner);
-				if (e.expectedType == TTVoid && isAnyLike(mappedInner.type) && mappedInner.kind.match(TELocal(_))) {
+				if (e.expectedType == TTVoid && isAnyLike(mappedInner.type) && (mappedInner.kind.match(TELocal(_)) || canBeRepeated(mappedInner))) {
 					return rewriteAnyIncDec(mappedInner, op.match(PostIncr(_)));
+				} else if (e.expectedType != TTVoid && isAnyLike(mappedInner.type) && canBeRepeated(mappedInner)) {
+					return applyExpectedCoercion(rewriteAnyIncDecValue(mappedInner, op.match(PostIncr(_)), true).with(expectedType = e.expectedType));
 				} else if (e.expectedType == TTVoid && !canBeRepeated(mappedInner)) {
 					var rewritten = rewriteIncDecUnsafe(mappedInner, op.match(PostIncr(_)), e);
 					if (rewritten != null) return rewritten;
@@ -238,6 +244,28 @@ class CoerceToNumber extends AbstractFilter {
 
 		var value = mk(TEBinop(mkToIntCall(targetForValue), op, oneExpr), TTInt, TTInt);
 		return mk(TEBinop(target, OpAssign(mkTokenWithSpaces(TkEquals, "=")), value), TTVoid, TTVoid);
+	}
+
+	/**
+		`++x` and `x++` on an untyped `x` whose value is used, which Haxe cannot apply to ASAny:
+		`(x = ASCompat.toNumber(x) + 1)` and `((x = ASCompat.toNumber(x) + 1) - 1)`, the Number AS3 gives.
+	**/
+	function rewriteAnyIncDecValue(target:TExpr, isInc:Bool, isPostfix:Bool):TExpr {
+		var lead = removeLeadingTrivia(target);
+		var trail = removeTrailingTrivia(target);
+		var targetForValue = cloneExpr(target);
+		inline function mkOne() return mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, "1", [], []))), TTInt, TTInt);
+		inline function mkOp(inc:Bool) return if (inc) OpAdd(mkTokenWithSpaces(TkPlus, "+")) else OpSub(mkTokenWithSpaces(TkMinus, "-"));
+		var eToNumber = mkBuiltin("ASCompat.toNumber", tToNumber);
+		var value = mk(TEBinop(mkCall(eToNumber, [targetForValue.with(expectedType = targetForValue.type)], TTNumber), mkOp(isInc), mkOne()), TTNumber, TTNumber);
+		var assign = mk(TEBinop(target, OpAssign(mkTokenWithSpaces(TkEquals, "=")), value), TTNumber, TTNumber);
+		var openParen = new Token(0, TkParenOpen, "(", lead, []);
+		if (!isPostfix) {
+			return mk(TEParens(openParen, assign, mkCloseParen(trail)), TTNumber, TTNumber);
+		}
+		var updated = mk(TEParens(mkOpenParen(), assign, mkCloseParen()), TTNumber, TTNumber);
+		var old = mk(TEBinop(updated, mkOp(!isInc), mkOne()), TTNumber, TTNumber);
+		return mk(TEParens(openParen, old, mkCloseParen(trail)), TTNumber, TTNumber);
 	}
 
 	static function retypeToUInt(e:TExpr):TExpr {

@@ -10,6 +10,9 @@
  * - Arithmetic typed before its operands were narrowed (field reads rewritten to
  *   toNumberField, ternaries of numbers) is retyped: no toNumber/toInt around it.
  * - Number to int uses ASCompat.floatToInt (AS3 int(): NaN -> 0, wraps modulo 2^32).
+ * - ++/-- on an untyped field as a statement, and on an untyped local or field whose value is used
+ *   (Haxe cannot apply them to ASAny): x = toInt(x) + 1, (x = toNumber(x) + 1) and
+ *   ((x = toNumber(x) + 1) - 1), the Number AS3 gives.
  */
 package {
     public class TestFilterCoerceToNumber {
@@ -101,6 +104,16 @@ package {
             } else {
                 trace("Has items: " + param1.length);
             }
+        }
+
+        private function testIncrementOnAny(o:*):int {
+            var count:* = 0;
+            count = o.count;
+            ++o.idle;
+            o.idle--;
+            var before:int = count++;
+            var after:Number = ++count;
+            return before + after + o.idle++;
         }
 
         private function testBitwiseOnAny():void {
