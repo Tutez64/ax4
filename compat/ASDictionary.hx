@@ -190,6 +190,15 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		return map.exists(key);
 	}
 
+	/** `remove` for a dictionary only known at runtime, see `existsIn`. **/
+	public static function removeIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Bool {
+		if (isPrimitiveKey(key)) {
+			var entries = primitiveStore.get(map);
+			return entries != null && entries.remove(primitiveKeyId(key));
+		}
+		return map.remove(key);
+	}
+
 	/** `[]` for a dictionary only known at runtime, see `existsIn`. **/
 	public static function getIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Dynamic {
 		if (existsIn(map, key)) {

@@ -621,6 +621,19 @@ class TestASCompat extends utest.Test {
 		isTrue(ASCompat.dictionaryLookupEqNull(objects, new TestASCompatLookupKey()));
 	}
 
+	function testDeleteDictionaryEntry() {
+		// delete on a Dictionary held in an untyped variable (ASCompat.deleteProperty)
+		var dict:ASDictionary<ASAny, ASAny> = new ASDictionary<ASAny, ASAny>();
+		var objectKey = new TestASCompatLookupKey();
+		dict[objectKey] = 1;
+		dict["name"] = 2;
+		var held:Dynamic = dict;
+		isTrue(ASCompat.deleteProperty(held, objectKey));
+		isFalse(dict.exists(objectKey));
+		isTrue(ASCompat.deleteProperty(held, "name"));
+		isFalse(dict.exists("name"));
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {

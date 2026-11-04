@@ -491,6 +491,10 @@ class ASCompat {
 		if (Std.isOfType(obj, ASProxyBase)) {
 			return (cast obj : ASProxyBase).deleteProperty(fieldName);
 		}
+		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
+			ASDictionary.removeIn(cast obj, fieldName);
+			return true;
+		}
 		var name = propertyName(fieldName);
 		var deleted = false;
 		try {
