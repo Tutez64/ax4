@@ -201,6 +201,15 @@ package {
             var holder:Object = {a: [1], b: [2]};
             var either:* = holder.a || holder.b;
             var both:* = (rows.length > 0) || (either == null);
+
+            // Case 23: A local holding a method with a rest is a Function, which Haxe's rest
+            // methods unify with.
+            var method:* = null;
+            method = this.withRest;
+            method.apply(this, [1, 2]);
+        }
+
+        public function withRest(first:int, ...rest):void {
         }
     }
 }

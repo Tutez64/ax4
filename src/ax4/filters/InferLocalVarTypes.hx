@@ -154,6 +154,11 @@ class InferLocalVarTypes extends AbstractFilter {
 
 		function noteHint(info:VarInfo, hint:TType) {
 			if (info.incompatible) return;
+			// a function type with a rest has no Haxe form that its methods unify with (haxe.Rest)
+			switch hint {
+				case TTFun(_, _, rest) if (rest != null): hint = TTFunction;
+				case _:
+			}
 
 			if (info.hint == null) {
 				info.hint = hint;
