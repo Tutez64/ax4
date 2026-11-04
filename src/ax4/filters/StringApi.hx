@@ -163,6 +163,10 @@ class StringApi extends AbstractFilter {
 				var eCoerced = coerceToString(processExpr(eObject));
 				var newFieldObj:TFieldObject = {kind: TOExplicit(dot, eCoerced), type: TTString};
 				var newMethod = mk(TEField(newFieldObj, methodName, fieldToken), TTFun([], TTString), TTFun([], TTString));
+				// the indices were not coerced as for a String (CoerceToNumber ran with the method untyped)
+				if (["substr", "substring", "slice", "charAt", "charCodeAt"].contains(methodName)) {
+					args = args.with(args = [for (a in args.args) {expr: coerceToIntIndex(a.expr), comma: a.comma}]);
+				}
 				processExpr(e.with(kind = TECall(newMethod, args)));
 
 			case _:
@@ -188,6 +192,14 @@ class StringApi extends AbstractFilter {
 
 		var baseType = getBaseType(e);
 		return baseType.match(TTAny | TTObject(_));
+	}
+
+	static function coerceToIntIndex(e:TExpr):TExpr {
+		if (e.type.match(TTInt | TTUint)) {
+			return e;
+		}
+		var eToInt = mkBuiltin("ASCompat.toInt", TTFun([TTAny], TTInt), removeLeadingTrivia(e));
+		return mkCall(eToInt, [e.with(expectedType = e.type)], TTInt, removeTrailingTrivia(e));
 	}
 
 	function coerceToString(e:TExpr):TExpr {

@@ -5,6 +5,8 @@
  * An untyped pattern (`regs[j].replace(relreg[0], "0")` in AGALMiniAssembler) is a RegExp or a string
  * only known at runtime: it becomes `ASCompat.stringReplace`.
  * `String.fromCharCode` with several codes (Starling's AtfData) concatenates one call per code.
+ * On an untyped value, the indices of substring, substr, slice, charAt and charCodeAt are coerced to
+ * Int as for a String (`any.substring(0, any.length - 1)` passes a Number).
  */
 package {
     public class TestFilterStringApi {
@@ -64,6 +66,10 @@ package {
             var header:flash.net.URLRequestHeader = new flash.net.URLRequestHeader("x-id", "val");
             var lowerTyped:String = header.name.toLowerCase();
 
+            var untypedText:* = replaceDict["#NAME"];
+            var trimmed:String = untypedText.substring(0, untypedText.length - 1);
+            var charAtEnd:String = untypedText.charAt(untypedText.length - 1);
+            trace(trimmed, charAtEnd);
             if (sliceAll == null || substrAll == null || substringAll == null || concatText == null || compareValue == 0 || upperAny == null || charAny == null || lowerTyped == null) {
                 trace(sliceAll, substrAll, substringAll, concatText, compareValue);
             }
