@@ -26,14 +26,29 @@ class HaxeInlinedMaps extends AbstractFilter {
 	}
 
 	static function isStdMap(e:TExpr, names:Array<String>):Bool {
-		return switch e.type {
-			case TTInst(c): isStdMapClass(c, names);
+		// a local's type, which InferLocalVarTypes can have set after its reads were typed
+		var type = switch skipParens(e).kind {
+			case TELocal(_, v): v.type;
+			case _: e.type;
+		}
+		return switch type {
+			case TTInst(c): isStdMapClass(c, names) || (names == storageMaps && isIMap(c));
 			case _: false;
 		}
 	}
 
+	/** haxe.IMap, which an unchecked Haxe cast (`(cast map : IntMap<T>).set(k, v)`) leaves as the type. **/
+	static function isIMap(c:TClassOrInterfaceDecl):Bool {
+		return c.name == "IMap" && c.parentModule != null && c.parentModule.parentPack.name == "haxe";
+	}
+
 	static function keyType(map:TExpr):TType {
-		return switch map.type {
+		var type = switch skipParens(map).kind {
+			case TELocal(_, v): v.type;
+			case _: map.type;
+		}
+		return switch type {
+			case TTInst({name: "IMap"}): TTAny;
 			case TTInst({name: "IntMap"}): TTInt;
 			case TTInst({name: "ObjectMap"}): TTAny;
 			case _: TTString;
@@ -111,6 +126,12 @@ class HaxeInlinedMaps extends AbstractFilter {
 				case TEVars(_, decls):
 					for (d in decls) {
 						if (d.init != null && isStorageValue(d.init.expr, vars)) add(d.v);
+						// a local inferred as a module-private std iterator, now map.keys()
+						switch d.v.type {
+							case TTInst(c) if (c.parentModule != null && iteratorPacks.contains(c.parentModule.parentPack.name)):
+								d.v.type = TTAny;
+							case _:
+						}
 					}
 				case TEBinop({kind: TELocal(_, v)}, OpAssign(_), value) if (isStorageValue(value, vars)):
 					add(v);
