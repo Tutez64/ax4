@@ -99,6 +99,7 @@ class Filters {
 			new FunctionApply(context),
 			new ToString(context),
 			new CoerceFromAny(context),
+			new UnifyBranchTypes(context),
 			new FixNonInlineableDefaultArgs(context),
 			new MoveCtorBaseFieldAssignAfterSuper(context),
 			new MoveFieldInits(context),
