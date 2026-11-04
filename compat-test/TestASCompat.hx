@@ -1026,6 +1026,33 @@ class TestASCompat extends utest.Test {
 		equals(3, result[1]);
 	}
 
+	function testHaxeMapStorageIteration() {
+		var map = new haxe.ds.IntMap<String>();
+		map.set(3, "c");
+		map.set(1, "a");
+		var storage:ASAny = ASCompat.haxeMapStorage(map);
+		var pairs = [];
+		var index = 0;
+		while ((index = ASCompat.nextIndex(storage, index)) != 0) {
+			pairs.push(ASCompat.nextName(storage, index) + "=" + ASCompat.nextValue(storage, index));
+		}
+		pairs.sort(Reflect.compare);
+		equals("1=a,3=c", pairs.join(","));
+		equals(0, ASCompat.nextIndex(ASCompat.haxeMapStorage(new haxe.ds.StringMap<Int>()), 0));
+	}
+
+	function testNextIndexOnObjectsAndArrays() {
+		var array:Array<Dynamic> = ["x", "y"];
+		equals(1, ASCompat.nextIndex(array, 0));
+		equals(0, ASCompat.nextName(array, 1));
+		equals("y", ASCompat.nextValue(array, 2));
+		equals(0, ASCompat.nextIndex(array, 2));
+		var object:Dynamic = {only: 5};
+		equals("only", ASCompat.nextName(object, ASCompat.nextIndex(object, 0)));
+		equals(5, ASCompat.nextValue(object, 1));
+		equals(0, ASCompat.nextIndex(null, 0));
+	}
+
 	static function xmlListHasNodeWithName(nodes:compat.XMLList, expectedName:String):Bool {
 		for (node in nodes) {
 			if (node.attribute("name") == expectedName) {

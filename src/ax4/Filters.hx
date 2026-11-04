@@ -31,6 +31,7 @@ class Filters {
 			new NormalizeContentTypeHeader(context),
 			new URLStreamHttpToURLLoader(context),
 			new HaxeCompiledCode(context),
+			new RewriteFFDecInstructions(context),
 			new MathApi(context),
 			new RewriteJSON(context),
 			new UtilFunctions(context),

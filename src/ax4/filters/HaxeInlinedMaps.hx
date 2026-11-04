@@ -12,6 +12,8 @@ package ax4.filters;
 	  the whole method elsewhere.
 	- `new StringMapKeysIterator(m.h, m.rh)` and the other keys and values iterators call keys and
 	  iterator, and `m.h = {}` (`m.h = new Dictionary()`) with `m.rh = null` calls clear.
+	- The storage read otherwise (`m.h`, to iterate it with FFDec's §§hasnext) is
+	  ASCompat.haxeMapStorage(m), the map's keys and values, and `m.rh` is null.
 	- The imports of the std's module-private iterators are dropped.
 **/
 class HaxeInlinedMaps extends AbstractFilter {
@@ -80,11 +82,78 @@ class HaxeInlinedMaps extends AbstractFilter {
 		}
 	}
 
+	/** The locals of the current function that hold a map's storage, typed ASAny (see findStorageVars). **/
+	var storageVars:Array<TVar> = [];
+
+	override function processFunction(fun:TFunction) {
+		var outerVars = storageVars;
+		storageVars = if (Main.haxeCompiled && fun.expr != null) findStorageVars(fun.expr) else [];
+		super.processFunction(fun);
+		storageVars = outerVars;
+	}
+
+	/**
+		The locals holding a map's storage (`var h:Dictionary = m.h`, and their copies). They become
+		ASAny, as ASCompat.haxeMapStorage is no Dictionary: an hxcpp Dictionary variable would hold null.
+	**/
+	static function findStorageVars(body:TExpr):Array<TVar> {
+		var vars = [];
+		var changed = true;
+		function add(v:TVar) {
+			if (!vars.contains(v)) {
+				vars.push(v);
+				v.type = TTAny;
+				changed = true;
+			}
+		}
+		function loop(e:TExpr) {
+			switch e.kind {
+				case TEVars(_, decls):
+					for (d in decls) {
+						if (d.init != null && isStorageValue(d.init.expr, vars)) add(d.v);
+					}
+				case TEBinop({kind: TELocal(_, v)}, OpAssign(_), value) if (isStorageValue(value, vars)):
+					add(v);
+				case _:
+			}
+			iterExpr(loop, e);
+		}
+		while (changed) {
+			changed = false;
+			loop(body);
+		}
+		return vars;
+	}
+
+	static function isStorageValue(e:TExpr, vars:Array<TVar>):Bool {
+		return switch skipParens(e).kind {
+			case TEField({kind: TOExplicit(_, map)}, "h" | "rh", _): isStdMap(map, storageMaps);
+			case TELocal(_, v): vars.contains(v);
+			case TEBinop(_, OpAssign(_), value): isStorageValue(value, vars);
+			case _: false;
+		}
+	}
+
 	override function processExpr(e:TExpr):TExpr {
 		if (!Main.haxeCompiled) {
 			return e;
 		}
 		switch e.kind {
+			case TELocal(_, v) if (storageVars.contains(v)):
+				return e.with(type = TTAny);
+
+			case TEVars(kind, decls) if (Lambda.exists(decls, d -> storageVars.contains(d.v))):
+				for (d in decls) {
+					if (d.init != null) {
+						d.init.expr = processExpr(d.init.expr);
+						if (storageVars.contains(d.v)) d.init.expr = d.init.expr.with(expectedType = TTAny);
+					}
+				}
+				return e;
+
+			case TEBinop(lhs = {kind: TELocal(_, v)}, op = OpAssign(_), value) if (storageVars.contains(v)):
+				return e.with(kind = TEBinop(processExpr(lhs), op, processExpr(value).with(expectedType = TTAny)), type = TTAny);
+
 			case TEBlock(block):
 				var exprs = [];
 				for (be in block.exprs) {
@@ -130,6 +199,17 @@ class HaxeInlinedMaps extends AbstractFilter {
 				&& args != null && args.args.length > 0 && getMapOfField(args.args[0].expr, "h") != null):
 				var method = if (StringTools.endsWith(c.name, "KeysIterator")) "keys" else "iterator";
 				return mkMapCall(e, getMapOfField(args.args[0].expr, "h"), method, [], [], TTAny);
+
+			// the storage itself, iterated with hasnext2 (see RewriteFFDecInstructions): the map's keys and values,
+			// and no reserved keys (the map's keys have them)
+			case TEField({kind: TOExplicit(_, map)}, "h", _) if (isStdMap(map, storageMaps)):
+				var lead = removeLeadingTrivia(e);
+				var trail = removeTrailingTrivia(e);
+				var eMethod = mkBuiltin("ASCompat.haxeMapStorage", TTFun([TTAny], TTAny), lead);
+				return mkCall(eMethod, [processExpr(map)], TTAny, trail).with(expectedType = e.expectedType);
+
+			case TEField({kind: TOExplicit(_, map)}, "rh", _) if (isStdMap(map, storageMaps)):
+				return mkNullExpr(TTAny, removeLeadingTrivia(e), removeTrailingTrivia(e));
 
 			case TEField({kind: TOExplicit(_, map)}, name, _) if (isStdMap(map, storageMaps) && internalFields.contains(name)):
 				reportError(exprPos(e), "Unhandled access to a Haxe map's internal " + name);

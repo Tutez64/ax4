@@ -489,6 +489,28 @@ class Scanner {
 					scanString(ch);
 					return mk(TkStringSingle);
 
+				// JPEXS FFDec prints a name it cannot print as is between § (`§typeof§`, a member
+				// named typeof), and an instruction ActionScript cannot express as §§name(...)
+				case "§".code:
+					pos++;
+					if (pos < end && text.fastCodeAt(pos) == "§".code) {
+						pos++;
+						while (pos < end && isIdentPart(text.fastCodeAt(pos))) {
+							pos++;
+						}
+						return mk(TkIdent);
+					}
+					var nameStart = pos;
+					while (pos < end && text.fastCodeAt(pos) != "§".code && text.fastCodeAt(pos) != "\n".code) {
+						pos++;
+					}
+					if (pos >= end || text.fastCodeAt(pos) != "§".code || pos == nameStart) {
+						return mk(TkUnknown);
+					}
+					var name = text.substring(nameStart, pos);
+					pos++;
+					return new Token(tokenStartPos, TkIdent, name, leadTrivia, scanTrivia(true));
+
 				case _ if (isIdentStart(ch)):
 					pos++;
 					while (pos < end) {

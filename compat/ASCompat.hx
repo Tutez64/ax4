@@ -1742,6 +1742,49 @@ class ASCompat {
 		return @:privateAccess e.unwrap();
 	}
 
+	/** The keys and values of a Haxe map, for code compiled with Haxe that iterates its flash storage. **/
+	public static function haxeMapStorage(map:haxe.Constraints.IMap<Dynamic, Dynamic>):Dynamic {
+		// Dynamic: the converted code declares the storage with its flash type (Object, Dictionary)
+		return new ASHaxeMapStorage(map);
+	}
+
+	static function enumerableKeys(o:Dynamic):Array<Dynamic> {
+		if (o == null) {
+			return [];
+		}
+		if (Std.isOfType(o, ASHaxeMapStorage)) {
+			return (o : ASHaxeMapStorage).keyList;
+		}
+		if (Std.isOfType(o, Array)) {
+			return [for (i in 0...(o : Array<Dynamic>).length) i];
+		}
+		return Reflect.fields(o);
+	}
+
+	/**
+		The hasnext2 instruction: the index of the property after `index` (from 1), or 0 after the last.
+		The properties are a Haxe map's (ASHaxeMapStorage), an Array's indices or an object's fields.
+	**/
+	public static function nextIndex(o:Dynamic, index:Int):Int {
+		return index < enumerableKeys(o).length ? index + 1 : 0;
+	}
+
+	/** The nextname instruction: the name of the property at `index` (see nextIndex). **/
+	public static function nextName(o:Dynamic, index:Int):Dynamic {
+		return enumerableKeys(o)[index - 1];
+	}
+
+	/** The nextvalue instruction: the value of the property at `index` (see nextIndex). **/
+	public static function nextValue(o:Dynamic, index:Int):Dynamic {
+		if (Std.isOfType(o, ASHaxeMapStorage)) {
+			return (o : ASHaxeMapStorage).valueList[index - 1];
+		}
+		if (Std.isOfType(o, Array)) {
+			return (o : Array<Dynamic>)[index - 1];
+		}
+		return Reflect.field(o, enumerableKeys(o)[index - 1]);
+	}
+
 	public static function stringSlice(s:String, ?startIndex:Int, ?endIndex:Int):String {
 		var length = s.length;
 		var start = startIndex == null ? 0 : (startIndex < 0 ? length + startIndex : startIndex);

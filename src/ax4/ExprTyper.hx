@@ -440,6 +440,9 @@ class ExprTyper {
 					mk(TEBuiltin(i, "arguments"), TTBuiltin, expectedType);
 				}
 			case "trace": mk(TEBuiltin(i, "trace"), TTFun([], TTVoid, TRestSwc), expectedType);
+			// FFDec's instructions (see RewriteFFDecInstructions)
+			case "§§hasnext": mk(TEBuiltin(i, i.text), TTFun([TTAny, TTInt], TTBoolean), expectedType);
+			case "§§nextname" | "§§nextvalue": mk(TEBuiltin(i, i.text), TTFun([TTInt, TTAny], TTAny), expectedType);
 			case "int": mk(TEBuiltin(i, "int"), TTBuiltin, expectedType);
 			case "uint": mk(TEBuiltin(i, "int"), TTBuiltin, expectedType);
 			case "Boolean": mk(TEBuiltin(i, "Boolean"), TTBuiltin, expectedType);
