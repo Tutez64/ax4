@@ -1,7 +1,7 @@
 /**
  * Test case: exhaustive coverage for UtilFunctions rewrites.
  * Expect rewrites for:
- * - flash.utils.getDefinitionByName -> Type.resolveClass
+ * - flash.utils.getDefinitionByName -> ASCompat.getDefinitionByName (takes the AS3 pkg::Name form too)
  * - flash.utils.getTimer -> flash.Lib.getTimer
  * - flash.utils.describeType -> ASCompat.describeType
  * - flash.utils.getQualifiedClassName / avmplus.getQualifiedClassName -> ASCompat.getQualifiedClassName
@@ -28,6 +28,7 @@ package {
 
         public function check(value:*):String {
             var cls:Class = getDefinitionByName("flash.display.Sprite");
+            var desktop:Object = getDefinitionByName("flash.desktop::NativeApplication");
             var now:int = getTimer();
             var xml:XML = describeType(value);
             var q1:String = getQualifiedClassName(value);

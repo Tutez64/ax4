@@ -199,7 +199,7 @@ class ASCompat {
 		if (Reflect.isFunction(value)) return "Function";
 		if (Std.isOfType(value, Class)) {
 			var className = Type.getClassName(cast value);
-			return className != null ? className : "Class";
+			return className != null ? qualifiedClassName(className) : "Class";
 		}
 
 		var cls = Type.getClass(value);
@@ -208,10 +208,35 @@ class ASCompat {
 			if (isVectorClassName(className)) {
 				return "__AS3__.vec::Vector.<*>";
 			}
-			return className != null ? className : "Object";
+			return className != null ? qualifiedClassName(className) : "Object";
 		}
 
 		return "Object";
+	}
+
+	// the packages of the flash API, which openfl implements under its own name
+	static final flashPackages = ~/^openfl\.(accessibility|desktop|display|display3D|errors|events|external|filesystem|filters|geom|globalization|media|net|printing|profiler|sampler|security|sensors|system|text|ui|utils|xml)(\.|$)/;
+
+	/** A Haxe class path as AS3 writes it: `flash.display::MovieClip`, `pkg.sub::Name`. **/
+	static function qualifiedClassName(className:String):String {
+		if (flashPackages.match(className)) {
+			className = "flash" + className.substr("openfl".length);
+		}
+		var dot = className.lastIndexOf(".");
+		return dot < 0 ? className : className.substr(0, dot) + "::" + className.substr(dot + 1);
+	}
+
+	/** `flash.utils.getDefinitionByName`: the AS3 form of a class path (`pkg::Name`) or the Haxe one. **/
+	public static function getDefinitionByName(name:String):Class<Dynamic> {
+		if (name == null) {
+			return null;
+		}
+		var path = StringTools.replace(name, "::", ".");
+		var cls = Type.resolveClass(path);
+		if (cls == null && StringTools.startsWith(path, "flash.")) {
+			cls = Type.resolveClass("openfl" + path.substr("flash".length));
+		}
+		return cls;
 	}
 
 	static inline function isVectorClassName(className:Null<String>):Bool {
@@ -221,8 +246,8 @@ class ASCompat {
 
 	static function describeTypeName(value:Dynamic, cls:Class<Dynamic>, isClassObject:Bool):String {
 		if (value == null) return "null";
-		if (isClassObject) return Type.getClassName(cast value);
-		if (cls != null) return Type.getClassName(cls);
+		if (isClassObject) return qualifiedClassName(Type.getClassName(cast value));
+		if (cls != null) return qualifiedClassName(Type.getClassName(cls));
 		return "Object";
 	}
 

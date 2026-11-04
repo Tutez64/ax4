@@ -1720,7 +1720,7 @@ class GenHaxe extends PrinterBase {
 			case TECall({kind: TEBuiltin(_, "ASCompat.reinterpretAs" | "ASCompat.dynamicAs" | "ASCompat.coerce")}, _) if (expectedType.match(TTArray(_))):
 				// this one will return an unbound Array element type
 				return false;
-			case TECall({kind: TEBuiltin(_, "Type.resolveClass")}, _) if (expectedType.match(TTStatic(_))):
+			case TECall({kind: TEBuiltin(_, "Type.resolveClass" | "ASCompat.getDefinitionByName")}, _) if (expectedType.match(TTStatic(_))):
 				// resolveClass returns an unbound T for Class<T> so don't lose the actual class type
 				return false;
 			case _:

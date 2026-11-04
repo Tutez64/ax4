@@ -754,6 +754,18 @@ class TestASCompat extends utest.Test {
 		equals("String", ASCompat.getQualifiedClassName("test"));
 		equals("Array", ASCompat.getQualifiedClassName([1, 2, 3]));
 		equals("null", ASCompat.getQualifiedClassName(null));
+		// AS3 class paths: package::Name, the flash API under flash. on every target
+		equals("flash.geom::Point", ASCompat.getQualifiedClassName(new flash.geom.Point()));
+		equals("flash.geom::Point", ASCompat.getQualifiedClassName(flash.geom.Point));
+		equals("TestASCompatLookupKey", ASCompat.getQualifiedClassName(new TestASCompatLookupKey()).split("::").pop());
+		equals("haxe.ds::StringMap", ASCompat.getQualifiedClassName(new haxe.ds.StringMap<Int>()));
+	}
+
+	function testGetDefinitionByName() {
+		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom::Point"));
+		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom.Point"));
+		equals(flash.geom.Point, ASCompat.getDefinitionByName(ASCompat.getQualifiedClassName(new flash.geom.Point())));
+		equals(null, ASCompat.getDefinitionByName("no.such::Class"));
 	}
 
 	function testShowRedrawRegions() {
