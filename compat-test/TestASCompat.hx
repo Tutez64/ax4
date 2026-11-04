@@ -1041,6 +1041,28 @@ class TestASCompat extends utest.Test {
 		equals(0, ASCompat.nextIndex(ASCompat.haxeMapStorage(new haxe.ds.StringMap<Int>()), 0));
 	}
 
+	function testUntypedDictionaryIteration() {
+		var key1 = function() {};
+		var key2 = {name: "two"};
+		var dictionary = new ASDictionary<ASAny, ASAny>();
+		dictionary[key1] = 1;
+		dictionary[key2] = 2;
+		var anyValue:ASAny = dictionary;
+		var keys = 0;
+		var sum = 0;
+		for (k in anyValue.___keys()) {
+			keys++;
+			sum += dictionary[k];
+		}
+		equals(2, keys);
+		equals(3, sum);
+		var values = 0;
+		for (v in anyValue) {
+			values += v;
+		}
+		equals(3, values);
+	}
+
 	function testArrayConcat() {
 		var a:Array<Dynamic> = [1];
 		var runtimeArray:Dynamic = [2, 3];

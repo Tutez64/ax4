@@ -52,12 +52,17 @@ class ASCompat {
 		#if flash
 		return new NativeValueIterator<ASAny>(v);
 		#else
+		// a Dictionary is a map outside flash: its values are not fields
+		if (Std.isOfType(v, haxe.Constraints.IMap)) {
+			return (cast v : haxe.Constraints.IMap<Dynamic, ASAny>).iterator();
+		}
 		return (cast v : haxe.DynamicAccess<ASAny>).iterator();
 		#end
 	}
 
 	// `for ... in`: an Array or ASArrayBase gives its indices as strings, anything else its property names.
-	public static function iterateDynamicKeys(v:Dynamic):Iterator<String> {
+	// Dynamic: a Dictionary's keys are not always Strings, and typed so, hxcpp converts each one
+	public static function iterateDynamicKeys(v:Dynamic):Iterator<Dynamic> {
 		if (Std.isOfType(v, Array)) {
 			return indexKeys((cast v : Array<Dynamic>).length);
 		}
@@ -68,6 +73,10 @@ class ASCompat {
 		#if flash
 		return new NativePropertyIterator<String>(v);
 		#else
+		// a Dictionary is a map outside flash: its keys are not fields, nor always Strings
+		if (Std.isOfType(v, haxe.Constraints.IMap)) {
+			return (cast v : haxe.Constraints.IMap<Dynamic, Dynamic>).keys();
+		}
 		return (cast v : haxe.DynamicAccess<ASAny>).keys().iterator();
 		#end
 	}
