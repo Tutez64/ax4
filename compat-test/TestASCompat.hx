@@ -659,6 +659,15 @@ class TestASCompat extends utest.Test {
 		equals("thirteen", Std.string(dict[13]));
 	}
 
+	function testCallNumberMethod() {
+		// toFixed and co on an untyped value: a Number, or an object with its own method
+		var n:Dynamic = 1.25;
+		equals("1.3", ASCompat.callNumberMethod(n, "toFixed", 1));
+		var i:Dynamic = 7;
+		equals("7.00", ASCompat.callNumberMethod(i, "toFixed", 2));
+		equals("own 3", ASCompat.callNumberMethod(new TestASCompatToFixedOwner(), "toFixed", 3));
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {
@@ -1314,4 +1323,12 @@ private class NullGetterClip extends flash.display.MovieClip {
 
 private class TestASCompatLookupKey {
 	public function new() {}
+}
+
+private class TestASCompatToFixedOwner {
+	public function new() {}
+
+	public function toFixed(digits:Int):String {
+		return "own " + digits;
+	}
 }

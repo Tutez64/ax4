@@ -928,6 +928,22 @@ class ASCompat {
 		#end
 	}
 
+	/**
+		`toFixed`, `toPrecision` or `toExponential` called on an untyped value: a Number has no methods
+		outside flash and JS, anything else has its own.
+	**/
+	public static function callNumberMethod(v:Dynamic, name:String, ?digits:Dynamic):String {
+		if (Std.isOfType(v, Float)) {
+			var n:Float = v;
+			return switch name {
+				case "toFixed": toFixed(n, digits == null ? null : toInt(digits));
+				case "toPrecision": toPrecision(n, toInt(digits));
+				case _: toExponential(n, digits == null ? null : toInt(digits));
+			}
+		}
+		return Reflect.callMethod(v, Reflect.field(v, name), digits == null ? [] : [digits]);
+	}
+
 	public static inline function toFixed(n:Float, ?digits:Int):String {
 		#if (js || flash)
 		return (cast n).toFixed(digits);
