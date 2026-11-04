@@ -162,8 +162,14 @@ class VarInits extends AbstractFilter {
 					loop(e);
 					for (state in vars) state.inited = true;
 
+				case TELocalFunction(f):
+					// its own scope: its returns do not end the enclosing function, and it can run at any time,
+					// so it inits nothing for the code after it (its reads of uninited vars still add inits)
+					push();
+					if (f.fun.expr != null) loop(f.fun.expr);
+					pop();
+
 				case _:
-					// TODO: maybe there's something to do with the local functions, have to check
 					iterExpr(loop, e);
 			}
 		}
