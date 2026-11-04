@@ -10,7 +10,8 @@
  * Vector.filter/every/some/forEach with an (item, index, vector) callback go through ASCompat.ASVectorTools
  * (Starling's AssetManager.dequeue); a one-argument callback stays a Vector method call.
  * reverse/map/some route to compat helpers for Array/Vector.
- * untyped concat arguments should report a non-blocking error.
+ * concat of untyped values (an Array or one item, known at runtime), or of several values, calls
+ * ASCompat.ASArray.concat.
  * Vector sort/splice paths are covered.
  * Array methods on TTAny/ASAny objects are transformed to ASCompat.dyn* calls.
  */
@@ -38,6 +39,7 @@ package {
             var withOne:Array = items.concat(3);
             var any:* = {};
             items.concat(any);
+            var several:Array = items.concat([1], 2, any);
 
             var joined:String = items.join();
 

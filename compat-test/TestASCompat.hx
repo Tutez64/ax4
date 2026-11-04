@@ -1041,6 +1041,18 @@ class TestASCompat extends utest.Test {
 		equals(0, ASCompat.nextIndex(ASCompat.haxeMapStorage(new haxe.ds.StringMap<Int>()), 0));
 	}
 
+	function testArrayConcat() {
+		var a:Array<Dynamic> = [1];
+		var runtimeArray:Dynamic = [2, 3];
+		var one:Dynamic = {x: 4};
+		var result = ASCompat.ASArray.concat(a, [runtimeArray, 5, one]);
+		equals(5, result.length);
+		equals(3, result[2]);
+		equals(5, result[3]);
+		equals(4, result[4].x);
+		equals(1, a.length);
+	}
+
 	function testNextIndexOnObjectsAndArrays() {
 		var array:Array<Dynamic> = ["x", "y"];
 		equals(1, ASCompat.nextIndex(array, 0));

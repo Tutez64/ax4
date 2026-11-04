@@ -146,8 +146,7 @@ class ArrayApi extends AbstractFilter {
 						e.with(kind = TECall(eConcatMethod, args.with(args = [{expr: eArrayDecl, comma: null}])));
 
 					case _:
-						reportError(exprPos(e), "Unhandled Array.concat() call (possibly untyped?). Leaving as is.");
-						e;
+						rewriteDynamicConcat(e, eArray, args);
 				}
 
 			// join with no args
@@ -469,5 +468,13 @@ class ArrayApi extends AbstractFilter {
 			eobj: eSplice,
 			eindex: mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, "0", [], []))), TTInt, TTInt)
 		}));
+	}
+
+	/** Concat of untyped values (an Array or one item, known at runtime), or of several values: ASCompat.ASArray.concat. **/
+	static function rewriteDynamicConcat(e:TExpr, eArray:TExpr, args:TCallArgs):TExpr {
+		var eMethod = mkBuiltin("ASCompat.ASArray.concat", TTFunction, removeLeadingTrivia(eArray));
+		var elements = [for (arg in args.args) {expr: arg.expr.with(expectedType = arg.expr.type), comma: arg.comma}];
+		var eValues = mk(TEArrayDecl({syntax: {openBracket: mkOpenBracket(), closeBracket: mkCloseBracket()}, elements: elements}), tUntypedArray, tUntypedArray);
+		return mkCall(eMethod, [eArray, eValues], eArray.type, removeTrailingTrivia(e)).with(expectedType = e.expectedType);
 	}
 }

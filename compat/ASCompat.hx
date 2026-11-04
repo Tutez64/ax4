@@ -1987,6 +1987,22 @@ class ASArray {
 		return a;
 	}
 
+	/**
+		AS3's concat with values typed only at runtime, or several: each Array value is appended item by
+		item, any other value as one item, into a new Array.
+	**/
+	public static function concat<T>(a:Array<T>, values:Array<Dynamic>):Array<T> {
+		var result = a.copy();
+		for (value in values) {
+			if (Std.isOfType(value, Array)) {
+				for (item in (value : Array<Dynamic>)) result.push(item);
+			} else {
+				result.push(value);
+			}
+		}
+		return result;
+	}
+
 	public static function some<T>(a:Array<T>, callback:(item:T, index:Int, array:Array<T>)->Bool, ?thisObj:Dynamic):Bool {
 		for (i in 0...a.length) {
 			var result:Bool =
