@@ -166,7 +166,8 @@ package {
             hashA += hashCarry;
 
             // Case 18: Simulate RewriteForIn generated iteratee temp var naming.
-            // A synthetic "__ax4_iter_*" iteratee local should prefer Array<Any> over ASAny.
+            // A synthetic "__ax4_iter_*" iteratee local of an untyped value stays ASAny: the value may be
+            // a Vector, a Dictionary or an Object, which an Array<ASAny> would turn into null.
             var data:* = {"attacks":[{"attackName":"A"}]};
             var __ax4_iter_999:* = data.attacks;
             for each (var attackEntry in __ax4_iter_999) {
