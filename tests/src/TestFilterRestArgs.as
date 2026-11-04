@@ -6,6 +6,8 @@
  * - rest parameter renaming must avoid collisions (`args`, `_args`, `__args`) while preserving body references
  * - local functions and anonymous functions with rest should also be rewritten
  * - anonymous rest closures escaping as `Function` values must be wrapped for dynamic call safety
+ *   (Reflect.makeVarArgs, which passes one Array: the arguments before the rest are read from it,
+ *   an optional one taking its default value when missing)
  */
 package {
 	public class TestFilterRestArgs {
@@ -69,7 +71,11 @@ package {
 				return prefix + ":" + rest.length;
 			};
 
-			var localValue:int = local(2, 10, 20, 30);
+			var optional:Function = function(first:int, second:int = 3, ...rest):int {
+				return first + second + rest.length;
+			};
+
+			var localValue:int = local(2, 10, 20, 30) + optional(1);
 			var anonValue:String = String(anon(tag, 1, 2, 3, 4));
 			return anonValue + ":" + localValue;
 		}

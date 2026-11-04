@@ -79,6 +79,9 @@ class RestArgs extends AbstractFilter {
 				processFunction(f.fun);
 				if (shouldWrapAnonymousRestClosure(f)) {
 					normalizeRestArgForVarArgs(f.fun.sig.args[f.fun.sig.args.length - 1]);
+					if (f.fun.sig.args.length > 1) {
+						readFixedArgsFromArray(f.fun);
+					}
 					var lead = removeLeadingTrivia(e);
 					var trail = removeTrailingTrivia(e);
 						var eMakeVarArgs = mkBuiltin("Reflect.makeVarArgs", TTFunction, lead, []);
@@ -123,6 +126,68 @@ class RestArgs extends AbstractFilter {
 				true;
 			case _:
 				false;
+		}
+	}
+
+	/**
+		Reflect.makeVarArgs passes all the arguments as one Array, so a closure with arguments before
+		its rest takes that Array and reads them from it:
+		`function(__args:Array<ASAny>) { var ch:String = __args[0]; var _rest = __args.slice(1); ... }`.
+	**/
+	static function readFixedArgsFromArray(fun:TFunction) {
+		var args = fun.sig.args;
+		// the declarations take the indentation of the body's first statement
+		var indent = switch fun.expr.kind {
+			case TEBlock(b) if (b.exprs.length > 0): extractIndent(processLeadingToken(t -> t.leadTrivia, b.exprs[0].expr));
+			case _: [];
+		}
+		var argsVar:TVar = {name: makeUniqueParamName("_args", args), type: tUntypedArray};
+		var decls:Array<TBlockExpr> = [];
+		for (i in 0...args.length) {
+			var arg = args[i];
+			var argsLocal = mk(TELocal(mkIdent(argsVar.name), argsVar), argsVar.type, argsVar.type);
+			var index = mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, Std.string(i), [], []))), TTInt, TTInt);
+			var typeHint:Null<TypeHint> = null;
+			var defaultValue:Null<TExpr> = null;
+			switch arg.kind {
+				case TArgNormal(hint, init):
+					typeHint = hint;
+					if (init != null) defaultValue = init.expr;
+				case TArgRest(_):
+			}
+			var value = if (i == args.length - 1) {
+				var eSlice = mk(TEField({kind: TOExplicit(mkDot(), argsLocal), type: argsVar.type}, "slice", mkIdent("slice")), TTFun([TTInt], tUntypedArray), TTFun([TTInt], tUntypedArray));
+				mkCall(eSlice, [index], tUntypedArray);
+			} else {
+				var access = mk(TEArrayAccess({syntax: {openBracket: mkOpenBracket(), closeBracket: mkCloseBracket()}, eobj: argsLocal, eindex: index}), TTAny, arg.type);
+				if (defaultValue == null) {
+					access;
+				} else {
+					// a missing optional argument takes its default value
+					var lengthField = mk(TEField({kind: TOExplicit(mkDot(), argsLocal), type: argsVar.type}, "length", mkIdent("length")), TTInt, TTInt);
+					var cond = mk(TEBinop(lengthField, OpGt(mkTokenWithSpaces(TkGt, ">")), index), TTBoolean, TTBoolean);
+					mk(TETernary({syntax: {question: mkTokenWithSpaces(TkQuestion, "?"), colon: mkTokenWithSpaces(TkColon, ":")}, econd: cond, ethen: access, eelse: defaultValue}), arg.type, arg.type);
+				}
+			}
+			var decl:TVarDecl = {
+				syntax: {name: mkIdent(arg.name), type: typeHint},
+				v: arg.v,
+				init: {equalsToken: mkTokenWithSpaces(TkEquals, "="), expr: value.with(expectedType = arg.type)},
+				comma: null
+			};
+			decls.push({expr: mk(TEVars(VVar(mkIdent("var", cloneTrivia(indent), [whitespace])), [decl]), TTVoid, TTVoid), semicolon: new Token(0, TkSemicolon, ";", [], [newline])});
+		}
+		fun.sig.args = [{
+			syntax: {name: mkIdent(argsVar.name)},
+			name: argsVar.name,
+			type: argsVar.type,
+			v: argsVar,
+			kind: TArgNormal(ensureArrayTypeHint(null), null),
+			comma: null
+		}];
+		fun.expr = switch fun.expr.kind {
+			case TEBlock(b): fun.expr.with(kind = TEBlock({syntax: b.syntax, exprs: decls.concat(b.exprs)}));
+			case _: concatExprs(mk(TEBlock({syntax: {openBrace: mkOpenBrace(), closeBrace: mkCloseBrace()}, exprs: decls}), TTVoid, TTVoid), fun.expr);
 		}
 	}
 
