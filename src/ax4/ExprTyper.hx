@@ -659,7 +659,15 @@ class ExprTyper {
 					return typeXMLFieldAccess(obj, dot, fieldToken, expectedType);
 				case [_, {type: TTXMLList}]:
 					return typeXMLListFieldAccess(obj, dot, fieldToken, expectedType);
-				case [_, {type: TTInst(cls)}]: typeInstanceField(cls, fieldName, fieldToken.pos);
+				case [_, {type: TTInst(cls)}]:
+					var fieldType = findInstanceFieldType(cls, fieldName);
+					if (fieldType == null && Main.haxeCompiled) {
+						// Haxe's unchecked cast ((cast o : T).f) leaves nothing in the bytecode: read the field dynamically
+						err('Unknown instance field $fieldName on class ${cls.name}, read dynamically (an unchecked Haxe cast?)', fieldToken.pos);
+						var anyObj = mk(TEHaxeRetype(obj), TTAny, TTAny);
+						return mkExplicitFieldAccess(anyObj, dot, fieldToken, TTAny, expectedType);
+					}
+					if (fieldType == null) throwErr('Unknown instance field $fieldName on class ${cls.name}', fieldToken.pos) else fieldType;
 				case [_, {type: TTStatic(cls)}]: typeStaticField(cls, fieldName);
 		}
 		return mkExplicitFieldAccess(obj, dot, fieldToken, type, expectedType);
@@ -682,6 +690,11 @@ class ExprTyper {
 	}
 
 	function typeInstanceField(cls:TClassOrInterfaceDecl, fieldName:String, pos):TType {
+		var type = findInstanceFieldType(cls, fieldName);
+		return if (type != null) type else throwErr('Unknown instance field $fieldName on class ${cls.name}', pos);
+	}
+
+	function findInstanceFieldType(cls:TClassOrInterfaceDecl, fieldName:String):Null<TType> {
 		if (fieldName == "length" && isArrayClass(cls)) {
 			// Flash Array.length is uint, but Haxe exposes Int.
 			return TTInt;
@@ -720,7 +733,7 @@ class ExprTyper {
 			return TTAny;
 		}
 
-		return throwErr('Unknown instance field $fieldName on class ${cls.name}', pos);
+		return null;
 	}
 
 	function isArrayClass(cls:TClassOrInterfaceDecl):Bool {
