@@ -1332,7 +1332,13 @@ class GenHaxe extends PrinterBase {
 		printOpenParen(c.syntax.openParen);
 		printExpr(c.expr);
 		buf.add(", ");
-		printTType(c.type);
+		switch c.type {
+			// Haxe checks a cast to a generic type only with Dynamic type parameters
+			case TTInst(cls) if (HaxeStd.getTypeParams(cls) != ""):
+				buf.add(getClassLocalPath(cls) + HaxeStd.getCastTypeParams(cls));
+			case _:
+				printTType(c.type);
+		}
 		printTrivia(ParseTree.getDotPathTrailingTrivia(c.syntax.path));
 		printCloseParen(c.syntax.closeParen);
 	}

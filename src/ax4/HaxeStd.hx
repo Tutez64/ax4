@@ -46,6 +46,13 @@ class HaxeStd {
 		return params == null ? "" : "<" + params.join(", ") + ">";
 	}
 
+	/** The `<Dynamic, ...>` a checked cast to a generic Haxe std type needs, or "". **/
+	public static function getCastTypeParams(cls:TClassOrInterfaceDecl):String {
+		var path = compiledPath(cls);
+		var params = path == null ? null : typeParams[path];
+		return params == null ? "" : "<" + [for (_ in params) "Dynamic"].join(", ") + ">";
+	}
+
 	/** The full path of a Haxe std type declared in another module than its compiled path, or `otherwise`. **/
 	public static function getModulePath(cls:TClassOrInterfaceDecl, otherwise:String):String {
 		var path = compiledPath(cls);
