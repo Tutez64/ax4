@@ -26,7 +26,7 @@ class MathApi extends AbstractFilter {
 				args = mapCallArgs(processExpr, args);
 
 				if (e.expectedType.match(TTInt | TTUint)) {
-					e.with(type = TTInt);
+					e.with(kind = TECall(eMethod, args), type = TTInt);
 				} else {
 					fieldName = "f" + fieldName;
 					fieldToken = mkIdent(fieldName, fieldToken.leadTrivia, fieldToken.trailTrivia);
