@@ -8,6 +8,8 @@
  * - a `break` or `continue` whose loop (or a `break` whose switch) is inside the `try`,
  *   and a `return` in a local function, are left alone;
  * - a nested `finally` runs before the outer one.
+ * - the temporaries (__finallyReturnN, __finallyErrorN) are numbered per function, so they do not
+ *   depend on the order the modules are converted in.
  */
 package {
     public class TestTryFinally {

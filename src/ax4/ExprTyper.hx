@@ -1416,7 +1416,8 @@ class ExprTyper {
 		return lowerFinally(keyword, body, tCatches, typeExpr(EBlock(finally_.block), TTVoid));
 	}
 
-	static var finallyId = 0;
+	// per function (an ExprTyper types one), so the names do not depend on the order of the modules
+	var finallyId = 0;
 
 	/**
 		Haxe has no `finally`, so `try { A } catch (e:T) { B } finally { F }` becomes
