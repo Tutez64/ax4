@@ -40,6 +40,10 @@ class Tools {
 		return c.n;
 	}
 
+	public static function isFunction(x:Dynamic):Bool {
+		return Type.typeof(x) == TFunction;
+	}
+
 	public static function emoji():String {
 		return String.fromCharCode(0x1F600).length > 0 ? "yes" : "no";
 	}

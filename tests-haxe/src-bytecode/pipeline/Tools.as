@@ -81,6 +81,11 @@ package pipeline
          return c.n;
       }
       
+      public static function isFunction(x:*) : Boolean
+      {
+         return Type.§typeof§(x) == ValueType.TFunction;
+      }
+      
       public static function emoji() : String
       {
          if(Boot.fromCodePoint(128512).length > 0)

@@ -12,4 +12,6 @@ nan=true,true
 smap=2,-1,only
 omap=unit,none
 props=40,4,circle 2,shape
+loops=16,a+b+c+constructor
+typeof=true,false
 reset=-1,?

@@ -35,6 +35,9 @@ package pipeline
          var shape:Shape = new Circle(2);
          var assigned:int = shape.set_size(4);
          out.push("props=" + shape.get_size() + "," + assigned + "," + shape.get_label() + "," + new Shape("s").get_label());
+         store.add("constructor",10);
+         out.push("loops=" + store.total() + "," + store.joinedNames());
+         out.push("typeof=" + Std.string(Tools.isFunction(Tools.emoji)) + "," + Std.string(Tools.isFunction(3)));
          store.reset();
          out.push("reset=" + store.idOf("a") + "," + store.nameOf(1));
          return out;

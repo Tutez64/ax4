@@ -47,6 +47,19 @@ class Store {
 		byId.clear();
 	}
 
+	/** Inlined iterations: Haxe iterates the maps' storage with hasnext2, which FFDec prints as §§hasnext. */
+	public function total():Int {
+		var t = 0;
+		for (k in byName.keys()) t += byName.get(k);
+		return t;
+	}
+
+	public function joinedNames():String {
+		var names = [for (name in byId) name];
+		names.sort(Reflect.compare);
+		return names.join("+");
+	}
+
 	public function sumMap(m:haxe.Constraints.IMap<String, Int>):Int {
 		var t = 0;
 		for (k in m.keys()) t += m.get(k);

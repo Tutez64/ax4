@@ -29,6 +29,9 @@ class Checks {
 		var shape:Shape = new Circle(2);
 		var assigned = (shape.size = 4);
 		out.push("props=" + shape.size + "," + assigned + "," + shape.label + "," + new Shape("s").label);
+		store.add("constructor", 10);
+		out.push("loops=" + store.total() + "," + store.joinedNames());
+		out.push("typeof=" + Tools.isFunction(Tools.emoji) + "," + Tools.isFunction(3));
 		store.reset();
 		out.push("reset=" + store.idOf("a") + "," + store.nameOf(1));
 		return out;
