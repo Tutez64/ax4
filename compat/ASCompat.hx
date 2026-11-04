@@ -54,7 +54,7 @@ class ASCompat {
 		#else
 		// a Dictionary is a map outside flash: its values are not fields
 		if (Std.isOfType(v, haxe.Constraints.IMap)) {
-			return (cast v : haxe.Constraints.IMap<Dynamic, ASAny>).iterator();
+			return cast ASDictionary.valuesIn(cast v);
 		}
 		return (cast v : haxe.DynamicAccess<ASAny>).iterator();
 		#end
@@ -75,7 +75,7 @@ class ASCompat {
 		#else
 		// a Dictionary is a map outside flash: its keys are not fields, nor always Strings
 		if (Std.isOfType(v, haxe.Constraints.IMap)) {
-			return (cast v : haxe.Constraints.IMap<Dynamic, Dynamic>).keys();
+			return ASDictionary.keysIn(cast v);
 		}
 		return (cast v : haxe.DynamicAccess<ASAny>).keys().iterator();
 		#end
@@ -515,6 +515,12 @@ class ASCompat {
 		if (obj == null) {
 			return false;
 		}
+		#if !flash
+		// a Dictionary is a map outside flash: its keys are not fields
+		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
+			return ASDictionary.existsIn(cast obj, fieldName);
+		}
+		#end
 		var name = propertyName(fieldName);
 		if (hasReflectedProperty(obj, name)) {
 			return true;

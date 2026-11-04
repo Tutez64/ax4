@@ -634,6 +634,31 @@ class TestASCompat extends utest.Test {
 		isFalse(dict.exists("name"));
 	}
 
+	function testUntypedDictionaryPrimitiveKeys() {
+		// Primitive keys set through a typed Dictionary, then read through an untyped variable
+		// (for-in, for each, [], hasOwnProperty), as code compiled with Haxe does with its own maps
+		var dict:ASDictionary<ASAny, ASAny> = new ASDictionary<ASAny, ASAny>();
+		var objectKey = new TestASCompatLookupKey();
+		dict[12] = "twelve";
+		dict["name"] = "string";
+		dict[objectKey] = "object";
+		var held:ASAny = dict;
+		var keys = [for (k in held.___keys()) Std.string(k)];
+		keys.sort(Reflect.compare);
+		equals(3, keys.length);
+		isTrue(keys.contains("12"));
+		isTrue(keys.contains("name"));
+		var values = [for (v in held) Std.string(v)];
+		values.sort(Reflect.compare);
+		equals("object,string,twelve", values.join(","));
+		equals("twelve", Std.string(held[12]));
+		equals("object", Std.string(held[objectKey]));
+		isTrue(held.hasOwnProperty("12"));
+		isFalse(held.hasOwnProperty("13"));
+		held[13] = "thirteen";
+		equals("thirteen", Std.string(dict[13]));
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {

@@ -190,6 +190,46 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		return map.exists(key);
 	}
 
+	/** `[]=` for a dictionary only known at runtime, see `existsIn`. **/
+	public static function setIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic, value:Dynamic):Void {
+		if (isPrimitiveKey(key)) {
+			var entries = primitiveStore.get(map);
+			if (entries == null) {
+				entries = new haxe.ds.StringMap<Dynamic>();
+				primitiveStore.set(map, entries);
+			}
+			entries.set(primitiveKeyId(key), {key: key, value: value});
+		} else {
+			map.set(key, value);
+		}
+	}
+
+	/** `keys` for a dictionary only known at runtime, see `existsIn`. **/
+	public static function keysIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>):Iterator<Dynamic> {
+		var entries = primitiveStore.get(map);
+		if (entries == null) {
+			return map.keys();
+		}
+		var merged:Array<Dynamic> = [for (k in map.keys()) k];
+		for (entry in entries) {
+			merged.push((entry : Dynamic).key);
+		}
+		return merged.iterator();
+	}
+
+	/** `iterator` for a dictionary only known at runtime, see `existsIn`. **/
+	public static function valuesIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>):Iterator<Dynamic> {
+		var entries = primitiveStore.get(map);
+		if (entries == null) {
+			return map.iterator();
+		}
+		var merged:Array<Dynamic> = [for (v in map) v];
+		for (entry in entries) {
+			merged.push((entry : Dynamic).value);
+		}
+		return merged.iterator();
+	}
+
 	/** `remove` for a dictionary only known at runtime, see `existsIn`. **/
 	public static function removeIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Bool {
 		if (isPrimitiveKey(key)) {

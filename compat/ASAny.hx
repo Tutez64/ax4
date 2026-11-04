@@ -198,7 +198,7 @@ abstract ASAny(Dynamic)
 			#if flash
 			return (cast this : ASDictionary<Dynamic, Dynamic>)[name];
 			#else
-			return (cast dict : haxe.Constraints.IMap<Dynamic, Dynamic>).get(name);
+			return ASDictionary.getIn(cast dict, name);
 			#end
 		}
 
@@ -227,7 +227,7 @@ abstract ASAny(Dynamic)
 			#if flash
 			(cast this : ASDictionary<Dynamic, Dynamic>)[name] = value;
 			#else
-			(cast dict : haxe.Constraints.IMap<Dynamic, Dynamic>).set(name, value);
+			ASDictionary.setIn(cast dict, name, value);
 			#end
 			return value;
 		}
