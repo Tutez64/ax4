@@ -26,6 +26,9 @@ class Checks {
 		var c = new Circle(1);
 		store.tag(c, "unit");
 		out.push("omap=" + store.tagOf(c) + "," + store.tagOf(new Circle(1)));
+		var shape:Shape = new Circle(2);
+		var assigned = (shape.size = 4);
+		out.push("props=" + shape.size + "," + assigned + "," + shape.label + "," + new Shape("s").label);
 		store.reset();
 		out.push("reset=" + store.idOf("a") + "," + store.nameOf(1));
 		return out;

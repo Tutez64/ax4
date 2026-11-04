@@ -201,6 +201,9 @@ class HaxeProperties extends AbstractFilter {
 								expr: lastExpr.with(kind = TEReturn(mkIdent("return", leadTrivia, [whitespace]), lastExpr)),
 								semicolon: lastBlockExpr.semicolon
 							};
+						case TEReturn(_, _):
+							// already returns (such as a Haxe set_x merged by HaxeCompiledCode)
+							needsFinalReturn = false;
 						case _:
 					}
 				case _:

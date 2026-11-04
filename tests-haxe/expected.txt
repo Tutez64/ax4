@@ -11,4 +11,5 @@ emoji=yes
 nan=true,true
 smap=2,-1,only
 omap=unit,none
+props=40,4,circle 2,shape
 reset=-1,?

@@ -32,6 +32,9 @@ package pipeline
          var c:Circle = new Circle(1);
          store.tag(c,"unit");
          out.push("omap=" + store.tagOf(c) + "," + store.tagOf(new Circle(1)));
+         var shape:Shape = new Circle(2);
+         var assigned:int = shape.set_size(4);
+         out.push("props=" + shape.get_size() + "," + assigned + "," + shape.get_label() + "," + new Shape("s").get_label());
          store.reset();
          out.push("reset=" + store.idOf("a") + "," + store.nameOf(1));
          return out;

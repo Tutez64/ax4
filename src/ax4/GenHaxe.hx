@@ -810,6 +810,8 @@ class GenHaxe extends PrinterBase {
 				case FMFinal(t): printTextWithTrivia("final", t);
 			}
 		}
+		// an override accessor keeps its public modifier
+		var printedPublic = Lambda.exists(f.modifiers, m -> m.match(FMPublic(_)));
 
 		switch (f.kind) {
 			case TFVar(v):
@@ -828,7 +830,7 @@ class GenHaxe extends PrinterBase {
 
 			case TFGetter(f):
 				var kwd = "";
-				if (f.haxeProperty != null && f.haxeProperty.isPublic) kwd += "public ";
+				if (!printedPublic && (f.isPublicFunction == true || isPublicProperty(f.haxeProperty))) kwd += "public ";
 				if (f.isInline) kwd += "inline ";
 				kwd += "function";
 				printTextWithTrivia(kwd, f.syntax.functionKeyword);
@@ -838,7 +840,7 @@ class GenHaxe extends PrinterBase {
 				printExpr(f.fun.expr);
 			case TFSetter(f):
 				var kwd = "";
-				if (f.haxeProperty != null && f.haxeProperty.isPublic) kwd += "public ";
+				if (!printedPublic && (f.isPublicFunction == true || isPublicProperty(f.haxeProperty))) kwd += "public ";
 				if (f.isInline) kwd += "inline ";
 				kwd += "function";
 				printTextWithTrivia(kwd, f.syntax.functionKeyword);
@@ -1023,6 +1025,10 @@ class GenHaxe extends PrinterBase {
 			}
 		}
 		return false;
+	}
+
+	static function isPublicProperty(p:Null<THaxePropDecl>):Bool {
+		return p != null && p.isPublic;
 	}
 
 	function makeFQN(cls:TClassOrInterfaceDecl) {

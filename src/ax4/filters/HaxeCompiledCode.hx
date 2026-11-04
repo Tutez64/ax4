@@ -12,6 +12,11 @@ package ax4.filters;
 	  ASCompat.haxeEnumToString.
 	- `Boot.fromCodePoint(c)` calls ASCompat.fromCodePoint (String.fromCharCode, which takes any code point in Haxe).
 
+	A property `x(get, set)` compiles to its get_x and set_x methods plus a flash getter
+	`get x() { return get_x(); }` and setter `set x(v) { set_x(v); }` for AS3 code: those accessors
+	take the methods' functions and the methods are removed, so the Haxe property calls get_x and
+	set_x as Haxe declared them (calls to them keep working).
+
 	It also calls the private haxe.Exception members that Haxe's throw and catch compile to
 	through ASCompat: `Exception.thrown(v)`, `Exception.caught(v)` and `e.unwrap()`.
 
@@ -71,6 +76,77 @@ class HaxeCompiledCode extends AbstractFilter {
 		return switch e.kind {
 			case TEReturn(_, null): true;
 			case TEBlock(b): b.exprs.length == 1 && isReturnOnly(b.exprs[0].expr);
+			case _: false;
+		}
+	}
+
+	override function processClass(c:TClassOrInterfaceDecl) {
+		if (Main.haxeCompiled) {
+			mergePropertyAccessors(c);
+		}
+		super.processClass(c);
+	}
+
+	static function mergePropertyAccessors(c:TClassOrInterfaceDecl) {
+		var methods = new Map<String, {member:TClassMember, field:TFunctionField}>();
+		for (m in c.members) {
+			switch m {
+				case TMField({kind: TFFun(f)}): methods[f.name] = {member: m, field: f};
+				case _:
+			}
+		}
+		var removed = [];
+		for (m in c.members) {
+			switch m {
+				case TMField({kind: TFGetter(a)}):
+					var method = methods["get_" + a.name];
+					if (method != null && method.field.fun.sig.args.length == 0 && isAccessorStub(a.fun.expr, method.field.name, null)) {
+						a.fun = method.field.fun;
+						a.isPublicFunction = isPublicMember(method.member);
+						removed.push(method.member);
+					}
+				case TMField({kind: TFSetter(a)}) if (a.fun.sig.args.length == 1):
+					var method = methods["set_" + a.name];
+					if (method != null && method.field.fun.sig.args.length == 1 && isAccessorStub(a.fun.expr, method.field.name, a.fun.sig.args[0].v)) {
+						a.fun = method.field.fun;
+						a.isPublicFunction = isPublicMember(method.member);
+						removed.push(method.member);
+					}
+				case _:
+			}
+		}
+		if (removed.length > 0) {
+			c.members = [for (m in c.members) if (!removed.contains(m)) m];
+		}
+	}
+
+	static function isPublicMember(m:TClassMember):Bool {
+		return switch m {
+			case TMField(f): Lambda.exists(f.modifiers, m -> m.match(FMPublic(_)));
+			case _: false;
+		}
+	}
+
+	/** Whether `e` is `{ return method(); }` (`arg` null) or `{ method(arg); }`, on this or the class. **/
+	static function isAccessorStub(e:Null<TExpr>, method:String, arg:Null<TVar>):Bool {
+		if (e == null) {
+			return false;
+		}
+		var exprs = switch e.kind {
+			case TEBlock(b) if (b.exprs.length == 1): b.exprs[0].expr;
+			case _: return false;
+		}
+		var call = switch exprs.kind {
+			case TEReturn(_, call) if (arg == null && call != null): call;
+			case _ if (arg != null): exprs;
+			case _: return false;
+		}
+		return switch call.kind {
+			case TECall({kind: TEField({kind: TOImplicitThis(_) | TOImplicitClass(_) | TOExplicit(_, {kind: TELiteral(TLThis(_)) | TEDeclRef(_, _)})}, name, _)}, {args: args}) if (name == method):
+				if (arg == null) args.length == 0 else args.length == 1 && switch args[0].expr.kind {
+					case TELocal(_, v): v == arg;
+					case _: false;
+				};
 			case _: false;
 		}
 	}

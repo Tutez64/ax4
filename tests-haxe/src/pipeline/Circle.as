@@ -16,6 +16,11 @@ package pipeline
          }
       }
       
+      override public function get_label() : String
+      {
+         return "circle " + radius;
+      }
+      
       override public function area() : Number
       {
          return Math.PI * radius * radius;

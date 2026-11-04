@@ -548,6 +548,8 @@ typedef TAccessorField = {
 	var haxeProperty:Null<THaxePropDecl>;
 	var isInline:Bool;
 	var semicolon:Null<Token>;
+	/** Print the get_x/set_x function public whatever the property's visibility (code calls it). **/
+	@:optional var isPublicFunction:Bool;
 }
 
 typedef TVarField = {
