@@ -214,7 +214,18 @@ class Typer {
 						case MUseNamespace(n, semicolon):
 							tMembers.push(TMUseNamespace(n, semicolon));
 						case MField(f):
-							tMembers.push(TMField(typeClassField(mod, f, typerContext)));
+							var field = typeClassField(mod, f, typerContext);
+							switch field.kind {
+								// another function named as the class, which only decompiled non-AS3 code has (a Haxe
+								// port's leftover init method): a method, renamed so it is not a second constructor
+								case TFFun(fun) if (fun.name == tCls.name && hasConstructor(tMembers, tCls.name)):
+									var newName = fun.name + "_";
+									err(mod, 'Function ${fun.name} has the name of its class, which has a constructor: renamed to $newName', fun.syntax.name.pos);
+									fun.name = newName;
+									fun.syntax.name = new Token(fun.syntax.name.pos, TkIdent, newName, fun.syntax.name.leadTrivia, fun.syntax.name.trailTrivia);
+								case _:
+							}
+							tMembers.push(TMField(field));
 						case MStaticInit(block):
 							var initHolder = {expr: mk(TELiteral(TLNull(Token.nullToken)), TTVoid, TTVoid)};
 							tMembers.push(TMStaticInit(initHolder));
@@ -229,6 +240,16 @@ class Typer {
 		});
 
 		return tCls;
+	}
+
+	static function hasConstructor(members:Array<TClassMember>, className:String):Bool {
+		for (m in members) {
+			switch m {
+				case TMField({kind: TFFun({name: name})}) if (name == className): return true;
+				case _:
+			}
+		}
+		return false;
 	}
 
 	function typeClassField(mod:TModule, f:ClassField, typerContext:ExprTyper.TyperContext):TClassField {
