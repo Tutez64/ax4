@@ -25,6 +25,7 @@ class Filters {
 			new HandleStaticInstanceConflict.RenameStaticInstanceConflicts(context, detectStaticInstanceConflicts),
 			new EscapeHaxeKeywords(context),
 			new RewriteAssignOps(context),
+			new ByteArraySubclassLength(context),
 			new WrapModuleLevelDecls(context),
 			new HandleVisibilityModifiers(context),
 			new RewriteMeta(context),
