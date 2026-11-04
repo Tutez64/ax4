@@ -25,10 +25,40 @@ class HaxeInlinedMaps extends AbstractFilter {
 		return c.parentModule != null && c.parentModule.parentPack.name == "haxe.ds" && names.contains(c.name);
 	}
 
+	/**
+		The types the current function's untyped locals were declared with: FFDec declares a local whose
+		register holds several types `var m:* = null as StringMap`, keeping the Haxe local's type.
+	**/
+	static var declaredTypes = new Map<TVar, TType>();
+
+	/** A local's type, which InferLocalVarTypes can have set after its reads were typed, or the one it was declared with. **/
+	static function localType(v:TVar):TType {
+		var declared = declaredTypes[v];
+		return if (declared != null && v.type.match(TTAny | TTObject(TTAny))) declared else v.type;
+	}
+
+	static function findDeclaredTypes(body:TExpr) {
+		declaredTypes = new Map();
+		function loop(e:TExpr) {
+			switch e.kind {
+				case TEVars(_, decls):
+					for (d in decls) {
+						switch d.init {
+							case {expr: {kind: TEAs({kind: TELiteral(TLNull(_))}, _, {type: type = TTInst(_)})}}:
+								declaredTypes[d.v] = type;
+							case _:
+						}
+					}
+				case _:
+			}
+			iterExpr(loop, e);
+		}
+		loop(body);
+	}
+
 	static function isStdMap(e:TExpr, names:Array<String>):Bool {
-		// a local's type, which InferLocalVarTypes can have set after its reads were typed
 		var type = switch skipParens(e).kind {
-			case TELocal(_, v): v.type;
+			case TELocal(_, v): localType(v);
 			case _: e.type;
 		}
 		return switch type {
@@ -44,7 +74,7 @@ class HaxeInlinedMaps extends AbstractFilter {
 
 	static function keyType(map:TExpr):TType {
 		var type = switch skipParens(map).kind {
-			case TELocal(_, v): v.type;
+			case TELocal(_, v): localType(v);
 			case _: map.type;
 		}
 		return switch type {
@@ -102,6 +132,7 @@ class HaxeInlinedMaps extends AbstractFilter {
 
 	override function processFunction(fun:TFunction) {
 		var outerVars = storageVars;
+		if (Main.haxeCompiled && fun.expr != null) findDeclaredTypes(fun.expr);
 		storageVars = if (Main.haxeCompiled && fun.expr != null) findStorageVars(fun.expr) else [];
 		super.processFunction(fun);
 		storageVars = outerVars;

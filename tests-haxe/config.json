@@ -1,5 +1,5 @@
 {
-  "src": ["tests-haxe/src", "tests-haxe/src-bytecode"],
+  "src": ["tests-haxe/src", "tests-haxe/src-bytecode", "tests-haxe/src-handwritten"],
   "hxout": "tests-haxe/out",
   "swc": [
     "tests/lib/airglobal.swc",
