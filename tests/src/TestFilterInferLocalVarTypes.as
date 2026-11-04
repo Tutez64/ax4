@@ -187,6 +187,15 @@ package {
             var late:* = 0;
             late++;
             late = "text";
+
+            // Case 21: A local sorted with a typed comparator is a Vector of that type, unless it
+            // holds an Array: `rows` stays an Array.
+            var sorted:* = null;
+            sorted.sort(function(a:String, b:String):int { return 0; });
+            var rows:* = null as Array;
+            rows = [];
+            rows.push(["a"]);
+            rows.sort(function(a:Array, b:Array):int { return a.length - b.length; });
         }
     }
 }

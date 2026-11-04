@@ -575,7 +575,9 @@ class InferLocalVarTypes extends AbstractFilter {
 							var info = infoFromFieldObject(obj);
 							if (info != null) {
 								var elemType = inferSortElementType(args);
-								if (elemType != null) {
+								// a local that holds an Array stays one: its values would not be Vectors
+								var holdsArray = info.hint != null && info.hint.match(TTArray(_));
+								if (elemType != null && !holdsArray) {
 									info.hint = TTVector(elemType);
 									info.incompatible = false;
 								}
