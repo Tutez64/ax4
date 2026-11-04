@@ -772,14 +772,13 @@ class ASCompat {
 		var value:Dynamic = untyped dict[key];
 		return value == null || isUndefinedValue(value);
 		#else
-		try {
-			var asDict:ASDictionary<Dynamic, Dynamic> = cast dict;
-			if (!asDict.exists(cast key)) {
+		if (Std.isOfType(dict, haxe.Constraints.IMap)) {
+			var map:haxe.Constraints.IMap<Dynamic, Dynamic> = cast dict;
+			if (!ASDictionary.existsIn(map, key)) {
 				return true;
 			}
-			var value:Dynamic = asDict[cast key];
+			var value:Dynamic = ASDictionary.getIn(map, key);
 			return value == null || isUndefinedValue(value);
-		} catch (_:Dynamic) {
 		}
 		var fallback = getProperty(dict, key);
 		return fallback == null || isUndefinedValue(fallback);

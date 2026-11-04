@@ -610,6 +610,15 @@ class TestASCompat extends utest.Test {
 		dict[key] = 123;
 		isFalse(ASCompat.dictionaryLookupEqNull(dict, key));
 		isTrue(ASCompat.dictionaryLookupNeNull(dict, key));
+
+		// An object key of a dictionary typed with object keys
+		var objects:ASDictionary<ASAny, ASAny> = new ASDictionary<ASAny, ASAny>(true);
+		var objectKey = new TestASCompatLookupKey();
+		isTrue(ASCompat.dictionaryLookupEqNull(objects, objectKey));
+		objects[objectKey] = 1;
+		isFalse(ASCompat.dictionaryLookupEqNull(objects, objectKey));
+		isTrue(ASCompat.dictionaryLookupNeNull(objects, objectKey));
+		isTrue(ASCompat.dictionaryLookupEqNull(objects, new TestASCompatLookupKey()));
 	}
 
 	function testMapItemForNullComparisons() {
@@ -1263,4 +1272,8 @@ private class NullGetterClip extends flash.display.MovieClip {
 	function get_slot():Dynamic {
 		return null;
 	}
+}
+
+private class TestASCompatLookupKey {
+	public function new() {}
 }

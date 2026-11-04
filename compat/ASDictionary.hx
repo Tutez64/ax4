@@ -177,6 +177,36 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		#end
 	}
 
+	#if !flash
+	/**
+		`exists` for a dictionary only known at runtime: typed as `ASDictionary<Dynamic, Dynamic>`,
+		openfl's Dictionary would read it as a StringMap.
+	**/
+	public static function existsIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Bool {
+		if (isPrimitiveKey(key)) {
+			var entries = primitiveStore.get(map);
+			return entries != null && entries.exists(primitiveKeyId(key));
+		}
+		return map.exists(key);
+	}
+
+	/** `[]` for a dictionary only known at runtime, see `existsIn`. **/
+	public static function getIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Dynamic {
+		if (existsIn(map, key)) {
+			if (isPrimitiveKey(key)) {
+				var entry:Dynamic = primitiveStore.get(map).get(primitiveKeyId(key));
+				return entry.value;
+			}
+			return map.get(key);
+		}
+		#if js
+		return js.Syntax.code("undefined");
+		#else
+		return ASCompat.UNDEFINED;
+		#end
+	}
+	#end
+
 	public static inline function asDictionary<K,V>(v:Any):Null<Dictionary<K,V>> {
 		#if flash
 		return flash.Lib.as(v, flash.utils.Dictionary);
