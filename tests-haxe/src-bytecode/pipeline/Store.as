@@ -17,12 +17,15 @@ package pipeline
       
       public var byId:IntMap;
       
+      public var anyMap:IMap;
+      
       public function Store()
       {
          if(Boot.skip_constructor)
          {
             return;
          }
+         anyMap = new IntMap();
          tags = new ObjectMap();
          byId = new IntMap();
          byName = new StringMap();
@@ -133,6 +136,12 @@ package pipeline
          byId.h = new Dictionary();
       }
       
+      public function putAny(k:int, v:String) : void
+      {
+         var m:IntMap = IntMap(anyMap);
+         m.h[k] = v;
+      }
+      
       public function nameOf(id:int) : String
       {
          var _this:IntMap = byId;
@@ -197,6 +206,37 @@ package pipeline
       {
          var _this:StringMap = byName;
          return Store.first(new StringMapKeysIterator(_this.h,_this.rh));
+      }
+      
+      public function anyKeys() : String
+      {
+         var _loc8_:* = null as Dictionary;
+         var _loc9_:int = 0;
+         var _loc10_:Boolean = false;
+         var _loc11_:int = 0;
+         var _loc1_:Dictionary = IntMap(anyMap).h;
+         var _loc2_:int = 0;
+         var _loc3_:Dictionary = _loc1_;
+         var _loc4_:int = _loc2_;
+         var _loc5_:Boolean = §§hasnext(_loc3_,_loc4_);
+         var _loc6_:int = _loc4_;
+         var _loc7_:Array = [];
+         while(true)
+         {
+            _loc8_ = _loc1_;
+            _loc9_ = _loc2_;
+            _loc10_ = §§hasnext(_loc8_,_loc9_);
+            _loc6_ = _loc9_;
+            if(!_loc10_)
+            {
+               break;
+            }
+            _loc11_ = §§nextname(_loc6_,_loc1_);
+            _loc2_ = _loc6_;
+            _loc7_.push(_loc11_);
+         }
+         _loc7_.sort(Reflect.compare);
+         return _loc7_.join("+");
       }
       
       public function add(name:String, id:int) : void

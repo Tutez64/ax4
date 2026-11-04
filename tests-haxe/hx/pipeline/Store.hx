@@ -60,6 +60,22 @@ class Store {
 		return names.join("+");
 	}
 
+	/** Through an unchecked cast, the decompiled code reads the storage of a map typed IMap. */
+	public var anyMap:haxe.Constraints.IMap<Int, String> = new IntMap<String>();
+
+	public function putAny(k:Int, v:String):Void {
+		var m:IntMap<String> = cast anyMap;
+		m.set(k, v);
+	}
+
+	public function anyKeys():String {
+		var it:Iterator<Int> = (cast anyMap : IntMap<String>).keys();
+		var ks = [];
+		while (it.hasNext()) ks.push(it.next());
+		ks.sort(Reflect.compare);
+		return ks.join("+");
+	}
+
 	public function sumMap(m:haxe.Constraints.IMap<String, Int>):Int {
 		var t = 0;
 		for (k in m.keys()) t += m.get(k);

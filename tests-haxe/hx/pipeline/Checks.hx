@@ -32,6 +32,9 @@ class Checks {
 		store.add("constructor", 10);
 		out.push("loops=" + store.total() + "," + store.joinedNames());
 		out.push("typeof=" + Tools.isFunction(Tools.emoji) + "," + Tools.isFunction(3));
+		store.putAny(7, "seven");
+		store.putAny(2, "two");
+		out.push("imapcast=" + store.anyKeys() + "," + store.anyMap.get(7));
 		store.reset();
 		out.push("reset=" + store.idOf("a") + "," + store.nameOf(1));
 		return out;
