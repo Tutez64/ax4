@@ -120,6 +120,6 @@ abstract ASObject(flash.utils.Object)
 	@:op(a >= b) static function ___gte2(a:Float, b:ASObject):Bool return a >= b.___toFloat();
 	@:op(a <= b) static function ___lte2(a:Float, b:ASObject):Bool return a <= b.___toFloat();
 
-	@:op([]) inline function ___arrayGet(name:ASObject):ASAny return ASCompat.getProperty(this, ASCompat.toString(name));
-	@:op([]) inline function ___arraySet(name:ASObject, value:ASAny):ASAny return ___set(name, value);
+	@:op([]) inline function ___arrayGet(name:ASObject):ASAny return ASCompat.getIndexed(this, name);
+	@:op([]) inline function ___arraySet(name:ASObject, value:ASAny):ASAny return ASCompat.setIndexed(this, name, value);
 }

@@ -668,6 +668,25 @@ class TestASCompat extends utest.Test {
 		equals("own 3", ASCompat.callNumberMethod(new TestASCompatToFixedOwner(), "toFixed", 3));
 	}
 
+	function testObjectIndexAccess() {
+		// [] on an Object-typed value holding an Array or a Dictionary: an index or a key, not a field
+		var array:ASObject = [10, 20];
+		equals(20, ASCompat.toInt(array["1"]));
+		array["0"] = 11;
+		equals(11, ASCompat.toInt(array[0]));
+		var dict:ASDictionary<ASAny, ASAny> = new ASDictionary<ASAny, ASAny>();
+		var key = new TestASCompatLookupKey();
+		var held:ASObject = dict;
+		held[key] = "object";
+		held[5] = "five";
+		equals("object", Std.string(dict[key]));
+		equals("five", Std.string(held[5]));
+		var plain:ASObject = {name: "field"};
+		equals("field", Std.string(plain["name"]));
+		plain["other"] = 2;
+		equals(2, ASCompat.toInt(plain.other));
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {

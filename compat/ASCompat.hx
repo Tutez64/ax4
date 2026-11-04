@@ -450,6 +450,61 @@ class ASCompat {
 		#end
 	}
 
+	/** `obj[name]` on an Object: an Array index, a Dictionary key, else a property (a method read stays unbound). **/
+	public static function getIndexed(obj:Dynamic, name:Dynamic):Dynamic {
+		if (Std.isOfType(obj, Array)) {
+			var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
+			if (index != null) {
+				return (cast obj : Array<Dynamic>)[index];
+			}
+		} else if (Std.isOfType(obj, ASArrayBase)) {
+			var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
+			if (index != null) {
+				return (cast obj : ASArrayBase).get(index);
+			}
+		}
+		#if flash
+		if (Std.isOfType(obj, flash.utils.Dictionary)) {
+			return untyped obj[name];
+		}
+		#else
+		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
+			return ASDictionary.getIn(cast obj, name);
+		}
+		#end
+		return getProperty(obj, toString(name));
+	}
+
+	/** `obj[name] = value` on an Object, see `getIndexed`. **/
+	public static function setIndexed(obj:Dynamic, name:Dynamic, value:Dynamic):Dynamic {
+		if (Std.isOfType(obj, Array)) {
+			var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
+			if (index != null) {
+				return (cast obj : Array<Dynamic>)[index] = value;
+			}
+		} else if (Std.isOfType(obj, ASArrayBase)) {
+			var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
+			if (index != null) {
+				(cast obj : ASArrayBase).set(index, value);
+				return value;
+			}
+		}
+		#if flash
+		if (Std.isOfType(obj, flash.utils.Dictionary)) {
+			return untyped obj[name] = value;
+		}
+		#else
+		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
+			ASDictionary.setIn(cast obj, name, value);
+			return value;
+		}
+		#end
+		if (obj != null) {
+			Reflect.setProperty(obj, toString(name), value);
+		}
+		return value;
+	}
+
 	public static function getProperty(obj:Dynamic, fieldName:Dynamic):Dynamic {
 		if (obj == null) {
 			return null;
