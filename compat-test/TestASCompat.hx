@@ -687,6 +687,16 @@ class TestASCompat extends utest.Test {
 		equals(2, ASCompat.toInt(plain.other));
 	}
 
+	function testUntypedVectorIteration() {
+		// for each and for-in on an untyped Vector: its elements and indices, not its fields
+		var vector = new flash.Vector<String>();
+		vector.push("a");
+		vector.push("b");
+		var held:ASAny = vector;
+		equals("a,b", [for (v in held) Std.string(v)].join(","));
+		equals("0,1", [for (k in held.___keys()) Std.string(k)].join(","));
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {

@@ -52,6 +52,11 @@ class ASCompat {
 		#if flash
 		return new NativeValueIterator<ASAny>(v);
 		#else
+		// a Vector is an object outside flash: its elements are not fields
+		if (v != null && _isVector(v)) {
+			// typed as a Vector<T>, openfl's Vector would pick one implementation class at compile time
+			return Reflect.callMethod(v, Reflect.field(v, "iterator"), []);
+		}
 		// a Dictionary is a map outside flash: its values are not fields
 		if (Std.isOfType(v, haxe.Constraints.IMap)) {
 			return cast ASDictionary.valuesIn(cast v);
@@ -73,6 +78,10 @@ class ASCompat {
 		#if flash
 		return new NativePropertyIterator<String>(v);
 		#else
+		// a Vector is an object outside flash: its indices are not fields
+		if (v != null && _isVector(v)) {
+			return indexKeys(Reflect.callMethod(v, Reflect.field(v, "get_length"), []));
+		}
 		// a Dictionary is a map outside flash: its keys are not fields, nor always Strings
 		if (Std.isOfType(v, haxe.Constraints.IMap)) {
 			return ASDictionary.keysIn(cast v);
