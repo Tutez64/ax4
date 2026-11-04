@@ -214,10 +214,13 @@ class GenHaxe extends PrinterBase {
 	}
 
 	function printNamespace(ns:NamespaceDecl) {
+		// Haxe has no namespaces: the declaration stays as a comment, which leaves its module empty
+		buf.add("/* ");
 		printDeclModifiers(ns.modifiers);
 		printTextWithTrivia("namespace", ns.keyword);
 		printTextWithTrivia(ns.name.text, ns.name);
 		printSemicolon(ns.semicolon);
+		buf.add(" */");
 	}
 
 	function printFunctionDecl(f:TFunctionDecl) {
