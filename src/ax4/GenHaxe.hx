@@ -977,7 +977,15 @@ class GenHaxe extends PrinterBase {
 		}
 	}
 
+	/** The module path of a top-level Haxe std type declared in another module (`Type.ValueType`), which nothing imports, or "". **/
+	static function getTopLevelStdPath(cls:TClassOrInterfaceDecl):String {
+		return if (cls.parentModule != null && cls.parentModule.parentPack.name == "") HaxeStd.getModulePath(cls, "") else "";
+	}
+
 	inline function getClassLocalPath(cls:TClassOrInterfaceDecl):String {
+		if (getTopLevelStdPath(cls) != "") {
+			return getTopLevelStdPath(cls);
+		}
 		if (isModulePrivateClass(cls)) {
 			return normalizeTypeName(cls.name);
 		}
@@ -1179,6 +1187,10 @@ class GenHaxe extends PrinterBase {
 				buf.add("ASDictionary.type");
 				printTrivia(TypedTreeTools.removeTrailingTrivia(e));
 
+			case TEDeclRef(dotPath, {kind: TDClassOrInterface(cls)}) if (dotPath.rest.length == 0 && getTopLevelStdPath(cls) != ""):
+				printTrivia(dotPath.first.leadTrivia);
+				buf.add(getTopLevelStdPath(cls));
+				printTrivia(dotPath.first.trailTrivia);
 			case TEDeclRef(dotPath, {kind: TDClassOrInterface(cls)}) if (isDeclRefPathShadowed(dotPath, cls)):
 				// a path that would resolve elsewhere is printed as a type is: `DisplayObject` shadowed by an
 				// import of the private section, or `starling.display.X` by a `starling` field

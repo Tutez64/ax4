@@ -28,6 +28,7 @@ class HaxeStd {
 	/** Haxe std types declared in another module than their compiled path. **/
 	static final modulePaths = [
 		"haxe.IMap" => "haxe.Constraints.IMap",
+		"ValueType" => "Type.ValueType",
 	];
 
 	static function compiledPath(cls:TClassOrInterfaceDecl):Null<String> {
