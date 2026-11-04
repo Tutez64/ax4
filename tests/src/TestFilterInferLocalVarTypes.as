@@ -196,6 +196,11 @@ package {
             rows = [];
             rows.push(["a"]);
             rows.sort(function(a:Array, b:Array):int { return a.length - b.length; });
+
+            // Case 22: AS3's || and && give one of their operands: `either` is not a Boolean, `both` is.
+            var holder:Object = {a: [1], b: [2]};
+            var either:* = holder.a || holder.b;
+            var both:* = (rows.length > 0) || (either == null);
         }
     }
 }

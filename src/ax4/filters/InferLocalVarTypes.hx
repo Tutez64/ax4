@@ -711,7 +711,12 @@ class InferLocalVarTypes extends AbstractFilter {
 				if (isBitwiseOp(op)) return TTInt;
 				if (isArithmeticOp(op)) return TTNumber;
 				if (isComparisonOp(op)) return TTBoolean;
-				if (isBoolOp(op)) return TTBoolean;
+				if (isBoolOp(op)) {
+					// AS3's || and && give one of their operands, not a Boolean
+					var ha = hintFromExpr(a, mapValueHints, mapIteratorHints);
+					var hb = hintFromExpr(b, mapValueHints, mapIteratorHints);
+					return if (ha != null && hb != null && typeEq(ha, hb)) ha else null;
+				}
 
 				if (op.match(OpAdd(_))) {
 					var ha = hintFromExpr(a, mapValueHints, mapIteratorHints);
