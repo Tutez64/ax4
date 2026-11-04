@@ -269,6 +269,9 @@ class ExprTyper {
 
 			case ENew(keyword, e, args): typeNew(keyword, e, args, expectedType);
 			case EField(eobj, dot, fieldName): typeField(eobj, dot, fieldName, expectedType);
+			// the parser reads {} as a block, which is an empty object where a value is expected
+			case EBlock(b) if (b.exprs.length == 0 && expectedType != TTVoid):
+				mk(TEObjectDecl({syntax: {openBrace: b.openBrace, closeBrace: b.closeBrace}, fields: []}), tUntypedObject, expectedType);
 			case EBlock(b): mk(TEBlock(typeBlock(b)), TTVoid, TTVoid);
 			case EObjectDecl(openBrace, fields, closeBrace): typeObjectDecl(openBrace, fields, closeBrace, expectedType);
 			case EIf(keyword, openParen, econd, closeParen, ethen, eelse): typeIf(keyword, openParen, econd, closeParen, ethen, eelse, expectedType);
