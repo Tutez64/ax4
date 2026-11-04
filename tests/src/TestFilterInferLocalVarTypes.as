@@ -207,6 +207,19 @@ package {
             var method:* = null;
             method = this.withRest;
             method.apply(this, [1, 2]);
+
+            // Case 24: A for-in variable takes the keys, whatever it was set to before (FFDec reuses a
+            // register initialized to 0): an object's names are Strings, an untyped value's keys anything.
+            var names:* = 0;
+            var found:Array = [];
+            for (names in holder) {
+                found.push(names);
+            }
+            var anyKey:* = 0;
+            var untypedHolder:* = holder;
+            for (anyKey in untypedHolder) {
+                found.push(anyKey);
+            }
         }
 
         public function withRest(first:int, ...rest):void {

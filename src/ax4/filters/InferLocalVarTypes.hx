@@ -534,6 +534,30 @@ class InferLocalVarTypes extends AbstractFilter {
 					}
 					loop(f.body);
 
+				case TEForIn(f):
+					// the loop variable takes the keys: a Dictionary's key type, an Array's indices, an
+					// object's names, anything for an untyped value (a Dictionary at runtime has any keys)
+					loop(f.iter.eobj);
+					var keyHint = switch f.iter.eobj.type {
+						case TTDictionary(k, _): k;
+						case TTArray(_) | TTVector(_): TTInt;
+						case TTAny | TTObject(TTAny): TTAny;
+						case _: TTString;
+					}
+					switch f.iter.eit.kind {
+						case TEVars(_, vars):
+							for (decl in vars) {
+								addCandidate(decl);
+								var info = infos[decl.v];
+								if (info != null) noteHint(info, keyHint);
+							}
+						case TELocal(_, v):
+							var info = infos[v];
+							if (info != null) noteHint(info, keyHint);
+						case _:
+					}
+					loop(f.body);
+
 				case TEForEach(f):
 					// First process the loop variable declaration (to add candidates)
 					switch f.iter.eit.kind {
