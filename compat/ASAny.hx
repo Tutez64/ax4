@@ -55,8 +55,15 @@ abstract ASAny(Dynamic)
 	// use use native equality check, because AS3 and JS behave the same
 	// but if we want to build for other targets, we gotta implement the loose equality crap
 	// (or not, because there should be no ASAny in the final code)
+	#if (js || flash)
 	@:op(a == b) inline function ___eq(that:Dynamic):Bool return this == that;
 	@:op(a != b) inline function ___neq(that:Dynamic):Bool return this != that;
+	#else
+	// the undefined of a missing Dictionary entry (ASCompat.UNDEFINED) equals null, as AS3's undefined does
+	@:op(a == b) inline function ___eq(that:Dynamic):Bool
+		return this == that || (that == null && ASCompat.isUndefinedValue(this)) || (this == null && ASCompat.isUndefinedValue(that));
+	@:op(a != b) inline function ___neq(that:Dynamic):Bool return !___eq(that);
+	#end
 
 	@:op(a.b) inline function ___get(name:String):ASAny return ASAny.getPropertyOrBoundMethod(this, name);
 

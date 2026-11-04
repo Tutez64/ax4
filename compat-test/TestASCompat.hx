@@ -1041,6 +1041,17 @@ class TestASCompat extends utest.Test {
 		equals(0, ASCompat.nextIndex(ASCompat.haxeMapStorage(new haxe.ds.StringMap<Int>()), 0));
 	}
 
+	function testMissingDictionaryEntryEqualsNull() {
+		var dictionary = new ASDictionary<ASAny, ASAny>();
+		dictionary["present"] = 1;
+		var missing:ASAny = dictionary["missing"];
+		var present:ASAny = dictionary["present"];
+		isTrue(missing == null);
+		isFalse(missing != null);
+		isFalse(present == null);
+		isTrue(present != null);
+	}
+
 	function testUntypedDictionaryIteration() {
 		var key1 = function() {};
 		var key2 = {name: "two"};
