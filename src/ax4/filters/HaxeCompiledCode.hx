@@ -17,6 +17,9 @@ package ax4.filters;
 	take the methods' functions and the methods are removed, so the Haxe property calls get_x and
 	set_x as Haxe declared them (calls to them keep working).
 
+	`flash.Lib.describeType(v)`, from Haxe's flash-only flash.Lib (which other targets remap to
+	openfl.Lib, whose describeType returns a Haxe Xml), calls ASCompat.describeType.
+
 	It also calls the private haxe.Exception members that Haxe's throw and catch compile to
 	through ASCompat: `Exception.thrown(v)`, `Exception.caught(v)` and `e.unwrap()`.
 
@@ -30,6 +33,13 @@ class HaxeCompiledCode extends AbstractFilter {
 	static function isBootObject(obj:TFieldObject):Bool {
 		return switch obj.kind {
 			case TOExplicit(_, {kind: TEDeclRef(_, {kind: TDClassOrInterface(c)})}): isBoot(c);
+			case _: false;
+		}
+	}
+
+	static function isFlashLibObject(obj:TFieldObject):Bool {
+		return switch obj.kind {
+			case TOExplicit(_, {kind: TEDeclRef(_, {kind: TDClassOrInterface(c)})}): c.name == "Lib" && c.parentModule != null && c.parentModule.parentPack.name == "flash";
 			case _: false;
 		}
 	}
@@ -184,6 +194,10 @@ class HaxeCompiledCode extends AbstractFilter {
 			case TECall({kind: TEField(obj, "fromCodePoint", _)}, args) if (isBootObject(obj)):
 				var eMethod = mkBuiltin("ASCompat.fromCodePoint", TTFun([TTInt], TTString), removeLeadingTrivia(e));
 				return e.with(kind = TECall(eMethod, mapCallArgs(processExpr, args)));
+
+			case TECall({kind: TEField(obj, "describeType", _)}, args) if (isFlashLibObject(obj)):
+				var eMethod = mkBuiltin("ASCompat.describeType", TTFun([TTAny], TTXML), removeLeadingTrivia(e));
+				return e.with(kind = TECall(eMethod, mapCallArgs(processExpr, args)), type = TTXML);
 
 			case TECall({kind: TEField(obj, name = "thrown" | "caught", _)}, args) if (isExceptionObject(obj)):
 				var method = if (name == "thrown") "ASCompat.haxeThrown" else "ASCompat.haxeCaught";
