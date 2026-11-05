@@ -790,6 +790,19 @@ class TestASCompat extends utest.Test {
 		equals("haxe.ds::StringMap", ASCompat.getQualifiedClassName(new haxe.ds.StringMap<Int>()));
 	}
 
+	function testGetQualifiedClassNameOfSwfSymbol() {
+		// a SWF symbol without a class of its own is a MovieClip with the symbol on its timeline (swf
+		// library): it is named by its linkage, as in flash; other MovieClips stay flash.display::MovieClip
+		#if !flash
+		var clip = new flash.display.MovieClip();
+		equals("flash.display::MovieClip", ASCompat.getQualifiedClassName(clip));
+		@:privateAccess clip.__timeline = new TestASCompatSymbolTimeline("ui.hud::UI_teamloot_rare".split("::").join("."));
+		equals("ui.hud::UI_teamloot_rare", ASCompat.getQualifiedClassName(clip));
+		@:privateAccess clip.__timeline = new TestASCompatSymbolTimeline("UI_avatar");
+		equals("UI_avatar", ASCompat.getQualifiedClassName(clip));
+		#end
+	}
+
 	function testGetDefinitionByName() {
 		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom::Point"));
 		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom.Point"));
@@ -1373,3 +1386,14 @@ private class TestASCompatToFixedOwner {
 		return "own " + digits;
 	}
 }
+
+#if !flash
+private class TestASCompatSymbolTimeline extends flash.display.Timeline {
+	var __symbol:Dynamic;
+
+	public function new(className:String) {
+		super();
+		__symbol = {className: className};
+	}
+}
+#end

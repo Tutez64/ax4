@@ -217,11 +217,33 @@ class ASCompat {
 			if (isVectorClassName(className)) {
 				return "__AS3__.vec::Vector.<*>";
 			}
+			#if openfl
+			var linkageName = swfLinkageName(value, className);
+			if (linkageName != null) {
+				return qualifiedClassName(linkageName);
+			}
+			#end
 			return className != null ? qualifiedClassName(className) : "Object";
 		}
 
 		return "Object";
 	}
+
+	#if openfl
+	/**
+		The linkage name of a SWF symbol created without a class of its own: the swf library makes it a
+		MovieClip, with the symbol on its timeline. In flash, the instance has its linkage class.
+	**/
+	static function swfLinkageName(value:Dynamic, className:String):Null<String> {
+		if (className != "openfl.display.MovieClip") {
+			return null;
+		}
+		var timeline:Dynamic = Reflect.field(value, "__timeline");
+		var symbol:Dynamic = timeline != null ? Reflect.field(timeline, "__symbol") : null;
+		var linkageName:Dynamic = symbol != null ? Reflect.field(symbol, "className") : null;
+		return Std.isOfType(linkageName, String) && (linkageName : String).length > 0 ? linkageName : null;
+	}
+	#end
 
 	// the packages of the flash API, which openfl implements under its own name
 	static final flashPackages = ~/^openfl\.(accessibility|desktop|display|display3D|errors|events|external|filesystem|filters|geom|globalization|media|net|printing|profiler|sampler|security|sensors|system|text|ui|utils|xml)(\.|$)/;
@@ -256,7 +278,7 @@ class ASCompat {
 	static function describeTypeName(value:Dynamic, cls:Class<Dynamic>, isClassObject:Bool):String {
 		if (value == null) return "null";
 		if (isClassObject) return qualifiedClassName(Type.getClassName(cast value));
-		if (cls != null) return qualifiedClassName(Type.getClassName(cls));
+		if (cls != null) return getQualifiedClassNameNonFlash(value);
 		return "Object";
 	}
 
