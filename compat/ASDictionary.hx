@@ -26,6 +26,12 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		if (untyped __cpp__("({0}.mPtr->__GetType() == vtString)", key)) {
 			return key;
 		}
+		if (untyped __cpp__("({0}.mPtr->__GetType() == vtInt)", key)) {
+			var n:Int = key;
+			if (n >= 0 && n < SMALL_INT_IDS) {
+				return smallIntId(n);
+			}
+		}
 		#end
 		if (Std.isOfType(key, Float)) {
 			var n:Float = key;
@@ -36,6 +42,21 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		// numeric/string/bool keys are effectively compared by string form.
 		return ASCompat.toString(key);
 	}
+
+	#if cpp
+	static inline final SMALL_INT_IDS = 1024;
+	static final smallIntIds:Array<String> = [];
+
+	// The id of a small int key, kept: converting it on each access allocated a string.
+	static function smallIntId(n:Int):String {
+		var id = smallIntIds[n];
+		if (id == null) {
+			id = Std.string(n);
+			smallIntIds[n] = id;
+		}
+		return id;
+	}
+	#end
 
 	inline function getPrimitiveEntries(createIfMissing:Bool):Null<haxe.ds.StringMap<ASDictionaryPrimitiveEntry>> {
 		var mapKey:Dynamic = this;

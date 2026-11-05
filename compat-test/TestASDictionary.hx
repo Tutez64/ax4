@@ -35,6 +35,20 @@ class TestASDictionary extends utest.Test {
 		equals("string", dict["1"]);
 	}
 
+	function testIntKeysMatchTheirStringForm() {
+		// small, negative and large ints, which take different paths to their key id on C++
+		var dict = new ASDictionary<Dynamic, String>();
+		dict[3] = "small";
+		dict[-3] = "negative";
+		dict[100000] = "large";
+
+		equals("small", dict["3"]);
+		equals("negative", dict["-3"]);
+		equals("large", dict["100000"]);
+		equals("large", dict[100000.0]);
+		isFalse(dict.exists(30));
+	}
+
 	function testPrimitiveKeyRemove() {
 		var dict = new ASDictionary<Dynamic, String>();
 		dict[123] = "value";
