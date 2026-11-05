@@ -1692,6 +1692,10 @@ class ExprTyper {
 			switch [ethen.type, eelse.type] {
 				case [TTInt | TTUint, TTNumber] | [TTNumber, TTInt | TTUint]: TTNumber;
 				case _ if (typeEq(ethen.type, eelse.type)): ethen.type;
+				// `cond ? value : null` is a value of that type, or null, when the type can hold null:
+				// typing it so spares a runtime coercion of the result.
+				case [t, _] if (isNullLiteral(eelse) && canHoldNull(t)): t;
+				case [_, t] if (isNullLiteral(ethen) && canHoldNull(t)): t;
 				case _: TTAny; // TODO: warn here?
 			}
 		return mk(TETernary({
@@ -1700,6 +1704,22 @@ class ExprTyper {
 			ethen: ethen,
 			eelse: eelse
 		}), resultType, expectedType);
+	}
+
+	static function isNullLiteral(e:TExpr):Bool {
+		return switch e.kind {
+			case TELiteral(TLNull(_)): true;
+			case TEParens(_, e, _): isNullLiteral(e);
+			case _: false;
+		}
+	}
+
+	// A type whose AS3 values include null (unlike Boolean, int, uint and Number, which coerce null to false or 0).
+	static function canHoldNull(t:TType):Bool {
+		return switch t {
+			case TTAny | TTVoid | TTBoolean | TTNumber | TTInt | TTUint | TTBuiltin: false;
+			case _: true;
+		}
 	}
 
 	function typeArrayAccess(e:Expr, openBracket:Token, eindex:Expr, closeBracket:Token, expectedType:TType):TExpr {
