@@ -367,6 +367,26 @@ class TestASAny extends utest.Test {
 		equals(77, arr["2"]);
 	}
 
+	// As code compiled from Haxe copies an AS3 Vector it was handed untyped (Box2D's As3Array.of).
+	function testVectorIndexAccessViaASAny() {
+		var points = new flash.Vector<flash.geom.Point>();
+		points.push(new flash.geom.Point(1, 2));
+		points.push(new flash.geom.Point(3, 4));
+		var v:ASAny = points;
+
+		equals(2, ASCompat.toInt(v.length));
+		equals(3.0, (v[1] : flash.geom.Point).x);
+		equals(1.0, (v["0"] : flash.geom.Point).x);
+
+		v[1] = new flash.geom.Point(5, 6);
+		equals(5.0, points[1].x);
+
+		var numbers:ASAny = flash.Vector.ofArray([1.5, 2.5]);
+		equals(2.5, ASCompat.toNumber(numbers[1]));
+		numbers[0] = 7.5;
+		equals(7.5, ASCompat.toNumber(numbers[0]));
+	}
+
 	function testArrayBasePropertyFallbackViaASAny() {
 		var arr:ASAny = new ASArrayBase(11, 22, 33);
 

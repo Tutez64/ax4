@@ -498,6 +498,28 @@ class ASCompat {
 	}
 
 	/** `obj[name]` on an Object: an Array index, a Dictionary key, else a property (a method read stays unbound). **/
+	#if !flash
+	/**
+		The index `name` reads in `obj` when `obj` is an OpenFL Vector reached untyped, else null:
+		its elements sit behind `get` and `set`, not in fields.
+	**/
+	@:noCompletion public static function vectorIndex(obj:Dynamic, name:Dynamic):Null<Int> {
+		if (obj == null) {
+			return null;
+		}
+		var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
+		return index != null && _isVector(obj) ? index : null;
+	}
+
+	@:noCompletion public static function vectorGet(vector:Dynamic, index:Int):Dynamic {
+		return Reflect.callMethod(vector, Reflect.field(vector, "get"), [index]);
+	}
+
+	@:noCompletion public static function vectorSet(vector:Dynamic, index:Int, value:Dynamic):Dynamic {
+		return Reflect.callMethod(vector, Reflect.field(vector, "set"), [index, value]);
+	}
+	#end
+
 	public static function getIndexed(obj:Dynamic, name:Dynamic):Dynamic {
 		if (Std.isOfType(obj, Array)) {
 			var index = @:privateAccess ASAny.parseArrayIndex(toString(name));
@@ -515,6 +537,10 @@ class ASCompat {
 			return untyped obj[name];
 		}
 		#else
+		var vectorIndex = vectorIndex(obj, name);
+		if (vectorIndex != null) {
+			return vectorGet(obj, vectorIndex);
+		}
 		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
 			return ASDictionary.getIn(cast obj, name);
 		}
@@ -541,6 +567,11 @@ class ASCompat {
 			return untyped obj[name] = value;
 		}
 		#else
+		var vectorIndex = vectorIndex(obj, name);
+		if (vectorIndex != null) {
+			vectorSet(obj, vectorIndex, value);
+			return value;
+		}
 		if (Std.isOfType(obj, haxe.Constraints.IMap)) {
 			ASDictionary.setIn(cast obj, name, value);
 			return value;

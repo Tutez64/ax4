@@ -191,6 +191,12 @@ abstract ASAny(Dynamic)
 				return (cast this : ASArrayBase).get(index);
 			}
 		}
+		#if !flash
+		var vectorIndex = ASCompat.vectorIndex(this, name);
+		if (vectorIndex != null) {
+			return ASCompat.vectorGet(this, vectorIndex);
+		}
+		#end
 
 		// Preserve object keys for Dictionary access (important on cpp target).
 		var dict = ASDictionary.asDictionary(this);
@@ -220,6 +226,13 @@ abstract ASAny(Dynamic)
 				return value;
 			}
 		}
+		#if !flash
+		var vectorIndex = ASCompat.vectorIndex(this, name);
+		if (vectorIndex != null) {
+			ASCompat.vectorSet(this, vectorIndex, value);
+			return value;
+		}
+		#end
 
 		// Preserve object keys for Dictionary access (important on cpp target).
 		var dict = ASDictionary.asDictionary(this);
