@@ -164,6 +164,15 @@ class ASCompat {
 		#end
 	}
 
+	/** `flash.utils.getDefinitionByName`: the AS3 form of a class path (`pkg::Name`) or the Haxe one. **/
+	public static function getDefinitionByName(name:String):Class<Dynamic> {
+		#if flash
+		return untyped __global__["flash.utils.getDefinitionByName"](name);
+		#else
+		return getDefinitionByNameNonFlash(name);
+		#end
+	}
+
 	public static inline function showRedrawRegions(show:Bool, color:Int):Void {
 		#if flash
 		untyped __global__["flash.profiler.showRedrawRegions"](show, color);
@@ -257,18 +266,25 @@ class ASCompat {
 		return dot < 0 ? className : className.substr(0, dot) + "::" + className.substr(dot + 1);
 	}
 
-	/** `flash.utils.getDefinitionByName`: the AS3 form of a class path (`pkg::Name`) or the Haxe one. **/
-	public static function getDefinitionByName(name:String):Class<Dynamic> {
+	#if !flash
+	static function getDefinitionByNameNonFlash(name:String):Class<Dynamic> {
 		if (name == null) {
-			return null;
+			throw new flash.errors.TypeError("Error #2007: Parameter name must be non-null.");
 		}
 		var path = StringTools.replace(name, "::", ".");
 		var cls = Type.resolveClass(path);
 		if (cls == null && StringTools.startsWith(path, "flash.")) {
 			cls = Type.resolveClass("openfl" + path.substr("flash".length));
 		}
+		if (cls == null) {
+			// as in flash (openfl has no ReferenceError)
+			var error = new flash.errors.Error("Error #1065: Variable " + name + " is not defined.", 1065);
+			error.name = "ReferenceError";
+			throw error;
+		}
 		return cls;
 	}
+	#end
 
 	static inline function isVectorClassName(className:Null<String>):Bool {
 		if (className == null) return false;
@@ -618,8 +634,10 @@ class ASCompat {
 			return true;
 		}
 		return deleted;
+		#else
+		// the key as it is: a Dictionary's keys are not always strings
+		return untyped __delete__(obj, fieldName);
 		#end
-		return Reflect.deleteField(obj, propertyName(fieldName));
 	}
 
 	public static function hasProperty(obj:Dynamic, fieldName:Dynamic):Bool {
@@ -1046,6 +1064,10 @@ class ASCompat {
 		outside flash and JS, anything else has its own.
 	**/
 	public static function callNumberMethod(v:Dynamic, name:String, ?digits:Dynamic):String {
+		#if (flash || js)
+		// a Number has its methods there; apply gives the method its object
+		return untyped v[name].apply(v, digits == null ? [] : [digits]);
+		#end
 		if (Std.isOfType(v, Float)) {
 			var n:Float = v;
 			return switch name {

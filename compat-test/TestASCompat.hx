@@ -829,6 +829,8 @@ class TestASCompat extends utest.Test {
 		equals("ui.hud::UI_teamloot_rare", ASCompat.getQualifiedClassName(clip));
 		@:privateAccess clip.__timeline = new TestASCompatSymbolTimeline("UI_avatar");
 		equals("UI_avatar", ASCompat.getQualifiedClassName(clip));
+		#else
+		pass("flash names SWF symbols itself");
 		#end
 	}
 
@@ -836,7 +838,10 @@ class TestASCompat extends utest.Test {
 		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom::Point"));
 		equals(flash.geom.Point, ASCompat.getDefinitionByName("flash.geom.Point"));
 		equals(flash.geom.Point, ASCompat.getDefinitionByName(ASCompat.getQualifiedClassName(new flash.geom.Point())));
-		equals(null, ASCompat.getDefinitionByName("no.such::Class"));
+		#if !flash
+		// an unknown class throws, as in flash (where the call is flash's own)
+		raises(() -> ASCompat.getDefinitionByName("no.such::Class"));
+		#end
 	}
 
 	function testShowRedrawRegions() {
