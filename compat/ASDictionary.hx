@@ -7,16 +7,26 @@ private typedef Dictionary<K,V> = flash.utils.Dictionary;
 abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K,V> { //TODO: remove implicit cast?
 	#if !flash
 	#if cpp
-	static final primitiveStore:haxe.ds.WeakMap<{}, haxe.ds.StringMap<Dynamic>> = new haxe.ds.WeakMap();
+	static final primitiveStore:haxe.ds.WeakMap<{}, haxe.ds.StringMap<ASDictionaryPrimitiveEntry>> = new haxe.ds.WeakMap();
 	#else
-	static final primitiveStore:haxe.ds.ObjectMap<Dynamic, haxe.ds.StringMap<Dynamic>> = new haxe.ds.ObjectMap();
+	static final primitiveStore:haxe.ds.ObjectMap<Dynamic, haxe.ds.StringMap<ASDictionaryPrimitiveEntry>> = new haxe.ds.ObjectMap();
 	#end
 
 	static inline function isPrimitiveKey(key:Dynamic):Bool {
+		#if cpp
+		// one virtual call, where each Std.isOfType against a runtime class is a generic type test
+		return ASDictionaryPrimitiveEntry.isPrimitiveType(key);
+		#else
 		return Std.isOfType(key, String) || Std.isOfType(key, Int) || Std.isOfType(key, Float) || Std.isOfType(key, Bool);
+		#end
 	}
 
 	static function primitiveKeyId(key:Dynamic):String {
+		#if cpp
+		if (untyped __cpp__("({0}.mPtr->__GetType() == vtString)", key)) {
+			return key;
+		}
+		#end
 		if (Std.isOfType(key, Float)) {
 			var n:Float = key;
 			if (Math.isNaN(n)) return "NaN";
@@ -27,11 +37,11 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		return ASCompat.toString(key);
 	}
 
-	inline function getPrimitiveEntries(createIfMissing:Bool):Null<haxe.ds.StringMap<Dynamic>> {
+	inline function getPrimitiveEntries(createIfMissing:Bool):Null<haxe.ds.StringMap<ASDictionaryPrimitiveEntry>> {
 		var mapKey:Dynamic = this;
 		var entries = primitiveStore.get(mapKey);
 		if (entries == null && createIfMissing) {
-			entries = new haxe.ds.StringMap<Dynamic>();
+			entries = new haxe.ds.StringMap<ASDictionaryPrimitiveEntry>();
 			primitiveStore.set(mapKey, entries);
 		}
 		return entries;
@@ -50,7 +60,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		if (isPrimitiveKey(key)) {
 			var entries = getPrimitiveEntries(false);
 			if (entries != null) {
-				var entry:Dynamic = entries.get(primitiveKeyId(key));
+				var entry = entries.get(primitiveKeyId(key));
 				if (entry != null) {
 					result = entry.value;
 				} else {
@@ -87,7 +97,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		var result:Dynamic = null;
 		if (isPrimitiveKey(key)) {
 			var entries = getPrimitiveEntries(true);
-			entries.set(primitiveKeyId(key), {key: key, value: value});
+			entries.set(primitiveKeyId(key), new ASDictionaryPrimitiveEntry(key, value));
 			result = value;
 		} else {
 			result = this.set(key, value);
@@ -195,10 +205,10 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		if (isPrimitiveKey(key)) {
 			var entries = primitiveStore.get(map);
 			if (entries == null) {
-				entries = new haxe.ds.StringMap<Dynamic>();
+				entries = new haxe.ds.StringMap<ASDictionaryPrimitiveEntry>();
 				primitiveStore.set(map, entries);
 			}
-			entries.set(primitiveKeyId(key), {key: key, value: value});
+			entries.set(primitiveKeyId(key), new ASDictionaryPrimitiveEntry(key, value));
 		} else {
 			map.set(key, value);
 		}
@@ -212,7 +222,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		}
 		var merged:Array<Dynamic> = [for (k in map.keys()) k];
 		for (entry in entries) {
-			merged.push((entry : Dynamic).key);
+			merged.push(entry.key);
 		}
 		return merged.iterator();
 	}
@@ -225,7 +235,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		}
 		var merged:Array<Dynamic> = [for (v in map) v];
 		for (entry in entries) {
-			merged.push((entry : Dynamic).value);
+			merged.push(entry.value);
 		}
 		return merged.iterator();
 	}
@@ -243,7 +253,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 	public static function getIn(map:haxe.Constraints.IMap<Dynamic, Dynamic>, key:Dynamic):Dynamic {
 		if (existsIn(map, key)) {
 			if (isPrimitiveKey(key)) {
-				var entry:Dynamic = primitiveStore.get(map).get(primitiveKeyId(key));
+				var entry = primitiveStore.get(map).get(primitiveKeyId(key));
 				return entry.value;
 			}
 			return map.get(key);
@@ -266,3 +276,27 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 
 	public static final type = #if flash flash.utils.Dictionary #else haxe.Constraints.IMap #end;
 }
+
+#if !flash
+/** The key and value of an ASDictionary entry whose key is a String, Number, int or Boolean. **/
+@:noCompletion final class ASDictionaryPrimitiveEntry {
+	public final key:Dynamic;
+	public final value:Dynamic;
+
+	public function new(key:Dynamic, value:Dynamic) {
+		this.key = key;
+		this.value = value;
+	}
+
+	#if cpp
+	public static function isPrimitiveType(key:Dynamic):Bool {
+		if (untyped __cpp__("!{0}.mPtr", key)) {
+			return false;
+		}
+		var type:Int = untyped __cpp__("{0}.mPtr->__GetType()", key);
+		var primitive:Bool = untyped __cpp__("({0} == vtString || {0} == vtInt || {0} == vtFloat || {0} == vtBool)", type);
+		return primitive;
+	}
+	#end
+}
+#end
