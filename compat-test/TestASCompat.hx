@@ -716,6 +716,16 @@ class TestASCompat extends utest.Test {
 		#end
 	}
 
+	function testObjectUndefinedEqualsNull() {
+		// an Object-typed missing Dictionary entry (undefined) equals null, as in AS3
+		var tables = new ASDictionary<ASAny, ASAny>();
+		var table:ASObject = tables[new TestASCompatLookupKey()];
+		isTrue(table == null);
+		isFalse(table != null);
+		var found:ASObject = {};
+		isFalse(found == null);
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {

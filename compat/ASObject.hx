@@ -72,8 +72,15 @@ abstract ASObject(flash.utils.Object)
 	}
 
 	// see ASAny.___eq/___neq comments
+	#if (js || flash)
 	@:op(a == b) inline function ___eq(that:Dynamic):Bool return this == that;
 	@:op(a != b) inline function ___neq(that:Dynamic):Bool return this != that;
+	#else
+	// the undefined of a missing Dictionary entry (ASCompat.UNDEFINED) equals null, as AS3's undefined does
+	@:op(a == b) inline function ___eq(that:Dynamic):Bool
+		return this == that || (that == null && ASCompat.isUndefinedValue(this)) || (this == null && ASCompat.isUndefinedValue(that));
+	@:op(a != b) inline function ___neq(that:Dynamic):Bool return !___eq(that);
+	#end
 
 	@:op(a.b) inline function ___get(name:String):ASAny return ASAny.getPropertyOrBoundMethod(this, name);
 
