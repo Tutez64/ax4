@@ -13,7 +13,7 @@ class ASCompat {
 	#if (flash || js)
 	public static inline final UNDEFINED:Dynamic = null;
 	#else
-	public static final UNDEFINED:Dynamic = {__as3_undefined__: true};
+	public static final UNDEFINED:Dynamic = new ASUndefined();
 	#end
 
 	public static inline final MAX_INT = 2147483647;
@@ -876,7 +876,9 @@ class ASCompat {
 		#elseif flash
 		return false;
 		#else
-		return value == UNDEFINED;
+		// a type test: == between Dynamic values of different types compares their string forms, which
+		// converted every value tested (a whole map, for a Dictionary) to a string
+		return Std.isOfType(value, ASUndefined);
 		#end
 	}
 
@@ -2841,3 +2843,18 @@ class ASDate {
 		#end
 	}
 }
+
+#if !(flash || js)
+/** The undefined of AS3 outside flash and JS, where Haxe has only null (ASCompat.UNDEFINED). **/
+@:noCompletion final class ASUndefined {
+	public function new() {}
+
+	/**
+		null: a cast to String gives the null AS3 coerces undefined to (a missing Dictionary entry typed
+		String); ASCompat.toString gives "undefined" for String(undefined).
+	**/
+	public function toString():String {
+		return null;
+	}
+}
+#end

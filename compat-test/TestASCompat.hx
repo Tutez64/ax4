@@ -697,6 +697,25 @@ class TestASCompat extends utest.Test {
 		equals("0,1", [for (k in held.___keys()) Std.string(k)].join(","));
 	}
 
+	function testUndefinedCheckDoesNotStringify() {
+		// testing a value for undefined must not convert it to a string (a whole map, for a Dictionary)
+		var calls = 0;
+		var value:Dynamic = {toString: function() {
+			calls++;
+			return "counted";
+		}};
+		isFalse(ASCompat.isUndefinedValue(value));
+		isFalse(ASCompat.isUndefinedValue(new haxe.ds.StringMap<Int>()));
+		equals(0, calls);
+		#if !(js || flash)
+		// there, undefined is a value of its own, told apart by its type: a string with the same text is
+		// not undefined (a comparison of string forms said it was)
+		isFalse(ASCompat.isUndefinedValue(Std.string(ASCompat.UNDEFINED)));
+		isTrue(ASCompat.isUndefinedValue(ASCompat.UNDEFINED));
+		equals("undefined", ASCompat.toString(ASCompat.UNDEFINED));
+		#end
+	}
+
 	function testMapItemForNullComparisons() {
 		var store = new haxe.ds.StringMap<Dynamic>();
 		var fakeMap:Dynamic = {
@@ -1397,3 +1416,4 @@ private class TestASCompatSymbolTimeline extends flash.display.Timeline {
 	}
 }
 #end
+
