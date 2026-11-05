@@ -997,22 +997,29 @@ class ASCompat {
 	// Implicit coercion of an untyped value to a class, as AVM2 does on assignment or argument passing:
 	// null and undefined give null, a value of another type throws a TypeError (`as` returns null instead).
 	public static function coerce<T>(v:Dynamic, c:Class<T>):T {
-		if (v == null || isUndefinedValue(v)) {
+		if (v == null) {
 			return null;
 		}
+		// the class first: a value of it is the common case, and undefined is an instance of no class
 		if (Std.isOfType(v, c)) {
 			return v;
+		}
+		if (isUndefinedValue(v)) {
+			return null;
 		}
 		throw new flash.errors.TypeError('Error #1034: Type Coercion failed: cannot convert ${typeNameOf(v)} to ${Type.getClassName(c)}.');
 	}
 
 	// Implicit coercion of an untyped value to Function: like coerce, a TypeError on a non-function.
 	public static function coerceFunction(v:Dynamic):Null<ASFunction> {
-		if (v == null || isUndefinedValue(v)) {
+		if (v == null) {
 			return null;
 		}
 		if (Reflect.isFunction(v)) {
 			return v;
+		}
+		if (isUndefinedValue(v)) {
+			return null;
 		}
 		throw new flash.errors.TypeError('Error #1034: Type Coercion failed: cannot convert ${typeNameOf(v)} to Function.');
 	}
