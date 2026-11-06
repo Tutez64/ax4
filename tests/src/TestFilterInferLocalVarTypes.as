@@ -3,6 +3,9 @@
  * This test case verifies that local variable types are correctly inferred
  * based on their usage within the code. It covers various scenarios including
  * basic literal inference, uninitialized variables, and complex expressions.
+ * A local compared with a value of another basic type (`s == 1`, a number case of a switch on it)
+ * or holding an object added to a non-String stays ASAny: AS3 converts the operands, Haxe would not
+ * compile them (see comparedWithOtherTypes).
  */
 package {
     import flash.filters.ColorMatrixFilter;
@@ -224,6 +227,21 @@ package {
         }
 
         public function withRest(first:int, ...rest):void {
+        }
+
+        public function comparedWithOtherTypes(helper:LocalVarTypeHelper):String {
+            var digits:* = "1"; // stays ASAny: compared with a number
+            var same:Boolean = digits == 1;
+            var key:* = "2"; // stays ASAny: a number case
+            switch (key) {
+                case 2:
+                    same = !same;
+                    break;
+            }
+            var held:* = helper; // stays ASAny: added to a number
+            var sum:* = held + 1;
+            var label:* = "x"; // String: compared with a String
+            return label == "x" && same ? sum : label;
         }
     }
 }

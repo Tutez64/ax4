@@ -321,6 +321,36 @@ class InferLocalVarTypes extends AbstractFilter {
 			}
 		}
 
+		// An untyped local compared with a value of another basic type (`var s:* = "1"; s == 1`, a
+		// switch with a number case) stays untyped: AS3 converts the operands, Haxe would not compile it.
+		function checkCompared(e:TExpr, other:TExpr) {
+			var info = switch e.kind {
+				case TELocal(_, v): infos[v];
+				case _: null;
+			}
+			if (info == null || info.incompatible || info.hint == null) return;
+			var otherHint = hintFromExprWithLocals(other);
+			if (otherHint == null || typeEq(otherHint, TTAny) || mergeTypes(info.hint, otherHint) != null) return;
+			if (isBasicType(info.hint) || isBasicType(otherHint)) {
+				info.incompatible = true;
+			}
+		}
+
+		// An untyped local holding an object, added to anything but a String, stays untyped: AS3 adds
+		// its valueOf(), Haxe has no + for it.
+		function checkAdded(e:TExpr, other:TExpr) {
+			var info = switch e.kind {
+				case TELocal(_, v): infos[v];
+				case _: null;
+			}
+			if (info == null || info.incompatible || info.hint == null) return;
+			if (typeEq(info.hint, TTString) || isNumericType(info.hint)) return;
+			var otherHint = hintFromExprWithLocals(other);
+			if (otherHint == null || !typeEq(otherHint, TTString)) {
+				info.incompatible = true;
+			}
+		}
+
 		function mapKeyFromIteratorExpr(expr:TExpr):Null<String> {
 			return switch expr.kind {
 				case TECast(c): mapKeyFromIteratorExpr(c.expr);
@@ -467,8 +497,24 @@ class InferLocalVarTypes extends AbstractFilter {
 						checkUsage(a, TTNumber);
 						checkUsage(b, TTNumber);
 					}
+					else if (isComparisonOp(op)) {
+						checkCompared(a, b);
+						checkCompared(b, a);
+					}
+					else if (op.match(OpAdd(_))) {
+						checkAdded(a, b);
+						checkAdded(b, a);
+					}
 					loop(a);
 					loop(b);
+
+				case TESwitch(s):
+					for (c in s.cases) {
+						for (value in c.values) {
+							checkCompared(s.subj, value);
+						}
+					}
+					iterExpr(loop, e);
 
 				case TEArrayAccess(a):
 					// Index usage implies Int only for Array/Vector/XMLList/ByteArray.
@@ -929,6 +975,13 @@ class InferLocalVarTypes extends AbstractFilter {
 		if (t == null) return false;
 		return switch t {
 			case TTInt | TTUint | TTNumber: true;
+			case _: false;
+		}
+	}
+
+	static function isBasicType(t:TType):Bool {
+		return switch t {
+			case TTInt | TTUint | TTNumber | TTString | TTBoolean: true;
 			case _: false;
 		}
 	}
