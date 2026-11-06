@@ -1,6 +1,22 @@
 import utest.Assert.*;
 
 class TestASAny extends utest.Test {
+	function testPropertyReadOfEachKindOfObject() {
+		var struct:ASAny = {present: 1, none: null};
+		equals(1, struct.present);
+		isNull(struct.none);
+		isNull(struct.missing);
+
+		var array:ASAny = [4, 5];
+		equals(2, array.length);
+
+		var instance:ASAny = new haxe.io.BytesOutput();
+		isNull(instance.missing);
+
+		var nothing:ASAny = null;
+		isNull(ASAny.getPropertyOrBoundMethod(nothing, "present"));
+	}
+
 	function testToBool() {
 		inline function b(v:ASAny):Bool return v;
 

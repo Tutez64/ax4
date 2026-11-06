@@ -92,6 +92,16 @@ abstract ASAny(Dynamic)
 
 	#if flash inline #end
 	public static function getPropertyOrBoundMethod(obj:Any, name:String):ASAny {
+		#if cpp
+		// A JSON-like object (Animate's frames) is neither an array nor a proxy, and a String key needs no boxing.
+		if (obj == null) {
+			return null;
+		}
+		var isStruct:Bool = untyped __cpp__("(({0}).mPtr->__GetType() == vtObject)", (obj : Dynamic));
+		if (isStruct || !(Std.isOfType(obj, ASArrayBase) || Std.isOfType(obj, ASProxyBase))) {
+			return ASCompat.getOwnProperty(obj, name);
+		}
+		#end
 		var handled = false;
 		var result:ASAny = null;
 		if (Std.isOfType(obj, ASArrayBase)) {

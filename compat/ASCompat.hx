@@ -593,7 +593,14 @@ class ASCompat {
 		if (Std.isOfType(obj, ASProxyBase)) {
 			return (cast obj : ASProxyBase).getProperty(fieldName);
 		}
-		var name = propertyName(fieldName);
+		return getOwnProperty(obj, propertyName(fieldName));
+		#end
+		return Reflect.getProperty(obj, propertyName(fieldName));
+	}
+
+	#if !flash
+	/** `obj[name]` for an object that is not null and not a proxy, with a name already a String. **/
+	public static function getOwnProperty(obj:Dynamic, name:String):Dynamic {
 		if (name == "length" && Std.isOfType(obj, Array)) {
 			return (cast obj : Array<Dynamic>).length;
 		}
@@ -613,9 +620,8 @@ class ASCompat {
 			return namedChild;
 		}
 		return value;
-		#end
-		return Reflect.getProperty(obj, propertyName(fieldName));
 	}
+	#end
 
 	public static function setProperty(obj:Dynamic, fieldName:Dynamic, value:Dynamic):Dynamic {
 		if (obj == null) {
