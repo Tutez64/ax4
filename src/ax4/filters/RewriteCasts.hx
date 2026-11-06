@@ -4,6 +4,25 @@ package ax4.filters;
 class RewriteCasts extends AbstractFilter {
 	static final tToInt = TTFun([TTAny], TTInt);
 	static final tStdInt = TTFun([TTNumber], TTInt);
+
+	static function mkBoolToInt(expr:TExpr, e:TExpr, syntax:{openParen:Token, closeParen:Token}):TExpr {
+		inline function mkInt(text:String) return mk(TELiteral(TLInt(new Token(0, TkDecimalInteger, text, [], []))), TTInt, TTInt);
+		var value = mk(TEIf({
+			syntax: {
+				keyword: mkIdent("if", removeLeadingTrivia(e), [whitespace]),
+				openParen: mkOpenParen(),
+				closeParen: mkCloseParen([whitespace])
+			},
+			econd: expr.with(expectedType = TTBoolean),
+			ethen: mkInt("1"),
+			eelse: {
+				keyword: mkIdent("else", [whitespace], [whitespace]),
+				expr: mkInt("0"),
+				semiliconBefore: false
+			}
+		}), TTInt, TTInt);
+		return mk(TEParens(syntax.openParen, value, syntax.closeParen), TTInt, TTInt);
+	}
 	static final tToNumber = TTFun([TTAny], TTNumber);
 	static final tToString = TTFun([TTAny], TTString);
 
@@ -67,6 +86,14 @@ class RewriteCasts extends AbstractFilter {
 					// uint(from int)
 					case [TTInt, TTUint]:
 						mk(TEHaxeRetype(stripCast()), TTUint, TTUint);
+
+					// int(boolean)
+					case [TTBoolean, TTInt]:
+						mkBoolToInt(expr, e, syntax);
+
+					// uint(boolean)
+					case [TTBoolean, TTUint]:
+						mk(TEHaxeRetype(mkBoolToInt(expr, e, syntax)), TTUint, TTUint);
 
 					// int(other)
 					case [_, TTInt]:

@@ -12,6 +12,10 @@
  * - Boolean(stageRef) -> stageRef != null
  * - Boolean(bool || stageRef && bool) -> bool || stageRef != null && bool (no thisOrDefault)
  *
+ * int(bool) and uint(bool) need no runtime conversion:
+ * - int(flag) -> (if (flag) 1 else 0)
+ * - uint(flag) -> ((if (flag) 1 else 0) : UInt)
+ *
  * Object(typed).field reads a field the type does not declare, so it stays dynamic:
  * - Object(stageRef).custom -> (stageRef : ASObject).custom
  * - Object(stageRef).stageWidth -> the cast is dropped, as the field is declared
@@ -26,6 +30,9 @@ package {
         public var size:Number = 0;
 
         public function TestFilterRewriteCasts() {
+            var flag:Boolean = pos > size;
+            var boolInt:int = int(flag);
+            var boolUint:uint = uint(flag);
             var a:Object = "test";
             
             // Basic casts
