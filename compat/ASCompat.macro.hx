@@ -82,6 +82,20 @@ class ASCompat {
 		return macro @:pos(Context.currentPos()) ASCompat._setIntervalNative($closure, $delay, $argsExpr);
 	}
 
+	static function orValue(value:Expr, other:Expr):Expr {
+		return macro @:pos(value.pos) {
+			var __ax4_value = $value;
+			if ((__ax4_value : ASAny)) __ax4_value else $other;
+		};
+	}
+
+	static function andValue(value:Expr, other:Expr):Expr {
+		return macro @:pos(value.pos) {
+			var __ax4_value = $value;
+			if ((__ax4_value : ASAny)) $other else __ax4_value;
+		};
+	}
+
 	static function vectorSpliceAll<T>(a:Expr, startIndex:Expr):Expr {
 		var pos = Context.currentPos();
 		return macro @:pos(pos) {

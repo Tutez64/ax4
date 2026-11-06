@@ -1220,6 +1220,12 @@ class ASCompat {
 		return if ((value : ASAny)) value else def;
 	}
 
+	/** AS3's `value || other`: `value` once, `other` only when `value` is falsy. */
+	public static macro function orValue(value:Expr, other:Expr):Expr;
+
+	/** AS3's `value && other`: `value` once, `other` only when `value` is truthy. */
+	public static macro function andValue(value:Expr, other:Expr):Expr;
+
 	public static inline function stringAsBool(s:Null<String>):Bool {
 		return s != null && s.length > 0;
 	}

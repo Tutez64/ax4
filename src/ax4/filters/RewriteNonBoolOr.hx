@@ -1,5 +1,11 @@
 package ax4.filters;
 
+/**
+	AS3's `||` and `&&` give one of their operands, Haxe's take Bools: `a || b` becomes
+	`if (a) a else b` and `a && b` becomes `if (a) b else a` when `a` can be read twice, else
+	`ASCompat.orValue(a, b)` and `ASCompat.andValue(a, b)`, which read `a` once and `b` only when it
+	is the result, as AS3 does.
+**/
 class RewriteNonBoolOr extends AbstractFilter {
 	final coerceToBool:CoerceToBool;
 
@@ -11,20 +17,23 @@ class RewriteNonBoolOr extends AbstractFilter {
 	override function processExpr(e:TExpr):TExpr {
 		e = mapExpr(processExpr, e);
 		return switch e.kind {
-			case TEBinop(a, OpOr(_), b) if (a.type != TTBoolean || b.type != TTBoolean):
-
+			case TEBinop(a, op = OpOr(_) | OpAnd(_), b) if (a.type != TTBoolean || b.type != TTBoolean):
+				var isOr = op.match(OpOr(_));
 				if (canBeRepeated(a)) {
+					var lead = removeLeadingTrivia(a);
+					var trail = removeTrailingTrivia(a);
+					var eRead = a;
 					mk(TEIf({
 						syntax: {
-							keyword: mkIdent("if", removeLeadingTrivia(a), [whitespace]),
+							keyword: mkIdent("if", lead, [whitespace]),
 							openParen: mkOpenParen(),
-							closeParen: mkCloseParen(removeTrailingTrivia(a))
+							closeParen: mkCloseParen(trail)
 						},
 						econd: coerceToBool.coerce(a),
-						ethen: a,
+						ethen: if (isOr) eRead else b,
 						eelse: {
 							keyword: mkIdent("else", [whitespace], [whitespace]),
-							expr: b,
+							expr: if (isOr) b else eRead,
 							semiliconBefore: false
 						}
 					}), e.type, e.expectedType);
@@ -32,7 +41,7 @@ class RewriteNonBoolOr extends AbstractFilter {
 					var lead = removeLeadingTrivia(a);
 					var tail = removeTrailingTrivia(b);
 
-					var eChooseMethod = mkBuiltin("ASCompat.thisOrDefault", TTFunction, lead, []);
+					var eChooseMethod = mkBuiltin(if (isOr) "ASCompat.orValue" else "ASCompat.andValue", TTFunction, lead, []);
 
 					mk(TECall(eChooseMethod, {
 						openParen: mkOpenParen(),

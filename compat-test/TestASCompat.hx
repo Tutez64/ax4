@@ -324,7 +324,9 @@ class TestASCompat extends utest.Test {
 		same([10, 21, 32], seen);
 	}
 
-	function pick(value:String):String {
+	function testOrAndValueEvaluateOnce() {
+		var calls = [];
+		function pick(value:String):String {
 			calls.push(value);
 			return value;
 		}
