@@ -32,6 +32,18 @@ class FixImports extends AbstractFilter {
 				}
 			case TECast(c):
 				markTypeUsed(c.type);
+			case TETry(t):
+				// a top-level error named only by a catch (`catch (e:RangeError)`) needs its import too
+				for (c in t.catches) {
+					switch c.v.type {
+						case TTInst(cls) if (cls.parentModule.parentPack.name == "" && flashErrorsTopLevel.exists(cls.name)):
+							if (neededImportNames != null) {
+								neededImportNames[cls.name] = true;
+							}
+						case other:
+							markTypeUsed(other);
+					}
+				}
 			case TEVector(_, t):
 				markTypeUsed(t);
 			case TEHaxeRetype(_):
