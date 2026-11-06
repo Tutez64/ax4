@@ -9,6 +9,9 @@ package ax4.filters;
 	an `Error` is expected work on any caught value. `e.message` and `e.name` read as Strings. A rethrow
 	(`throw e`) and an assignment to `e` keep the caught value itself.
 
+	An `Error` catch followed by a catch of anything (`catch (e:*)`) stays typed: the latter takes the
+	runtime errors then, and the values that are not errors, such as a thrown String, still reach it.
+
 	It runs before the API filters, which then see these reads.
 **/
 class RewriteErrorCatch extends AbstractFilter {
@@ -17,8 +20,12 @@ class RewriteErrorCatch extends AbstractFilter {
 		return switch e.kind {
 			case TETry(t):
 				var changed = false;
-				var catches = [for (c in t.catches) {
-					if (isCatchErrorType(c.v.type)) {
+				var catches = [for (i => c in t.catches) {
+					// followed by a catch of anything, which then also takes the runtime errors: a Dynamic
+					// catch would leave it unreachable (not compiling), and the values that are not errors
+					// would no longer reach it
+					var untypedCatchFollows = Lambda.exists(t.catches.slice(i + 1), other -> other.v.type.match(TTAny | TTObject(TTAny)));
+					if (isCatchErrorType(c.v.type) && !untypedCatchFollows) {
 						changed = true;
 						rewriteErrorCatch(c);
 					} else {

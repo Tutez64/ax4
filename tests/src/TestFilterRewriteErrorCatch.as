@@ -8,6 +8,8 @@
  *   flash is not one: a field read, an argument where an Error is expected, an untyped copy.
  * - the API filters see those reads: `e.message.replace(regexp, "")` becomes a RegExp replace.
  * - a rethrow (`throw e`) and an assignment to the caught variable keep the caught value itself.
+ * - an Error catch followed by a catch of anything (`catch (e:*)`) stays typed: as Dynamic it would
+ *   leave the latter unreachable, and a thrown String would no longer reach it.
  */
 package {
 	public class TestFilterRewriteErrorCatch {
@@ -16,6 +18,7 @@ package {
 			testTypedThenErrorCatch();
 			testUntypedThrowWithErrorCatch();
 			testErrorReadsAndRethrow();
+			testErrorThenUntypedCatch();
 		}
 
 		private function testSingleErrorCatch():void {
@@ -48,6 +51,16 @@ package {
 					throw e;
 				}
 				e = new Error("replaced");
+			}
+		}
+
+		private function testErrorThenUntypedCatch():void {
+			try {
+				throw "plain";
+			} catch (e:Error) {
+				trace("error " + e.message);
+			} catch (other:*) {
+				trace("other " + other);
 			}
 		}
 
