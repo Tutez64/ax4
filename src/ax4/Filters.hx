@@ -67,6 +67,7 @@ class Filters {
 			new InferLocalVarTypes(context),
 			new RewriteHasOwnProperty(context),
 			new RewriteUndefinedLookupComparisons(context),
+			new RewriteUndefinedValues(context),
 			new RewriteDynamicArrayReadAccess(context),
 			new CoerceToNumber(context),
 			new RewriteObjectCompare(context),
