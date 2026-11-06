@@ -48,8 +48,10 @@ private class FlashTestOutput {
 		tf.height = current.stage != null ? Math.max(120, current.stage.stageHeight - 16) : 700;
 		current.addChild(tf);
 
+		// also traced, which the Flash Player content debugger writes to flashlog.txt
 		haxe.Log.trace = function(v:Dynamic, ?infos:haxe.PosInfos):Void {
 			tf.text += infos.className + ":" + infos.lineNumber + ": " + v;
+			flash.Lib.trace(v);
 		};
 
 		runner.onTestStart.add(function(handler):Void {
