@@ -102,6 +102,24 @@ class TestASCompat extends utest.Test {
 		equals(true, ASCompat.processNull(flags[1]));
 	}
 
+	// As a converted catch (e:Error) reads what it caught: an Error is kept, any other value becomes one.
+	function testAsErrorKeepsErrorsAndWrapsOtherValues() {
+		var error = new flash.errors.Error("kept", 7);
+		isTrue(error == ASCompat.asError(error));
+		equals(null, ASCompat.asError(null));
+
+		var wrapped = ASCompat.asError("Null Object Reference");
+		isTrue(Std.isOfType(wrapped, flash.errors.Error));
+		equals("Null Object Reference", wrapped.message);
+		equals(0, wrapped.errorID);
+
+		// On flash, haxe.Exception already is an Error, and reading its message through that type stalls the player.
+		#if !flash
+		var fromException = ASCompat.asError(new haxe.Exception("from haxe"));
+		equals("from haxe", fromException.message);
+		#end
+	}
+
 	// As a converted finally rethrows: run the finally body, then rethrow the same value.
 	function testRethrowKeepingStackRethrowsTheSameValue() {
 		if (!canCatchErrors()) {

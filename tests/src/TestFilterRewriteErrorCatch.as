@@ -4,6 +4,9 @@
  * - `catch (e:Error)` should be rewritten to `catch (e:Dynamic)` in generated Haxe.
  * - specific catches (e.g. `TypeError`) must remain typed.
  * - catch body expressions should remain intact after rewrite.
+ * - reads of the caught value become `ASCompat.asError(e)`, an Error even when a runtime error outside
+ *   flash is not one: a field read, an argument where an Error is expected, an untyped copy.
+ * - a rethrow (`throw e`) and an assignment to the caught variable keep the caught value itself.
  */
 package {
 	public class TestFilterRewriteErrorCatch {
@@ -11,6 +14,7 @@ package {
 			testSingleErrorCatch();
 			testTypedThenErrorCatch();
 			testUntypedThrowWithErrorCatch();
+			testErrorReadsAndRethrow();
 		}
 
 		private function testSingleErrorCatch():void {
@@ -29,6 +33,24 @@ package {
 			} catch (fallback:Error) {
 				var second:String = fallback.message;
 			}
+		}
+
+		private function testErrorReadsAndRethrow():void {
+			try {
+				var o:Object = null;
+				o.field = 1;
+			} catch (e:Error) {
+				report(e);
+				var id:int = e.errorID;
+				if (id == 0) {
+					throw e;
+				}
+				e = new Error("replaced");
+			}
+		}
+
+		private function report(error:Error):void {
+			trace(error.message);
 		}
 
 		private function testUntypedThrowWithErrorCatch():void {

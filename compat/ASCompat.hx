@@ -1028,6 +1028,22 @@ class ASCompat {
 	// Implicit coercion of an untyped value to a class, as AVM2 does on assignment or argument passing:
 	// null and undefined give null, a value of another type throws a TypeError (`as` returns null instead).
 	/**
+		The value a converted `catch (e:Error)` reads. The catch takes any value, since outside flash
+		a runtime error, such as a null access or a `haxe.Exception`, is not an `Error`, while AS3
+		catches them all as errors: such a value becomes an `Error` with its message. An `Error` is kept
+		as it is.
+	**/
+	public static function asError(e:Dynamic):flash.errors.Error {
+		if (e == null || Std.isOfType(e, flash.errors.Error)) {
+			return e;
+		}
+		if (Std.isOfType(e, haxe.Exception)) {
+			return new flash.errors.Error((e : haxe.Exception).message);
+		}
+		return new flash.errors.Error(Std.string(e));
+	}
+
+	/**
 		Rethrows `e`, caught to run a converted `finally`, with the stack of where it was thrown,
 		where the target can: on hxcpp, a plain `throw` starts the stack again from the rethrow.
 		Elsewhere it returns, and the `throw` the converter puts after it rethrows `e`.
