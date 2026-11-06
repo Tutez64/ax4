@@ -5,6 +5,7 @@ import ax4.ParseTree.*;
 import ax4.TypedTree;
 import ax4.TypedTreeTools.mk;
 import ax4.TypedTreeTools.mkBuiltin;
+import ax4.TypedTreeTools.mkCall;
 import ax4.TypedTreeTools.mkDeclRef;
 import ax4.TypedTreeTools.skipParens;
 import ax4.TypedTreeTools.tUntypedArray;
@@ -1491,6 +1492,8 @@ class ExprTyper {
 		var name = "__finallyError" + finallyId++;
 		var v:TVar = {name: name, type: TTAny};
 		var rethrow = mk(TEThrow(mkIdent("throw", [], [whitespace]), mk(TELocal(mkIdent(name), v), TTAny, TTAny)), TTVoid, TTVoid);
+		// the throw starts the error's stack again on hxcpp, which the helper rethrows with its own
+		var keepStack = mkCall(mkBuiltin("ASCompat.rethrowKeepingStack", TTFun([TTAny], TTVoid)), [mk(TELocal(mkIdent(name), v), TTAny, TTAny)]);
 		var catchAll:TCatch = {
 			syntax: {
 				keyword: mkIdent("catch", [whitespace], [whitespace]),
@@ -1500,7 +1503,7 @@ class ExprTyper {
 				closeParen: mkCloseParen([whitespace])
 			},
 			v: v,
-			expr: block([cloneExpr(fin), rethrow])
+			expr: block([cloneExpr(fin), keepStack, rethrow])
 		};
 		var guard = mk(TETry({keyword: new Token(0, TkIdent, "try", keyword.leadTrivia, [whitespace]), expr: inner, catches: [catchAll]}), TTVoid, TTVoid);
 		keyword.leadTrivia = [];

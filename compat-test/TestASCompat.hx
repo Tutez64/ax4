@@ -102,6 +102,27 @@ class TestASCompat extends utest.Test {
 		equals(true, ASCompat.processNull(flags[1]));
 	}
 
+	// As a converted finally rethrows: run the finally body, then rethrow the same value.
+	function testRethrowKeepingStackRethrowsTheSameValue() {
+		if (!canCatchErrors()) {
+			pass();
+			return;
+		}
+		var error = new flash.errors.Error("thrown on purpose");
+		var caught:Dynamic = null;
+		try {
+			try {
+				throw error;
+			} catch (e:Dynamic) {
+				ASCompat.rethrowKeepingStack(e);
+				throw e;
+			}
+		} catch (e:Dynamic) {
+			caught = e;
+		}
+		equals(error, caught);
+	}
+
 	function testCoerceMatchesAvm2ImplicitCoercion() {
 		var sprite = new flash.display.Sprite();
 		equals(null, ASCompat.coerce(null, flash.display.Sprite));

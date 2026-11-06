@@ -1027,6 +1027,17 @@ class ASCompat {
 
 	// Implicit coercion of an untyped value to a class, as AVM2 does on assignment or argument passing:
 	// null and undefined give null, a value of another type throws a TypeError (`as` returns null instead).
+	/**
+		Rethrows `e`, caught to run a converted `finally`, with the stack of where it was thrown,
+		where the target can: on hxcpp, a plain `throw` starts the stack again from the rethrow.
+		Elsewhere it returns, and the `throw` the converter puts after it rethrows `e`.
+	**/
+	public static inline function rethrowKeepingStack(e:Dynamic):Void {
+		#if cpp
+		cpp.Lib.rethrow(e);
+		#end
+	}
+
 	public static function coerce<T>(v:Dynamic, c:Class<T>):T {
 		if (v == null) {
 			return null;
