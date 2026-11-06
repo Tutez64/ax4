@@ -10,9 +10,14 @@ private typedef RegExpImpl = #if js js.lib.RegExp #elseif flash flash.utils.RegE
 class RegExp {
 	#if (!js && !flash)
 	var regex:EReg;
-	var global:Bool;
 	var groupCount:Int;
 	#end
+
+	/** The pattern and flags it was built with, as AS3's read-only properties. */
+	public var source(default, null):String;
+	public var global(default, null):Bool;
+	public var ignoreCase(default, null):Bool;
+	public var multiline(default, null):Bool;
 
 	#if (js || flash)
 	var impl:RegExpImpl;
@@ -24,10 +29,13 @@ class RegExp {
 	#end
 
 	public function new(pattern:String, options = "") {
+		source = pattern;
+		global = options.indexOf("g") >= 0;
+		ignoreCase = options.indexOf("i") >= 0;
+		multiline = options.indexOf("m") >= 0;
 		#if (js || flash)
 		impl = new RegExpImpl(pattern, options);
 		#else
-		global = options.indexOf("g") >= 0;
 		regex = new EReg(pattern, options);
 		groupCount = countCaptureGroups(pattern);
 		#end

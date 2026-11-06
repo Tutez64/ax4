@@ -814,6 +814,8 @@ class ExprTyper {
 			case "test": TTFun([TTString], TTBoolean);
 			case "exec": TTFun([TTString], tUntypedObject);
 			case "lastIndex": TTInt;
+			case "source": TTString;
+			case "global" | "ignoreCase" | "multiline": TTBoolean;
 			case other: err('Unknown RegExp instance field: $other', field.pos); TTAny;
 		}
 	}

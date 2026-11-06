@@ -14,6 +14,15 @@ class TestRegExp extends utest.Test {
 		same(["a", "b", "c"], sep.split("a--b--c"));
 	}
 
+	function testSourceAndFlags() {
+		var re = new compat.RegExp("o+", "gi");
+		equals("o+", re.source);
+		isTrue(re.global);
+		isTrue(re.ignoreCase);
+		isFalse(re.multiline);
+		isFalse(new compat.RegExp("x").global);
+	}
+
 	function testExecAndMatch() {
 		var re = new compat.RegExp("foo", "g");
 		var execResult = re.exec("xxfooyy");
