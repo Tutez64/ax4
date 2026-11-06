@@ -5,7 +5,8 @@
  * - The same methods on an untyped (*) or Object value, which may hold a Number: a Number has
  *   no methods outside flash and JS, so they become ASCompat.callNumberMethod(v, "toFixed", digits),
  *   which calls the object's own method otherwise.
- * - int.MAX_VALUE/MIN_VALUE and Number.MAX_VALUE/MIN_VALUE/POSITIVE_INFINITY/NEGATIVE_INFINITY.
+ * - int.MAX_VALUE/MIN_VALUE, uint.MAX_VALUE/MIN_VALUE (ASCompat.MAX_UINT/MIN_UINT, not int's), and
+ *   Number.MAX_VALUE/MIN_VALUE, with POSITIVE_INFINITY/NEGATIVE_INFINITY as Math's (not MAX/MIN_VALUE).
  */
 package {
     public class TestFilterNumberApi {
@@ -21,6 +22,9 @@ package {
 
             var g:int = int.MAX_VALUE;
             var h:Number = Number.POSITIVE_INFINITY;
+            var hn:Number = Number.NEGATIVE_INFINITY;
+            var hu:uint = uint.MAX_VALUE;
+            var hz:uint = uint.MIN_VALUE;
         }
 
         private function format(value:*):String {

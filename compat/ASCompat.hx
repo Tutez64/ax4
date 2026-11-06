@@ -18,6 +18,8 @@ class ASCompat {
 
 	public static inline final MAX_INT = 2147483647;
 	public static inline final MIN_INT = -2147483648;
+	public static inline final MAX_UINT:UInt = 0xFFFFFFFF;
+	public static inline final MIN_UINT:UInt = 0;
 
 	public static inline final MAX_FLOAT = 1.7976931348623157e+308;
 	// Represents the smallest positive Number value in AS3 (Number.MIN_VALUE)

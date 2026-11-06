@@ -335,6 +335,12 @@ class TestASCompat extends utest.Test {
 		same(["a", "", "c", "", "e", "f"], calls);
 	}
 
+	function testUintLimits() {
+		var max:UInt = ASCompat.MAX_UINT;
+		equals(4294967295.0, (max : Float));
+		equals(0.0, (ASCompat.MIN_UINT : Float));
+	}
+
 	function testArrayReverseMapSomeSort() {
 		var reversed = [1, 2, 3];
 		var reversedResult = ASCompat.ASArray.reverse(reversed);

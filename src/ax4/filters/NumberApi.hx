@@ -31,23 +31,26 @@ class NumberApi extends AbstractFilter {
 				var eMethod = mkBuiltin("ASCompat.callNumberMethod", TTFunction, removeLeadingTrivia(eValue));
 				e.with(kind = TECall(eMethod, args.with(args = callArgs)), type = TTString);
 
+			// `uint` is typed as the `int` builtin: its token tells them apart
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "int")})}, "MAX_VALUE", fieldToken):
-				return mkBuiltin("ASCompat.MAX_INT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return if (builtinToken.text == "uint") mkBuiltin("ASCompat.MAX_UINT", TTUint, builtinToken.leadTrivia, fieldToken.trailTrivia)
+					else mkBuiltin("ASCompat.MAX_INT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "int")})}, "MIN_VALUE", fieldToken):
-				return mkBuiltin("ASCompat.MIN_INT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return if (builtinToken.text == "uint") mkBuiltin("ASCompat.MIN_UINT", TTUint, builtinToken.leadTrivia, fieldToken.trailTrivia)
+					else mkBuiltin("ASCompat.MIN_INT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "Number")})}, "MAX_VALUE", fieldToken):
-				return mkBuiltin("ASCompat.MAX_FLOAT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return mkBuiltin("ASCompat.MAX_FLOAT", TTNumber, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "Number")})}, "MIN_VALUE", fieldToken):
-				return mkBuiltin("ASCompat.MIN_FLOAT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return mkBuiltin("ASCompat.MIN_FLOAT", TTNumber, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "Number")})}, "POSITIVE_INFINITY", fieldToken):
-				return mkBuiltin("ASCompat.MAX_FLOAT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return mkBuiltin("Math.POSITIVE_INFINITY", TTNumber, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case TEField({kind: TOExplicit(_, {kind: TEBuiltin(builtinToken, "Number")})}, "NEGATIVE_INFINITY", fieldToken):
-				return mkBuiltin("ASCompat.MIN_FLOAT", TTInt, builtinToken.leadTrivia, fieldToken.trailTrivia);
+				return mkBuiltin("Math.NEGATIVE_INFINITY", TTNumber, builtinToken.leadTrivia, fieldToken.trailTrivia);
 
 			case _:
 				e;
