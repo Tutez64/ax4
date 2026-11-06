@@ -61,6 +61,8 @@ class Filters {
 		]);
 		if (cloneExprSmokeLate != null) filters.push(cloneExprSmokeLate);
 		filters = filters.concat([
+			// Early, so that the API filters below see the caught value read as an Error.
+			new RewriteErrorCatch(context),
 			new ApiSignatureOverrides(context),
 			new RewriteForIn(context),
 			// Re-run inference after loop rewrites to type synthesized temp iteratee vars.
@@ -110,7 +112,6 @@ class Filters {
 			new UintComparison(context),
 			new HandleProtectedOverrides(context),
 			new FixOverrides(context),
-			new RewriteErrorCatch(context),
 			new CheckUntypedMethodCalls(context),
 			new RemoveRedundantParenthesis(context),
 			new RewriteProxyInheritance(context),

@@ -6,6 +6,7 @@
  * - catch body expressions should remain intact after rewrite.
  * - reads of the caught value become `ASCompat.asError(e)`, an Error even when a runtime error outside
  *   flash is not one: a field read, an argument where an Error is expected, an untyped copy.
+ * - the API filters see those reads: `e.message.replace(regexp, "")` becomes a RegExp replace.
  * - a rethrow (`throw e`) and an assignment to the caught variable keep the caught value itself.
  */
 package {
@@ -42,6 +43,7 @@ package {
 			} catch (e:Error) {
 				report(e);
 				var id:int = e.errorID;
+				trace(e.message.replace(/\.+$/, ""));
 				if (id == 0) {
 					throw e;
 				}

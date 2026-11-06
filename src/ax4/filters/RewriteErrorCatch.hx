@@ -6,8 +6,10 @@ package ax4.filters;
 
 	The body still reads `e` as an `Error`: each read becomes `ASCompat.asError(e)`, which turns any
 	other value into an `Error` with its message, so that `e.message`, `e.errorID` or passing `e` where
-	an `Error` is expected work on any caught value. A rethrow (`throw e`) and an assignment to `e` keep
-	the caught value itself.
+	an `Error` is expected work on any caught value. `e.message` and `e.name` read as Strings. A rethrow
+	(`throw e`) and an assignment to `e` keep the caught value itself.
+
+	It runs before the API filters, which then see these reads.
 **/
 class RewriteErrorCatch extends AbstractFilter {
 	override function processExpr(e:TExpr):TExpr {
@@ -50,6 +52,11 @@ class RewriteErrorCatch extends AbstractFilter {
 					var local = e.with(kind = TELocal(new Token(token.pos, token.kind, token.text, [], []), dynamicVar), type = TTAny, expectedType = TTAny);
 					var call = mkCall(mkBuiltin("ASCompat.asError", TTFun([TTAny], errorType), token.leadTrivia), [local], errorType, token.trailTrivia);
 					call.with(expectedType = e.expectedType);
+				case TEField(obj = {kind: TOExplicit(dot, inner = {kind: TELocal(_, v)})}, fieldName = "message" | "name", fieldToken) if (v == caught):
+					// declared untyped (*) in AS3, but a String on the converted Error, as the API filters
+					// that follow need to know (a RegExp replace on the message)
+					var eObj = asError(inner);
+					e.with(kind = TEField(obj.with(kind = TOExplicit(dot, eObj), type = eObj.type), fieldName, fieldToken), type = TTString);
 				case TEThrow(keyword, value):
 					var inner = raw(value);
 					if (inner != value) e.with(kind = TEThrow(keyword, inner)) else mapExpr(asError, e);
