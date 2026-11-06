@@ -2,7 +2,8 @@
  * MathApi: Math.min/max with more than two values nest two-value calls; Math.round/floor/ceil
  * stay Math's (Int) where an int is expected and become fround/ffloor/fceil otherwise, with their
  * arguments rewritten too (a Math.max of several values inside Math.ceil into an int);
- * Infinity and -Infinity are Math's.
+ * Infinity and -Infinity are Math's; Math.max() and Math.min() with no arguments are
+ * Math.NEGATIVE_INFINITY and Math.POSITIVE_INFINITY, as in AS3.
  */
 package {
     public class TestFilterMathApi {
@@ -12,7 +13,8 @@ package {
             total += Math.ceil(Math.max(-a, -b, c - d, d, widest));
             var rounded:Number = Math.round(Math.min(a, b, c));
             var none:Number = a > 0 ? Infinity : -Infinity;
-            return total + int(rounded + none);
+            var empty:Number = Math.max() + Math.min();
+            return total + int(rounded + none + empty);
         }
     }
 }

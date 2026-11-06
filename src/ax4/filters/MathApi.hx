@@ -75,6 +75,14 @@ class MathApi extends AbstractFilter {
 
 				e.with(kind = TECall(eMethod, args.with(args = [firstArg, secondArg])));
 
+			// with no arguments, AS3 gives -Infinity for max and Infinity for min: Haxe's take two
+			case TECall({
+					kind: TEField({kind: TOExplicit(_, {kind: TEDeclRef(_, {kind: TDClassOrInterface({name: "Math", parentModule: {parentPack: {name: ""}}})})})},
+						fieldName = "min" | "max", _)
+				}, {args: []}):
+				var name = if (fieldName == "max") "Math.NEGATIVE_INFINITY" else "Math.POSITIVE_INFINITY";
+				mk(TEBuiltin(mkIdent(name, removeLeadingTrivia(e), removeTrailingTrivia(e)), name), TTNumber, e.expectedType);
+
 			case TEDeclRef(_, {name: "Infinity", kind: TDVar({parentModule: {parentPack: {name: ""}}})}):
 				var name = "Math.POSITIVE_INFINITY";
 				e.with(kind = TEBuiltin(mkIdent(name, removeLeadingTrivia(e), removeTrailingTrivia(e)), name));
