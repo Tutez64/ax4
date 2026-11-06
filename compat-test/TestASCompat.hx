@@ -315,6 +315,26 @@ class TestASCompat extends utest.Test {
 		isTrue(owner.calls > 0);
 	}
 
+	function testArrayEveryAndForEach() {
+		var values = [1, 2, 3];
+		isTrue(ASCompat.ASArray.every(values, (value, index, array) -> value == index + 1 && array == values));
+		isFalse(ASCompat.ASArray.every(values, (value, index, array) -> value < 3));
+		var seen = [];
+		ASCompat.ASArray.forEach(values, (value, index, array) -> seen.push(value * 10 + index));
+		same([10, 21, 32], seen);
+	}
+
+	function pick(value:String):String {
+			calls.push(value);
+			return value;
+		}
+		equals("a", ASCompat.orValue(pick("a"), pick("b")));
+		equals("c", ASCompat.orValue(pick(""), pick("c")));
+		equals("", ASCompat.andValue(pick(""), pick("d")));
+		equals("f", ASCompat.andValue(pick("e"), pick("f")));
+		same(["a", "", "c", "", "e", "f"], calls);
+	}
+
 	function testArrayReverseMapSomeSort() {
 		var reversed = [1, 2, 3];
 		var reversedResult = ASCompat.ASArray.reverse(reversed);

@@ -9,7 +9,9 @@
  * Every item of a multiple push/unshift is coerced to the element type (Number items in a Vector.<uint>).
  * Vector.filter/every/some/forEach with an (item, index, vector) callback go through ASCompat.ASVectorTools
  * (Starling's AssetManager.dequeue); a one-argument callback stays a Vector method call.
- * reverse/map/some route to compat helpers for Array/Vector.
+ * reverse/map/some route to compat helpers for Array/Vector, and Array.forEach/every to ASCompat.ASArray,
+ * which pass AS3's (item, index, array) to the callback.
+ * An unshift whose result (the new length) is read becomes unshiftMultiple: Haxe's returns Void.
  * concat of untyped values (an Array or one item, known at runtime), or of several values, calls
  * ASCompat.ASArray.concat.
  * Vector sort/splice paths are covered.
@@ -53,6 +55,15 @@ package {
             var mapped:Array = items.map(function(item:*, index:int, array:Array):* {
                 return item;
             }, this);
+
+            items.forEach(function(item:*, index:int, array:Array):void {
+                items2[index] = item;
+            });
+            var allSet:Boolean = items.every(function(item:*, index:int, array:Array):Boolean {
+                return item != null;
+            });
+            var newLength:uint = items.unshift(0);
+            items.unshift(1);
 
             // map with void callback should be rewritten to forEach
             items.map(function(item:*, index:int, array:Array):void {

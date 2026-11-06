@@ -2249,6 +2249,18 @@ class ASArray {
 		return false;
 	}
 
+	public static function every<T>(a:Array<T>, callback:(item:T, index:Int, array:Array<T>)->Bool, ?thisObj:Dynamic):Bool {
+		for (i in 0...a.length) {
+			var result:Bool =
+				if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])
+				else callback(a[i], i, a);
+			if (!result) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static function forEach<T>(a:Array<T>, callback:(item:T, index:Int, array:Array<T>)->Void, ?thisObj:Dynamic):Void {
 		for (i in 0...a.length) {
 			if (thisObj != null) Reflect.callMethod(thisObj, callback, [a[i], i, a])

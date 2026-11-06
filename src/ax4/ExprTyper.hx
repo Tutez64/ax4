@@ -845,10 +845,14 @@ class ExprTyper {
 			case "push" | "unshift": TTFun([t], TTUint, TRestSwc);
 			case "pop" | "shift": TTFun([], t);
 			case "insertAt": TTFun([TTInt, t], TTVoid);
-			case "concat": TTFun([TTArray(t)], TTArray(t));
+			case "concat": TTFun([TTArray(t)], TTArray(t), TRestSwc); // AS3: ...args
 			case "indexOf" | "lastIndexOf": TTFun([t, TTInt], TTInt);
 			case "slice": TTFun([TTInt, TTInt], TTArray(t));
-			case "splice": TTFun([TTInt, TTUint, TTAny], TTArray(t));
+			case "splice": TTFun([TTInt, TTUint, TTAny], TTArray(t), TRestSwc); // AS3: ...items
+			case "reverse": TTFun([], TTArray(t));
+			case "map": TTFun([TTFunction, TTAny], TTArray(TTAny));
+			case "forEach": TTFun([TTFunction, TTAny], TTVoid);
+			case "every" | "some": TTFun([TTFunction, TTAny], TTBoolean);
 			case "removeAt": TTFun([TTInt], t);
 			case "sort": TTFun([TTAny], TTArray(t));
 			case "sortOn": TTFun([TTAny, TTAny], TTArray(t));

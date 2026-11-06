@@ -24,11 +24,11 @@ class ArrayApi extends AbstractFilter {
 				var eMethod = mk(TEField(fieldObj, "reverse", mkIdent("reverse")), TTFunction, TTFunction);
 				e.with(kind = TECall(eMethod, args.with(args = [{expr: eArray, comma: null}])));
 
-			// Array.some -> ASCompat.ASArray.some
-			case TECall({kind: TEField({kind: TOExplicit(dot, eArray = {type: TTArray(_)})}, "some", _)}, args):
+			// Array.some/every/forEach -> ASCompat.ASArray, which pass AS3's (item, index, array)
+			case TECall({kind: TEField({kind: TOExplicit(dot, eArray = {type: TTArray(_)})}, methodName = "some" | "every" | "forEach", _)}, args):
 				var eCompatArray = mkBuiltin("ASCompat.ASArray", TTBuiltin, removeLeadingTrivia(eArray));
 				var fieldObj = {kind: TOExplicit(mkDot(), eCompatArray), type: eCompatArray.type};
-				var eMethod = mk(TEField(fieldObj, "some", mkIdent("some")), TTFunction, TTFunction);
+				var eMethod = mk(TEField(fieldObj, methodName, mkIdent(methodName)), TTFunction, TTFunction);
 				e.with(kind = TECall(eMethod, args.with(args = [{expr: eArray, comma: commaWithSpace}].concat(args.args))));
 
 			// Vector.filter/every/some/forEach with AS3's (item, index, vector) callback: Haxe's pass the item only
@@ -155,8 +155,9 @@ class ArrayApi extends AbstractFilter {
 					{expr: mk(TELiteral(TLString(mkString(','))), TTString, TTString), comma: null}
 				])));
 
-			// push with multiple arguments
-			case TECall({kind: TEField({kind: TOExplicit(dot, eArray = {type: TTArray(_) | TTVector(_)})}, methodName = "push" | "unshift", fieldToken)}, args) if (args.args.length > 1):
+			// push with multiple arguments, and an unshift whose result (the new length) is read: Haxe's returns Void
+			case TECall({kind: TEField({kind: TOExplicit(dot, eArray = {type: TTArray(_) | TTVector(_)})}, methodName = "push" | "unshift", fieldToken)}, args)
+				if (args.args.length > 1 || (methodName == "unshift" && args.args.length == 1 && e.expectedType != TTVoid && isHaxeArray(eArray.type))):
 				var eCompatArray = mkBuiltin("ASCompat.ASArray", TTBuiltin, removeLeadingTrivia(eArray));
 				var fieldObj = {kind: TOExplicit(dot, eCompatArray), type: eCompatArray.type};
 				var eMethod = mk(TEField(fieldObj, methodName + "Multiple", fieldToken), TTFunction, TTFunction);
