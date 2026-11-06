@@ -24,3 +24,4 @@ loopCapture=0,2
 defaults=NaN,0,0,null,false,null,null
 rest=0,3,1-2-3,2:0.5:undefined,5:0.5:undefined
 staticOrder=NaN,5,x,42
+dictionaryRead=named,seven,seven,large,negative,nine,null,null,null

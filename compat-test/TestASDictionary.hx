@@ -1,6 +1,28 @@
 import utest.Assert.*;
 
 class TestASDictionary extends utest.Test {
+	function testGetStringAndGetInt() {
+		var dict = new ASDictionary<Dynamic, Dynamic>();
+		dict["name"] = "named";
+		dict[7] = "seven";
+		dict[5000] = "large";
+		dict[-3] = "negative";
+		equals("named", ASDictionary.getString(dict, "name"));
+		equals("seven", ASDictionary.getString(dict, "7"));
+		equals("seven", ASDictionary.getInt(dict, 7));
+		equals("large", ASDictionary.getInt(dict, 5000));
+		equals("negative", ASDictionary.getInt(dict, -3));
+		// a missing key reads as with [], which is undefined outside flash
+		equals(ASCompat.toString(dict["missing"]), ASCompat.toString(ASDictionary.getString(dict, "missing")));
+		equals(ASCompat.toString(dict[8]), ASCompat.toString(ASDictionary.getInt(dict, 8)));
+		equals(ASCompat.toString(dict[(null : String)]), ASCompat.toString(ASDictionary.getString(dict, null)));
+		#if !flash
+		isTrue(ASCompat.isUndefinedValue(ASDictionary.getString(dict, "missing")));
+		isTrue(ASCompat.isUndefinedValue(ASDictionary.getInt(dict, 8)));
+		isTrue(ASCompat.isUndefinedValue(ASDictionary.getString(dict, null)));
+		#end
+	}
+
 	function testAsDictionary() {
 		var dict = new ASDictionary<Int, String>();
 		equals(dict, ASDictionary.asDictionary(dict));

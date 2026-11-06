@@ -31,3 +31,4 @@ errorToString=m|t|
 loopCapture=0,2
 defaults=NaN,0,0,null,false,null,null
 staticOrder=1,5,x,42
+dictionaryRead=named,seven,seven,large,negative,nine,null,null,null

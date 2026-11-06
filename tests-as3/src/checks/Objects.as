@@ -64,6 +64,24 @@ package checks {
 			}
 			delete dict[k2];
 			out.push("dictionary=" + dict[k1] + "," + dict[k2] + "," + dict[1] + "," + count + "," + (k1 in dict) + "," + dict["true"]);
+			var primitiveKeys:Dictionary = new Dictionary();
+			var nameKey:String = "name";
+			var numberName:String = "7";
+			var noName:String = null;
+			var intKey:int = 7;
+			var largeKey:int = 5000;
+			var negativeKey:int = -3;
+			var uintKey:uint = 9;
+			primitiveKeys[nameKey] = "named";
+			primitiveKeys[intKey] = "seven";
+			primitiveKeys[largeKey] = "large";
+			primitiveKeys[negativeKey] = "negative";
+			primitiveKeys[uintKey] = "nine";
+			out.push("dictionaryRead=" + primitiveKeys[nameKey] + "," + primitiveKeys[numberName] + "," + primitiveKeys[intKey] + "," + primitiveKeys[largeKey]
+				+ "," + primitiveKeys[negativeKey] + "," + primitiveKeys[uintKey] + "," + primitiveKeys[noName] + "," + primitiveKeys["missing"] + "," + primitiveKeys[8]);
+			var yes:Boolean = true;
+			var no:Boolean = false;
+			out.push("intFromBool=" + int(yes) + "," + int(no) + "," + uint(yes) + "," + (int(yes) + 1) + "," + (1 + int(no) * 2));
 			var withToString:Labelled = new Labelled("lbl");
 			// a class instance in an arithmetic + stops ax4 (Unsupported + operation): it goes through an untyped value
 			var untypedLabel:* = withToString;

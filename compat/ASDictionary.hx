@@ -47,6 +47,10 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 	static inline final SMALL_INT_IDS = 1024;
 	static final smallIntIds:Array<String> = [];
 
+	static function intKeyId(n:Int):String {
+		return n >= 0 && n < SMALL_INT_IDS ? smallIntId(n) : Std.string(n);
+	}
+
 	// The id of a small int key, kept: converting it on each access allocated a string.
 	static function smallIntId(n:Int):String {
 		var id = smallIntIds[n];
@@ -102,7 +106,7 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 			#if cpp
 			result = this.exists(key) ? this.get(key) : ASCompat.UNDEFINED;
 			#elseif js
-			result = this.exists(key) ? this.get(key) : js.Syntax.code("undefined");
+			result = key != null && this.exists(key) ? this.get(key) : js.Syntax.code("undefined");
 			#else
 			result = this.get(key);
 			#end
@@ -110,6 +114,44 @@ abstract ASDictionary<K,V>(Dictionary<K,V>) from Dictionary<K,V> to Dictionary<K
 		return cast result;
 		#end
 	}
+
+	#if flash
+	// Dynamic: a value typed by a type parameter here would turn undefined into null.
+	public static inline function getString(dict:Dynamic, key:String):Dynamic {
+		return untyped dict[key];
+	}
+
+	public static inline function getInt(dict:Dynamic, key:Int):Dynamic {
+		return untyped dict[key];
+	}
+	#else
+	/** `dict[key]` for a key known to be a String. On C++ it skips boxing the key and testing its type at runtime. **/
+	public static inline function getString<K,V>(dict:ASDictionary<K,V>, key:String):Null<V> {
+		#if cpp
+		if (key == null) {
+			return dict.get(cast key);
+		}
+		var entries = dict.getPrimitiveEntries(false);
+		var entry = entries != null ? entries.get(key) : null;
+		var result:Dynamic = entry != null ? entry.value : ASCompat.UNDEFINED;
+		return cast result;
+		#else
+		return dict.get(cast key);
+		#end
+	}
+
+	/** `dict[key]` for a key known to be an int. On C++ it skips boxing the key and testing its type at runtime. **/
+	public static inline function getInt<K,V>(dict:ASDictionary<K,V>, key:Int):Null<V> {
+		#if cpp
+		var entries = dict.getPrimitiveEntries(false);
+		var entry = entries != null ? entries.get(intKeyId(key)) : null;
+		var result:Dynamic = entry != null ? entry.value : ASCompat.UNDEFINED;
+		return cast result;
+		#else
+		return dict.get(cast key);
+		#end
+	}
+	#end
 
 	@:op([]) public inline function set(key:K, value:V):Null<V> {
 		#if flash

@@ -115,6 +115,8 @@ class Filters {
 			new CheckUntypedMethodCalls(context),
 			new RemoveRedundantParenthesis(context),
 			new RewriteProxyInheritance(context),
+			// Last, so that the filters above all see these reads as array accesses.
+			new RewriteDictionaryPrimitiveRead(context),
 			new FixImports(context)
 		]);
 
