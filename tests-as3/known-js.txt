@@ -1,0 +1,26 @@
+# Lines the converted checks print on JS where they differ from Flash (expected.txt).
+intOverflow=2147483648,2147483648,4294967294,4294967294
+toUint=-1,3,-3,5
+parse=31,8,12,350,false,0,12,true,0,false
+mixedCompare=false,true,true,0
+constants=-2147483648,4294967295,true,5e-324
+concat=a12,3a,null,null,null,null,null
+substr=World|ell|ello||lo, World||
+replace=bbb|bbb|smith john|a<1>b<2>|x$&$&y
+indexOf=1,-1,2,0
+sort=1,9,10|1,9,10|10,9,1|A,b,c|3,2,1
+stack=2,1,null,null,2,3,430
+toString=1,2,3|,,0|[true,s,1.5]
+vector=0,0,0,1|0,0|,||3|4
+vectorMore=ab,abc,false,b
+equality=true,true,true,true,false,true,true
+typeof=number,string,object,object,object,function,object,boolean,number,function,object
+is=true,false,true,true,true,true,true,false,true,true
+dictionary=one,null,string,4,true,bool
+error=boom,7,Error,boom
+nullAccess=no
+errorToString=m|t|
+loopCapture=0,2
+defaults=NaN,0,0,null,false,null,null
+rest=0,3,1-2-3,2:0.5:undefined,5:0.5:undefined
+staticOrder=NaN,5,x,42

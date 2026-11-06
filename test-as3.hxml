@@ -1,0 +1,37 @@
+# Converts tests-as3 (AS3 checks) and runs them against expected.txt, which Flash Player printed (tests-as3/build.sh).
+-cmd java -jar converter.jar tests-as3/config.json
+
+--next
+
+-D no-deprecation-warnings
+-cp compat
+-cp tests-as3/out
+-cp tests-as3/harness
+-lib openfl
+-lib lime
+-D nocffi
+-D disable-cffi
+-lib hxnodejs
+-resource tests-as3/expected.txt@expected
+-resource tests-as3/known-js.txt@known
+-main Main
+-js test-as3.js
+--remap flash:openfl
+-cmd node -r ./compat-test/shim.js test-as3.js
+
+--next
+
+-D no-deprecation-warnings
+-cp compat
+-cp tests-as3/out
+-cp tests-as3/harness
+-lib openfl
+-lib lime
+-D nocffi
+-D disable-cffi
+-resource tests-as3/expected.txt@expected
+-resource tests-as3/known-cpp.txt@known
+-main Main
+-cpp tests-as3/cpp
+--remap flash:openfl
+-cmd npx haxe -cp compat-test --run RunCompiledMain tests-as3/cpp/Main

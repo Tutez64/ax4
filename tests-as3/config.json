@@ -1,0 +1,9 @@
+{
+  "src": "tests-as3/src",
+  "hxout": "tests-as3/out",
+  "swc": [
+    "tests/lib/airglobal.swc"
+  ],
+  "skipXmlLiterals": true,
+  "hxoutClean": true
+}

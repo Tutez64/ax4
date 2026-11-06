@@ -10,3 +10,6 @@ test.swf
 /tests-haxe/out
 /tests-haxe/cpp
 /test-haxe.js
+/tests-as3/out
+/tests-as3/cpp
+/test-as3.js

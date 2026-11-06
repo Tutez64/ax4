@@ -44,6 +44,12 @@ The conversion pipeline is sequential and defined in `src/ax4/Main.hx`:
     *   `hx/` holds Haxe sources; `tests-haxe/build.sh <ffdec.jar>` compiles them to a SWC, decompiles it with JPEXS FFDec and splits it into `src/`, `src-bytecode/` and `lib/bytecode.swc` as a decompiled game would be, and writes `expected.txt` from the Haxe sources (`--interp`). Rerun it after changing `hx/`.
     *   `npx haxe test-haxe.hxml` converts them, then runs the converted checks against `expected.txt` on JS and C++.
     *   Their inputs are real Haxe output, so the filters' reports of unhandled forms are not triggered there.
+*   **Converted AS3 run against Flash**: `tests-as3/` checks that converted code behaves as in Flash Player.
+    *   `src/checks/` holds AS3 checks that push `name=value` lines. `tests-as3/build.sh <air-sdk> <flashplayerdebugger>` compiles them with the AIR SDK's mxmlc, turns its ABC 47.16 into the 46.16 Flash Player 32 reads (`abc46.py`), runs them in the Flash Player projector content debugger and writes its traces to `expected.txt`. Rerun it after changing `src/`.
+    *   `npx haxe test-as3.hxml` converts them, then runs the converted checks against `expected.txt` on JS and C++.
+    *   `known-js.txt` and `known-cpp.txt` list, as printed, the lines where a target is known to differ from Flash. Another difference fails, and so does a listed line that is no longer printed: update the list when a fix changes it.
+    *   Forms ax4 stops on are left out with a comment saying so (labelled break/continue, named function expressions, `arguments`, a `case` after `default`, `split` with a limit, a class instance in an arithmetic `+`).
+*   **Flash output**: the Flash Player projector content debugger writes `trace` to `~/.macromedia/Flash_Player/Logs/flashlog.txt` when `~/mm.cfg` has `TraceOutputFileEnable=1`; the compat `test.swf` traces its results too.
 
 ### Debugging
 *   **Debugging**: `src/ax4/ParseTreeDump.hx` can dump ASTs. `TypedTree.dump()` can visualize the semantic tree.
