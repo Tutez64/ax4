@@ -197,6 +197,12 @@ These are judgment labels for triage, not strict severity levels. The same warni
 - **Category:** Gap (should be rare after fall-through support).
 - **Recommendation:** If this still appears, treat it as an ax4 bug and provide a minimal repro.
 
+#### `Unhandled flash.Boot member: <name>` / `Unhandled access to a Haxe map's internal <name>` / `Unhandled access to StringMap.reserved`
+
+- **Meaning:** In a [program compiled with Haxe](Config.md#programs-compiled-with-haxe), code uses a part of `flash.Boot`, or of the flash storage of a Haxe map, that ax4 does not rewrite. Neither exists outside Flash, so the output will not compile or will fail at runtime there.
+- **Category:** Gap.
+- **Recommendation:** Treat it as an ax4 bug and provide a minimal repro (a Haxe source using that member, as in `tests-haxe/hx/`).
+
 ---
 
 ## Adding new diagnostics

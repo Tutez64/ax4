@@ -10,11 +10,11 @@ java -jar converter.jar config.json
 
 ## Required fields
 
-| Key     | Type                   | Description                              |
-|---------|------------------------|------------------------------------------|
-| `src`   | `string` or `string[]` | AS3 source root(s).                      |
-| `hxout` | `string`               | Output directory for generated Haxe.     |
-| `swc`   | `string[]`             | SWC files loaded as extern/type sources. |
+| Key     | Type                   | Description                                                                    |
+|---------|------------------------|--------------------------------------------------------------------------------|
+| `src`   | `string` or `string[]` | AS3 source root(s).                                                            |
+| `hxout` | `string`               | Output directory for generated Haxe.                                           |
+| `swc`   | `string[]`             | SWC files loaded as extern/type sources (ABC 46.16, or the 47.16 of AIR SDKs). |
 
 ## Optional fields
 
@@ -138,6 +138,17 @@ var ids:Array = []; // Array<int>
 var counts:Dictionary = new Dictionary(); // Dictionary<String, int>
 var names:Object = new Object(); // Object<String>
 ```
+
+## Programs compiled with Haxe
+
+A SWF compiled with Haxe embeds the Haxe standard library and `flash.Boot`. ax4 detects it, with no option to set, when a `src` root has `flash/Boot.as` or a SWC declares `flash.Boot`, as when the SWF is decompiled with JPEXS FFDec and the classes it cannot decompile are linked from a SWC.
+
+In that case:
+
+- The standard library modules in `src` are not converted (`Std`, `Type`, `Reflect`, `haxe.*`, `flash.Boot`, `flash.Lib`...): the converted code uses the Haxe standard library of its target, and their types come from the SWC.
+- What the compiled code uses of `flash.Boot` and of the flash storage of Haxe maps (inlined `StringMap`, `IntMap` and `ObjectMap` methods) is rewritten to calls that work on every target.
+- The `§§hasnext`, `§§nextname` and `§§nextvalue` instructions FFDec prints are emulated through `ASCompat`; the other `§§` instructions stop the conversion.
+- A Haxe property's flash `get x()` and `set x()` accessors are merged into its `get_x` and `set_x` methods.
 
 ## Path and platform notes
 

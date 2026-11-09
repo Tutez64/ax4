@@ -7,10 +7,12 @@ It is a high-level overview, not a changelog.
 
 - ax3 was primarily used for HTML5 migration; this fork is primarily optimized for C++ migration while still supporting HTML5.
 - Stronger conversion reliability for real-world AS3 code (fewer "unknown identifier/field" and conversion edge-case failures).
-- Much broader non-Flash target support, especially C++/hxcpp-oriented compatibility behavior.
+- Much broader non-Flash target support, especially C++/libhxcpp-oriented compatibility behavior.
 - Significant expansion of compatibility runtime (`compat/`) and tests (`compat-test/`).
 - Better handling of dynamic access, dictionary/object semantics, XML/E4X patterns, arrays/vectors, and coercions.
 - Stronger **AVM2 fidelity** on awkward-but-valid AS3 (Boolean in arithmetic, switch fall-through, `void` used as a condition) instead of aborting, and AS3 runtime conversions (`int()` wrapping, `TypeError` on failed implicit coercions).
+- Converts **programs compiled with Haxe**, as JPEXS FFDec decompiles them, leaving out the Haxe standard library they embed (see [Config](Config.md#programs-compiled-with-haxe)).
+- Reads the ABC 47.16 SWCs that AIR SDKs write.
 - End-of-run **diagnostics summary** (counts by warning kind) plus a [Diagnostics](Diagnostics.md) catalogue.
 - Distributed on lib.haxe.org: `haxelib run ax4` converts, `-lib ax4` adds the compat runtime.
 - More practical project tooling/docs (new docs set, troubleshooting guidance, wiki sync workflow, compat call audit).
@@ -21,6 +23,7 @@ Main areas improved in typing/filtering/generation:
 
 - Syntax:
   - AIR 50's nullish coalescing `??` and optional chaining `?.` (fields and method calls), converted to Haxe's own operators
+  - a `/` inside a regexp character class, and a member access or call after a Vector literal
 - Dynamic property access and assignments:
   - safer rewrites for reads/writes/compound assignments on dynamic values
   - improved `hasOwnProperty` handling and undefined lookup rewrites
@@ -33,12 +36,16 @@ Main areas improved in typing/filtering/generation:
   - `void` used as Bool rewritten to preserve side effects and falsy AVM2 `undefined` semantics
 - Control flow:
   - switch fall-through rewritten by duplicating executed case-body suffixes
-  - `finally`, which Haxe lacks, lowered to a catch-all that runs it and rethrows, with a copy after the `try` and before each `return`, `break` or `continue` leaving it
+  - `finally`, which Haxe lacks, lowered to a catch-all that runs it and rethrows, with a copy after the `try` and before each `return`, `break` or `continue` leaving it, keeping the error's stack on C++
+  - `catch (e:Error)` reads the caught value as an `Error`, and stays typed when a catch of anything follows it
+  - a value `||` evaluates its other operand only when it is the result, and `&&` the same way
 - Class/constructor handling:
   - fixes for ctor initialization ordering and super-call placement
   - better handling of class casts and `new` on dynamic/callable values
 - API-specific rewrites:
-  - improvements for Array/Vector APIs, function apply/call, URL loading patterns, Embed handling, flash/global utility shims
+  - improvements for Array/Vector APIs, function apply/call, URL loading patterns, flash/global utility shims
+  - `[Embed]`: images extend `ASBitmapAsset`, ByteArrays load their resource, sources resolve from the classpath, and ASC's `stem$<sha1>` class names are read
+  - `uint` subtraction and `>>>` giving AS3's values, `uint.MAX_VALUE` and Number's infinities as their own values
 - E4X/XML support:
   - expanded parser/filter/runtime handling for XML/XMLList and related patterns
 
@@ -48,22 +55,24 @@ Main areas improved in typing/filtering/generation:
 
 - `ASAny`, `ASDictionary`, `ASArrayBase`, `ASProxyBase` behavior refinements
 - non-Flash parity for dynamic/property access semantics, including `for each` / `for...in` over untyped arrays
+- untyped Dictionaries and Vectors outside Flash (indexing, iterating, deleting, object and primitive keys), and `undefined` told apart from `null` by its type
 - additional XML/XMLList, RegExp, describeType, ByteArray, and related utility behavior
 
-`compat-test/` includes dedicated tests for this layer, run on JS, C++ and Flash, and should be updated together with runtime changes.
+`compat-test/` includes dedicated tests for this layer, run on JS, C++ and Flash, and should be updated together with runtime changes. `tests-as3/` runs converted AS3 on JS and C++ against what Flash Player prints, and `tests-haxe/` runs code compiled with Haxe, decompiled and converted, against what its Haxe sources print (see [Contributing](Contributing.md)).
 
 ## Target support and portability
 
 Compared to baseline ax3 usage, target priorities are different:
 
-- Primary focus: C++/hxcpp migration and runtime parity.
+- Primary focus: C++/libhxcpp migration and runtime parity.
 - Secondary but still supported target: HTML5.
 
 To support that, this fork includes more explicit effort toward non-Flash portability:
 
-- multiple fixes targeting C++/hxcpp behavior
+- multiple fixes targeting C++/libhxcpp behavior
 - fallback paths for non-Flash runtime semantics
 - adjustments to avoid target-specific pitfalls (closure binding, varargs wrapping, numeric corner cases)
+- C++ runtime paths that avoid boxing, for Dictionary reads with String or int keys and for property reads through `ASAny`
 
 ## Configuration and workflow changes
 

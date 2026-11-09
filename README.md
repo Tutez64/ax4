@@ -85,3 +85,4 @@ The pipeline is implemented in `src/ax4/Main.hx`:
 - The parser doesn't currently support ASI (automatic semicolon insertion). The only case where a semicolon can be omitted is the last expression of a block.
 - Only a small, most commonly used subset of E4X is supported. It's recommended to rewrite the unsupported things in AS3 sources to adapt it for conversion.
 - XML literals (`<a>...</a>`) are not supported: `skipXmlLiterals` comments them out as `null`.
+- Some forms stop the conversion, such as a `case` after `default` or a `split` with a limit.

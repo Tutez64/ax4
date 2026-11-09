@@ -23,7 +23,7 @@ npx haxe test-compat.hxml
 ```
 
 `compat/` is the runtime compatibility layer used by converted projects.
-`compat-test/` is its test suite, run on JS (Node), C++ (hxcpp) and Flash (`test.swf`, opened with the system's Flash Player). When you change anything in `compat/`, update tests in `compat-test/` and run `npx haxe test-compat.hxml`.
+`compat-test/` is its test suite, run on JS (Node), C++ (libhxcpp) and Flash (`test.swf`, opened with the system's Flash Player). `test.swf` traces its results, which the Flash Player content debugger writes to `~/.macromedia/Flash_Player/Logs/flashlog.txt` when `~/mm.cfg` has `TraceOutputFileEnable=1`. When you change anything in `compat/`, update tests in `compat-test/` and run `npx haxe test-compat.hxml`.
 
 ## Test case conventions
 
@@ -35,13 +35,25 @@ npx haxe test-compat.hxml
   - Example: `RewriteAs.hx` -> `TestFilterRewriteAs.as`
 - Other tests can use `Test{Feature}.as`.
 
-Current state:
+`tests/` is checked by inspecting `tests/out`. The two suites below run converted code and compare what it prints.
 
-- Most converter tests are still manual/inspection-based (`tests/src` -> run converter -> inspect `tests/out`).
+## Converted AS3 run against Flash
 
-Future direction:
+`tests-as3/` checks that converted code behaves as in Flash Player.
 
-- Move toward automated checks (expected output diff, compile smoke tests, and execution tests where relevant) so regressions are caught in CI.
+- `src/checks/` holds AS3 checks that push `name=value` lines.
+- `tests-as3/build.sh <air-sdk> <flashplayerdebugger>` compiles them with the AIR SDK's mxmlc, turns its ABC 47.16 into the 46.16 that Flash Player 32 reads (`abc46.py`), runs them in the Flash Player projector content debugger and writes its traces to `expected.txt`. Rerun it after changing `src/`.
+- `npx haxe test-as3.hxml` converts them, then runs the converted checks against `expected.txt` on JS and C++.
+- `known-js.txt` and `known-cpp.txt` list, as printed, the lines where a target is known to differ from Flash. Another difference fails, and so does a listed line that is no longer printed: update the list when a fix changes it.
+- Forms ax4 stops on are left out, with a comment saying so.
+
+## Code compiled with Haxe
+
+`tests-haxe/` covers [programs compiled with Haxe](Config.md#programs-compiled-with-haxe).
+
+- `hx/` holds Haxe sources. `tests-haxe/build.sh <ffdec.jar>` compiles them to a SWC, decompiles it with JPEXS FFDec and splits it into `src/`, `src-bytecode/` and `lib/bytecode.swc` as a decompiled game would be, and writes `expected.txt` from the Haxe sources (`--interp`). Rerun it after changing `hx/`.
+- `npx haxe test-haxe.hxml` converts them, then runs the converted checks against `expected.txt` on JS and C++.
+- Their inputs are real Haxe output, so the filters' reports of unhandled forms are not triggered there.
 
 ## Error coverage policy
 
@@ -56,7 +68,7 @@ Future direction:
 2. Run converter and inspect `tests/out/`.
 3. Implement filter/typer/gen fix.
 4. Re-run converter.
-5. Run `npx haxe test-compat.hxml` if compat/runtime was touched.
+5. Run `npx haxe test-compat.hxml` if compat/runtime was touched, and `npx haxe test-as3.hxml` and `npx haxe test-haxe.hxml`.
 
 ## Auditing compat calls in a converted project
 
