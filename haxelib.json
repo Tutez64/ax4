@@ -3,8 +3,8 @@
 	"description": "Powerful ActionScript 3 to Haxe converter",
 	"url": "https://github.com/Tutez64/ax4",
 	"license": "MIT",
-	"version": "1.1.0",
-	"releasenote": "Converts AIR 50's ?? and ?. operators and try/finally; keeps Object(x).field dynamic; reads hex strings in toNumber on native targets.",
+	"version": "1.2.0",
+	"releasenote": "Converts programs compiled with Haxe and decompiled with FFDec; reads the ABC 47.16 SWCs of AIR SDKs; follows AS3 more closely on C++ and JS (untyped Dictionary and Vector, undefined, Error catches, Embed), checked against Flash Player; faster Dictionary and untyped property reads on C++.",
 	"contributors": ["Tutez"],
 	"classPath": "compat"
 }
