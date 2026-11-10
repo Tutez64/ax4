@@ -4,6 +4,7 @@
  * - Instance setters/getters (setTime, setFullYear, setMonth, setDate, setHours, setMinutes, setSeconds, setMilliseconds).
  * - Milliseconds property get/set/assign ops.
  * - UTC helpers (getUTCMilliseconds, Date.UTC).
+ * - The time (getTime, time, valueOf), read in whole milliseconds through ASCompat.
  */
 package {
     public class TestFilterDateApi {
@@ -26,6 +27,11 @@ package {
             var propMs:Number = date.milliseconds;
 
             var utc:Number = Date.UTC(2021, 1, 3, 4, 5, 6, 7);
+
+            var time:Number = date.getTime();
+            var propTime:Number = date.time;
+            var value:Number = date.valueOf();
+            var elapsed:Number = new Date().getTime() - time;
         }
     }
 }

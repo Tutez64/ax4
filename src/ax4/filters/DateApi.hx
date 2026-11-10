@@ -23,8 +23,11 @@ class DateApi extends AbstractFilter {
 					   | "setMilliseconds"
 					   | "getMilliseconds"
 					   | "getUTCMilliseconds"
+					   | "getTime"
+					   | "valueOf"
 					   :
-						var eMethod = mkBuiltin("ASCompat.ASDate." + fieldName, TTFunction, lead);
+						// valueOf() is the time
+						var eMethod = mkBuiltin("ASCompat.ASDate." + (fieldName == "valueOf" ? "getTime" : fieldName), TTFunction, lead);
 						var newArgs = if (args == null) {
 							{openParen: mkOpenParen(), args: [{expr: dateExpr, comma: null}], closeParen: mkCloseParen(trail)}
 						} else if (args.args.length == 0) {
@@ -186,7 +189,6 @@ class DateApi extends AbstractFilter {
 					   | "minutes"
 					   | "month"
 					   | "seconds"
-					   | "time"
 					   | "timezoneOffset"
 					   :
 						var methodName = "get" + fieldName.charAt(0).toUpperCase() + fieldName.substring(1);
@@ -197,8 +199,8 @@ class DateApi extends AbstractFilter {
 							closeParen: mkCloseParen(trail)
 						}));
 
-					case "milliseconds":
-						var eMethod = mkBuiltin("ASCompat.ASDate.getMilliseconds", TTFunction, lead);
+					case "milliseconds" | "time":
+						var eMethod = mkBuiltin("ASCompat.ASDate.get" + fieldName.charAt(0).toUpperCase() + fieldName.substring(1), TTFunction, lead);
 						e.with(kind = TECall(eMethod, {
 							openParen: mkOpenParen(),
 							args: [{expr: dateExpr, comma: null}],

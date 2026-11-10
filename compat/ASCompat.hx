@@ -2787,6 +2787,16 @@ class ASDate {
 		return DateTools.format(Date.fromTime(0), "%a %b %d %Y");
 	}
 
+	// Date.getTime(), in whole milliseconds as in Flash. A native Date holds seconds as a Float, so its
+	// time comes back with a fraction: of the clock's for Date.now(), of a rounding error after setTime.
+	public static inline function getTime(d:Date):Float {
+		#if (js || flash || python)
+		return d.getTime();
+		#else
+		return Math.fround(d.getTime());
+		#end
+	}
+
 	public static inline function setTime(d:Date, millisecond:Float):Float {
 		#if (js || flash || python)
 		return (cast d).setTime(millisecond);

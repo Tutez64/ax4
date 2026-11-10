@@ -1045,6 +1045,15 @@ class TestASCompat extends utest.Test {
 		ASCompat.ASDate.setTime(dTime, 1234567);
 		floatEquals(1234567, dTime.getTime());
 
+		// getTime is in whole milliseconds, as in Flash: a native Date holds seconds as a Float
+		var dWhole = Date.fromTime(0);
+		ASCompat.ASDate.setTime(dWhole, 1794293946316.0);
+		isTrue(ASCompat.ASDate.getTime(dWhole) == 1794293946316.0);
+		var now = ASCompat.ASDate.getTime(Date.now());
+		isTrue(now == Math.ffloor(now));
+		var later = ASCompat.ASDate.getTime(Date.now());
+		isTrue(later - now == Math.ffloor(later - now));
+
 		var dFull = Date.fromTime(0);
 		ASCompat.ASDate.setFullYear(dFull, 2020, 1, 2);
 		#if (js || flash || python)
