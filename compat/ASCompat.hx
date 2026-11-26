@@ -2071,6 +2071,15 @@ class ASCompat {
 	}
 
 	static function toNumberNative(d:Dynamic):Float {
+		#if cpp
+		// A number, by far the most frequent, is told by its type tag without the tests below.
+		if (d != null) {
+			var isNumber:Bool = untyped __cpp__("(({0}).mPtr->__GetType() == vtFloat || ({0}).mPtr->__GetType() == vtInt)", d);
+			if (isNumber) {
+				return cast d;
+			}
+		}
+		#end
 		if (isUndefinedValue(d)) {
 			return Math.NaN;
 		}

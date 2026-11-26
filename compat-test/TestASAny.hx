@@ -142,6 +142,9 @@ class TestASAny extends utest.Test {
 		equals(0, f(false));
 
 		isTrue(Math.isNaN(f(Math.NaN)));
+		equals(Math.POSITIVE_INFINITY, f(Math.POSITIVE_INFINITY));
+		equals(-2147483648.0, f(-2147483648));
+		equals(4294967295.0, f(4294967295.0));
 		equals(1.0, f(1));
 		equals(3.5, f(3.5));
 		equals(0.1, f(0.1));
