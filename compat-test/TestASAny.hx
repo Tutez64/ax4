@@ -7,6 +7,18 @@ class TestASAny extends utest.Test {
 		isNull(struct.none);
 		isNull(struct.missing);
 
+		// what an anonymous object holds is read as it is: a field called length, a function, another object,
+		// a field added after it was made
+		var record:ASAny = {length: 7, twice: function(n:Int) return n * 2, inner: {name: "in"}};
+		equals(7, record.length);
+		equals(6, record.twice(3));
+		equals("in", record.inner.name);
+		isNull(record.inner.missing);
+		record.added = "later";
+		equals("later", record.added);
+		record.added = null;
+		isNull(record.added);
+
 		var array:ASAny = [4, 5];
 		equals(2, array.length);
 

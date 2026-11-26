@@ -98,7 +98,12 @@ abstract ASAny(Dynamic)
 			return null;
 		}
 		var isStruct:Bool = untyped __cpp__("(({0}).mPtr->__GetType() == vtObject)", (obj : Dynamic));
-		if (isStruct || !(Std.isOfType(obj, ASArrayBase) || Std.isOfType(obj, ASProxyBase))) {
+		if (isStruct) {
+			// An anonymous object has no getter, no class and no named child: a field it lacks is null without
+			// going through what getOwnProperty tries for an object of a class.
+			return Reflect.field(obj, name);
+		}
+		if (!(Std.isOfType(obj, ASArrayBase) || Std.isOfType(obj, ASProxyBase))) {
 			return ASCompat.getOwnProperty(obj, name);
 		}
 		#end
